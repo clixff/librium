@@ -1,0 +1,68 @@
+{
+  "name": "epub-reader",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clear": "rmdir dist /S /Q",
+    "build:main:dev": "webpack --mode development --config ./webpack/webpack.main.config.js",
+    "build:main:prod": "webpack --mode production --config ./webpack/webpack.main.config.js",
+    "run:main:dev": "electron ./dist/main/index.js",
+    "build:renderer:prod": "webpack --mode production --config ./webpack/webpack.renderer.config.js",
+    "run:renderer:dev": "webpack serve --mode production --config ./webpack/webpack.renderer.dev.js",
+    "dev": "npm run build:main:dev && concurrently \"npm run run:renderer:dev\" \"npm run run:main:dev\"",
+    "build": "npm run build:main:prod && npm run build:renderer:prod",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "css-loader": "^5.0.1",
+    "css-minimizer-webpack-plugin": "^1.1.5",
+    "html-webpack-plugin": "^4.5.1",
+    "mini-css-extract-plugin": "^1.3.3",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "style-loader": "^2.0.0",
+    "ts-loader": "^8.0.13",
+    "typescript": "^4.1.3",
+    "webpack": "^5.11.1",
+    "webpack-cli": "^4.3.1",
+    "webpack-merge": "^4.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.20",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@types/webpack-env": "^1.16.0",
+    "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "@typescript-eslint/parser": "^4.12.0",
+    "concurrently": "^5.3.0",
+    "electron": "^11.1.1",
+    "electron-builder": "^22.9.1",
+    "eslint": "^7.17.0",
+    "webpack-dev-server": "^3.11.1"
+  },
+  "build": {
+    "asar": true,
+    "extends": null,
+    "extraMetadata": {
+      "main": "main/index.js"
+    },
+    "files": [
+      {
+        "from": ".",
+        "filter": [
+          "package.json"
+        ]
+      },
+      {
+        "from": "./dist/",
+        "filter": [
+          "main/**",
+          "renderer/**"
+        ]
+      }
+    ]
+  }
+}
