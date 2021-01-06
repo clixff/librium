@@ -1,5 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { initConfig } from './config';
+import { initPaths } from './paths';
+import './reader';
 
 const NODE_ENV: 'production'|'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
 
@@ -36,11 +39,8 @@ function createWindow(): void
 
 app.on('ready', async () => 
 {
-    console.log(`NODE_ENV is ${NODE_ENV}`);
+    await initPaths();
+    await initConfig();
     createWindow();
 });
 
-ipcMain.on('open-file-click', () => 
-{
-    console.log('Clicked open-file');
-});

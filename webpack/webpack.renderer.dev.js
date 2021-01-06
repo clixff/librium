@@ -8,15 +8,16 @@ const rendererDevConfig = {
         port: 45505,
         compress: true,
         hot: true,
-        host: '127.0.0.1'
+        host: '127.0.0.1',
+        stats: 'minimal'
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin()
     ],
     optimization: {
-        minimize: true
+        minimize: false
     },
-    devtool: 'eval',
+    devtool: 'eval-cheap-source-map',
     module: {
         rules: [
             {
@@ -35,5 +36,11 @@ const rendererDevConfig = {
     },
 };
 
+const devConfig = merge(rendererBaseConfig, rendererDevConfig);
 
-module.exports = merge(rendererBaseConfig, rendererDevConfig);
+/** Use development config with ts-loader */
+devConfig.module.rules[0].use.options = {
+    configFile: 'tsconfig.dev.json'
+};
+
+module.exports = devConfig;
