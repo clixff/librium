@@ -9,7 +9,7 @@ const rendererBaseConfig = {
         path: path.resolve(__dirname, '../', 'dist', 'renderer'),
         filename: 'bundle.js'
     },
-    target: 'web',
+    target: 'electron-renderer',
     plugins: [
         new HtmlWebpackPlugin({
             title: "test",

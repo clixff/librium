@@ -16,6 +16,7 @@ const rendererDevConfig = {
     optimization: {
         minimize: true
     },
+    devtool: 'eval',
     module: {
         rules: [
             {

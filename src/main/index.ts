@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 
 const NODE_ENV: 'production'|'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
@@ -10,7 +10,8 @@ function createWindow(): void
         height: 720,
         show: false,
         webPreferences: {
-
+            enableRemoteModule: false,
+            nodeIntegration: true
         }
     });
 
@@ -37,4 +38,9 @@ app.on('ready', async () =>
 {
     console.log(`NODE_ENV is ${NODE_ENV}`);
     createWindow();
+});
+
+ipcMain.on('open-file-click', () => 
+{
+    console.log('Clicked open-file');
 });
