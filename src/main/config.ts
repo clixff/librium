@@ -1,4 +1,4 @@
-import { getConfigPath, getSettingFolderPath } from "./paths";
+import { getAppDataPath, getConfigPath } from "./paths";
 import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 
@@ -12,9 +12,9 @@ interface IConfig
 
 const defaultConfig: IConfig = {
     /**
-     * Use default books directory `../AppData/Roaming/epub-reader/main/Books`
+     * Use default books directory `../Documents/epub-reader/Books`
      */
-    booksDir: path.resolve(getSettingFolderPath(), 'Books')
+    booksDir: path.resolve(getAppDataPath(), 'Books')
 };
 
 let config: IConfig | null = null;
@@ -78,7 +78,7 @@ function fixParams(object: Record<string, unknown>, defaultObject: Record<string
     for (const configParamKey in defaultObject)
     {
         const configParam: unknown = object[configParamKey];
-        const defaultParam: unknown = defaultConfig[configParamKey];
+        const defaultParam: unknown = defaultObject[configParamKey];
         const configParamType: varType = getVariableType(configParam);
         const defaultParamType: varType = getVariableType(defaultParam);
         /**

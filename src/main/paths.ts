@@ -4,17 +4,12 @@ import fs, { promises as fsPromises } from 'fs';
 
 export function getAppDataPath(): string
 {
-    return path.resolve(app.getPath('appData'), 'epub-reader');
-}
-
-export function getSettingFolderPath(): string
-{
-    return path.resolve(getAppDataPath(), 'main');
+    return path.resolve(app.getPath('documents'), 'epub-reader');
 }
 
 export function getConfigPath(): string
 {
-    return path.resolve(getSettingFolderPath(), 'config.json');
+    return path.resolve(getAppDataPath(), 'config.json');
 }
 
 /**
@@ -28,7 +23,7 @@ export function createDirIfNotExists(dirPath: string): Promise<void>
         {
             if (err)
             {
-                await fsPromises.mkdir(dirPath);
+                await fsPromises.mkdir(dirPath, { recursive: true });
             }
             resolve();
         });
@@ -38,11 +33,7 @@ export function createDirIfNotExists(dirPath: string): Promise<void>
 export async function initPaths(): Promise<void>
 {
     /**
-     * Check if folder `../AppData/Roaming/epub-reader/` exists
+     * Check if folder `../documents/epub-reader/` exists
      */
     await createDirIfNotExists(getAppDataPath());
-    /**
-     * Check if folder `../AppData/Roaming/epub-reader/main` exists
-     */
-    await createDirIfNotExists(getSettingFolderPath());
 }
