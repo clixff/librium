@@ -125,12 +125,29 @@ async function convertBook(bookDirectory: string, epubContent: Buffer): Promise<
         {
             throw new Error('Container.xml not found');
         }
+
+        const parser = new xml2js.Parser();
+
+        // xml2js.parseStringPromise(containerFile, {  })
+
+        const parsedContainer: Record<string, unknown> = await parser.parseStringPromise(containerFile);
+
+
+        // console.log(parsedContainer);
+
+        // for (const key in parsedContainer)
+        // {
+        //     console.log(parsedContainer[key]);
+        // }
+
+        // const packageFile = await readFileInArchive();
     }
     catch (error)
     {
         console.error(error);
     }
 }
+
 
 function readFileInArchive(archive: AdmZip, filePath: string, encoding = 'utf8'): Promise<string>
 {
@@ -153,4 +170,123 @@ function readFileInArchive(archive: AdmZip, filePath: string, encoding = 'utf8')
 function showBook(): void
 {
     showBook();
+}
+
+
+
+interface IXMLNode
+{
+    /** List of atributes */
+    "@_attr"?: Record<string, unknown>;
+    /** Inner text of this tag */
+    "@_text"?: string;
+    /** Name of this tag */
+    "#name": string; 
+    /** Children nodes */
+    "@_children"?: Array<IXMLNode>;
+}
+
+/**
+ * XML document in object
+ */
+interface IXMLObject
+{
+    [tag: string]: IXMLNode;
+}
+
+
+async function parseXML(xmlContent: string): Promise<IXMLObject>
+{
+    try
+    {
+        const xmlParserParams = {
+            explicitChildren: true,
+            preserveChildrenOrder: true,
+            childkey: '@_children',
+            attrkey: '@_attr',
+            charkey: '@_text'
+        };
+    
+        const xmlObject: IXMLObject = await xml2js.parseStringPromise(xmlContent, xmlParserParams);
+
+        
+        await fixXMLObject(xmlObject);
+
+        return xmlObject;
+    }
+    catch (err)
+    {
+        console.error(err);
+    }
+
+    return {};
+}
+
+/**
+ * Removes dublicate keys from the XML object
+ */
+async function fixXMLObject(xmlObject: IXMLObject): Promise<void>
+{
+    try
+    {
+        if (!xmlObject)
+        {
+            return;
+        }
+
+        const objectKeys = Object.keys(xmlObject);
+        if (!objectKeys.length)
+        {
+            return;
+        }
+
+        const xmlRootNode: string = objectKeys[0];
+
+        fixXMLNode(xmlObject[xmlRootNode]);
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+}
+
+
+/**
+ * Removes dublicate keys from the XML node
+ */
+function fixXMLNode(xmlNode: IXMLNode): void
+{
+    try
+    {
+        if (!xmlNode || typeof xmlNode !== 'object')
+        {
+            return;
+        }
+
+        const xmlNodeAsObject: Record<string, unknown> = (xmlNode as unknown) as Record<string, unknown>;
+
+        for (const key in xmlNodeAsObject)
+        {
+            if (key === '@_children')
+            {
+                const childrenList: Array<IXMLNode> = xmlNode["@_children"] as Array<IXMLNode>;
+
+                for (const childXmlNode of childrenList)
+                {
+                    fixXMLNode(childXmlNode);
+                }
+            }
+            else if (key !== '@_attr' && key !== '@_text' && key !== '#name')
+            {
+                /**
+                 * Remove key from the parsed XML node, if it's not a attributes list, inner text, children list or tag name.
+                 */
+                delete xmlNodeAsObject[key];
+            }
+        }
+    }
+    catch(err)
+    {
+        console.error(err);
+    }
 }
