@@ -5,6 +5,7 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import { getConfig } from "./config";
 import xml2js from 'xml2js';
+import { IContainerXMLSchema } from "./misc/schemas";
 
 ipcMain.on('open-file-click', async (event) => 
 {
@@ -117,7 +118,7 @@ async function convertBook(bookDirectory: string, epubContent: Buffer): Promise<
         }
 
         /**
-         * Open the file `container.xml`, that contains path to the `.opf` file
+         * Open the file `container.xml`, which contains path to the `.opf` file
          */
         const containerFile = await readFileInArchive(bookUnziped, path.join('META-INF', 'container.xml'));
         console.log('Container file is ', containerFile);
@@ -126,21 +127,16 @@ async function convertBook(bookDirectory: string, epubContent: Buffer): Promise<
             throw new Error('Container.xml not found');
         }
 
-        const parser = new xml2js.Parser();
 
-        // xml2js.parseStringPromise(containerFile, {  })
+        const parsedContainer: IContainerXMLSchema = (await parseXML(containerFile, false) as unknown) as IContainerXMLSchema;
 
-        const parsedContainer: Record<string, unknown> = await parser.parseStringPromise(containerFile);
+        /**
+         * Path to the file with book structure (`Open Packaging Format` file)
+         */
+        const opfFilePath: string = parsedContainer.container.rootfiles[0].rootfile[0]["@_attr"]["full-path"];
 
+        console.log(`.opf file path is ${opfFilePath}` );
 
-        // console.log(parsedContainer);
-
-        // for (const key in parsedContainer)
-        // {
-        //     console.log(parsedContainer[key]);
-        // }
-
-        // const packageFile = await readFileInArchive();
     }
     catch (error)
     {
@@ -195,22 +191,30 @@ interface IXMLObject
 }
 
 
-async function parseXML(xmlContent: string): Promise<IXMLObject>
+/**
+ * 
+ * @param xmlContent 
+ * @param bShouldFixXML The order of the child nodes will be preserved. `False` should be used with known XML schemas
+ */
+async function parseXML(xmlContent: string, bShouldFixXML = true): Promise<IXMLObject>
 {
     try
     {
-        const xmlParserParams = {
-            explicitChildren: true,
-            preserveChildrenOrder: true,
+        const xmlParserParams: xml2js.ParserOptions = {
+            explicitChildren: bShouldFixXML,
+            preserveChildrenOrder: bShouldFixXML,
             childkey: '@_children',
             attrkey: '@_attr',
-            charkey: '@_text'
+            charkey: '@_text',
+            trim: true
         };
     
         const xmlObject: IXMLObject = await xml2js.parseStringPromise(xmlContent, xmlParserParams);
 
-        
-        await fixXMLObject(xmlObject);
+        if (bShouldFixXML)
+        {
+            await fixXMLObject(xmlObject);
+        }
 
         return xmlObject;
     }
@@ -290,3 +294,4 @@ function fixXMLNode(xmlNode: IXMLNode): void
         console.error(err);
     }
 }
+

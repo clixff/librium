@@ -4,7 +4,7 @@ import { initConfig } from './config';
 import { initPaths } from './paths';
 import './reader';
 
-const NODE_ENV: 'production'|'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
+const NODE_ENV: 'production' | 'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
 
 function createWindow(): void
 {

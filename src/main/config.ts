@@ -5,7 +5,7 @@ import path from 'path';
 interface IConfig
 {
     /**
-     * Directory path with saved books
+     * Path to the directory with saved books
      */
     booksDir: string
 }
