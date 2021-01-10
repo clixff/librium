@@ -1,4 +1,4 @@
-import { IContainerXMLSchema, IMetadataSchema, IOPFSchema, IXMLNode, IXMLObject } from "./misc/schema";
+import {IXMLNode, IXMLObject } from "./misc/schema";
 import xml2js from 'xml2js';
 
 /**
@@ -103,52 +103,3 @@ function fixXMLNode(xmlNode: IXMLNode): void
         console.error(err);
     }
 }
-
-/**
- * Parses `META-INF/container.xml` file and gets path to the `.opf` file
- */
-export async function getOpfFilePath(fileContent: string): Promise<string>
-{
-
-    try
-    {
-        const parsedContainer: IContainerXMLSchema = (await parseXML(fileContent, false) as unknown) as IContainerXMLSchema;
-
-        /**
-         * Path to the file with book structure (`Open Packaging Format` file)
-         */
-        const opfFilePath: string = parsedContainer.container.rootfiles[0].rootfile[0]["@_attr"]["full-path"];
-
-        return opfFilePath;
-    }
-    catch (error)
-    {
-        console.error(error);
-    }
-
-    return '';
-}
-
-export async function parseOpfFile(fileContent: string): Promise<void>
-{
-    try
-    {
-        const parsedFile: IOPFSchema = (await parseXML(fileContent, false) as unknown) as IOPFSchema;
-        if (!parsedFile)
-        {
-            throw new Error('Failed to parse .opf file');
-        }
-
-        const bookMetadata: IMetadataSchema = parsedFile.package.metadata[0];
-
-        const bookTitle = bookMetadata['dc:title'][0];
-        
-        console.log(`Book title is ${bookTitle}`);
-
-    }
-    catch(error)
-    {
-        console.error(error);
-    }
-}
-

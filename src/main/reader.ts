@@ -1,12 +1,9 @@
 import { ipcMain, dialog, BrowserWindow, app } from "electron";
-import fs, { promises as fsPromises, readFile } from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import crypto from 'crypto';
 import path from 'path';
-import AdmZip from 'adm-zip';
 import { getConfig } from "./config";
-import xml2js from 'xml2js';
-import { IContainerXMLSchema, IMetadataSchema, IOPFSchema, IXMLNode, IXMLObject } from "./misc/schema";
-import { getOpfFilePath, parseOpfFile, parseXML } from "./parser";
+import { RawBook } from "./rawbook";
 
 ipcMain.on('open-file-click', async (event) => 
 {
@@ -74,9 +71,9 @@ async function openFile(filePath: string): Promise<void>
                 await fsPromises.mkdir(booksDirectoryPath, { recursive: true  });
             }
 
-            const bookToOpenDirectoryPath: string = path.resolve(booksDirectoryPath, fileCheckSum);
+            const pathToTheOpenedBook: string = path.resolve(booksDirectoryPath, fileCheckSum);
 
-            fs.access(bookToOpenDirectoryPath, fs.constants.F_OK, async (err) =>
+            fs.access(pathToTheOpenedBook, fs.constants.F_OK, async (err) =>
             {
                 if (!err)
                 {
@@ -92,8 +89,11 @@ async function openFile(filePath: string): Promise<void>
                      * Create a directory with book data,
                      * for example ../Documents/epub-reader/Books/886fc4262aeaed4470b34da71e842d4b21f63651/
                      */
-                    await fsPromises.mkdir(bookToOpenDirectoryPath, { recursive: true }); 
-                    await convertBook(bookToOpenDirectoryPath, fileContent);
+                    await fsPromises.mkdir(pathToTheOpenedBook, { recursive: true }); 
+                    
+                    const rawBook = new RawBook(fileContent, pathToTheOpenedBook);
+
+                    await rawBook.parse();
                 }
             });
         });
@@ -104,65 +104,6 @@ async function openFile(filePath: string): Promise<void>
     }
 }
 
-/**
- * Unzip a .epub book, converts it to a custom format, then saves book data to disk
- */
-async function convertBook(bookDirectory: string, epubContent: Buffer): Promise<void>
-{
-    try
-    {
-        const bookUnziped = new AdmZip(epubContent);
-        const mimetype = await readFileInArchive(bookUnziped, 'mimetype');
-        if (mimetype !== 'application/epub+zip')
-        {
-            throw new Error('MIME type is incorrect');
-        }
-
-        /**
-         * Open the file `container.xml`, which contains path to the `.opf` file
-         */
-        const containerFile = await readFileInArchive(bookUnziped, path.join('META-INF', 'container.xml'));
-        console.log('Container file is ', containerFile);
-        if (!containerFile)
-        {
-            throw new Error('Container.xml not found');
-        }
-
-        const opfFilePath: string = await getOpfFilePath(containerFile);
-
-        console.log(`.opf file path is ${opfFilePath}` );
-
-        const opfFile: string = await readFileInArchive(bookUnziped, opfFilePath);
-
-        if (!opfFile)
-        {
-            throw new Error(`"${opfFilePath}" file not found`);
-        }
-        
-        await parseOpfFile(opfFile);
-    
-    }
-    catch (error)
-    {
-        console.error(error);
-    }
-}
-
-
-function readFileInArchive(archive: AdmZip, filePath: string, encoding = 'utf8'): Promise<string>
-{
-    /**
-     * Replace double backslashes with frontslashes
-     */
-    filePath = filePath.replace(/\\/g, '/');
-    return new Promise((resolve) =>
-    {
-        archive.readAsTextAsync(filePath, (data) => 
-        {
-            resolve(data);
-        }, encoding);
-    });
-}
 
 /**
  * Shows book in the GUI
