@@ -1,6 +1,7 @@
 import AdmZip from "adm-zip";
 import path from 'path';
-import { IContainerXMLSchema, IMetadataSchema, IOPFSchema } from "./misc/schema";
+import { Book } from "./book";
+import { IContainerXMLSchema, IMetadataSchema, IOPFSchema, MetadataItem } from "./misc/schema";
 import { parseXML } from "./parser";
 
 /**
@@ -25,6 +26,11 @@ export class RawBook
      * This file contains book's resources and metadata.
      */
     packageOpf: IOPFSchema | null = null;
+
+    /**
+     * Ref to the actual book object, that can be parsed by app
+     */
+    bookRef: Book | null = null;
     constructor(epubContent: Buffer, pathToSave: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -51,7 +57,7 @@ export class RawBook
     {
         try
         {
-            const mimetype: string = await this.readFile('mimetype');
+            const mimetype: string = (await this.readFile('mimetype')).trim().replace(/\n/, '');
             if (mimetype !== 'application/epub+zip')
             {
                 throw new Error('MIME type is incorrect');
@@ -133,11 +139,69 @@ export class RawBook
                 throw new Error('Failed to parse the ".opf" file');
             }
 
+            this.bookRef = new Book();
+
+            await this.parseMetadata();
+
+            
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
+    /**
+     * Parses metadata from the `.opf` file and save it in the 'bookRef'
+     */
+    async parseMetadata(): Promise<void>
+    {
+        try
+        {
+            if (!this.packageOpf || !this.bookRef)
+            {
+                return;
+            }
+
             const bookMetadata: IMetadataSchema = this.packageOpf.package.metadata[0];
 
-            const bookTitle = bookMetadata['dc:title'][0];
+            const bookTitleObject = bookMetadata['dc:title'][0];
+            this.bookRef.title = typeof bookTitleObject === 'string' ? bookTitleObject : (bookTitleObject["@_text"] || '');
 
-            console.log(`Book title is ${bookTitle}`);
+            console.log(`Book title is ${this.bookRef.title}`);
+
+            const authorsDataList: Array<MetadataItem> | undefined = bookMetadata['dc:creator'];
+            if (authorsDataList)
+            {
+                for (const author of authorsDataList)
+                {
+                    const authorName: string | undefined = typeof author === 'string' ? author : author["@_text"];
+                    if (authorName)
+                    {
+                        this.bookRef.authors.push(authorName);
+                    }
+                }
+            }
+
+            console.log(`Authors: `, this.bookRef.authors);
+
+            const languageData: Array<MetadataItem> | undefined = bookMetadata['dc:language'];
+
+            if (languageData && languageData.length)
+            {
+                this.bookRef.title = typeof languageData[0] === 'string' ? languageData[0] : (languageData[0]["@_text"] || '');
+            }
+
+            console.log(`Book's language is ${this.bookRef.title}`);
+
+            const publisherData: Array<MetadataItem> | undefined = bookMetadata['dc:publisher'];
+
+            if (publisherData && publisherData.length)
+            {
+                this.bookRef.publisher = typeof publisherData[0] === 'string' ? publisherData[0] : (publisherData[0]["@_text"] || '');
+            }
+
+            console.log(`Book's publisher is ${this.bookRef.publisher}`);
+
         }
         catch (error)
         {
