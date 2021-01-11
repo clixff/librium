@@ -94,10 +94,9 @@ export interface ISpineSchema
  * 
  * `Item` elements are listed in the `manifest` element of the `.opf` file
  */
-export interface IManifestItem
+export interface IManifestItemSchema
 {
-    "@_attr": 
-    {
+    "@_attr": {
         "id": string;
         "media-type": string;
         "href": string;
@@ -131,7 +130,7 @@ export interface IOPFSchema
         ];
         manifest: [
             {
-                item: Array<IManifestItem>
+                item: Array<IManifestItemSchema>
             }
         ],
         spine: [
@@ -141,4 +140,11 @@ export interface IOPFSchema
             Record<string, Array<IReferenceSchema>>
         ]
     }
+}
+
+export interface IManifestItem
+{
+    "media-type": string;
+    "href": string;
+    "properties"?: string;
 }

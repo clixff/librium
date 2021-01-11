@@ -1,7 +1,8 @@
 import AdmZip from "adm-zip";
+import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { Book } from "./book";
-import { IContainerXMLSchema, IMetadataSchema, IOPFSchema, MetadataItem } from "./misc/schema";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, MetadataItem } from "./misc/schema";
 import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
 
 /**
@@ -31,6 +32,13 @@ export class RawBook
      * Ref to the actual book object, that can be parsed by app
      */
     bookRef: Book | null = null;
+
+    items = new Map<string, IManifestItem>();
+
+    /**
+     * Directory path in archive to the book content
+     */
+    epubContentPath = '';
     constructor(epubContent: Buffer, pathToSave: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -100,6 +108,12 @@ export class RawBook
             }
 
             this.optFilePath = parsedContainer.container.rootfiles[0].rootfile[0]["@_attr"]["full-path"];
+            const parseArchivePath: path.ParsedPath = path.parse(this.optFilePath);
+
+            if (parseArchivePath)
+            {
+                this.epubContentPath = parseArchivePath.dir;
+            }
         }
         catch (error)
         {
@@ -142,7 +156,14 @@ export class RawBook
             this.bookRef = new Book();
 
             await this.parseMetadata();
+            await this.parseManifest();
+            await this.parseSpine();
+            // console.log('Items: ', this.items);
 
+            console.log('Base path is ', this.epubContentPath);
+            /**
+             * TODO: Parse toc.ncx
+             */
             
         }
         catch (error)
@@ -172,17 +193,27 @@ export class RawBook
             }
             const bookMetadata: IMetadataSchema = bookMetadataArray[0];
 
+            /**
+             * Parse book title
+             */
             this.bookRef.title = getFirstMetadataItemString(bookMetadata, 'dc:title');
-
             console.log(`Book title is ${this.bookRef.title}`);
 
+            /**
+             * Parse array of book authors
+             */
             this.bookRef.authors = getAllMetadataItemStrings(bookMetadata, 'dc:creator');
-
             console.log(`Authors: `, this.bookRef.authors);
 
+            /**
+             * Parse book language
+             */
             this.bookRef.title = getFirstMetadataItemString(bookMetadata, 'dc:language');
             console.log(`Book language is ${this.bookRef.title}`);
-
+            
+            /**
+             * Parse book publisher
+             */
             this.bookRef.publisher = getFirstMetadataItemString(bookMetadata, 'dc:publisher');
             console.log(`Book's publisher is ${this.bookRef.publisher}`);
 
@@ -191,5 +222,78 @@ export class RawBook
         {
             console.error(error);
         }
+    }
+    /**
+     * Parses `item` elements from the `manifest` and saves them in the `items` Map.
+     */
+    async parseManifest(): Promise<void>
+    {
+        try
+        {
+            if (!this.packageOpf)
+            {
+                return;
+            }
+
+            const bookManifest = this.packageOpf.package.manifest[0];
+            for (const item of bookManifest.item)
+            {
+                const itemAttributes = item['@_attr'];
+                const manifestItem: IManifestItem = {
+                    'media-type': itemAttributes['media-type'],
+                    'href': itemAttributes.href 
+                };
+                if (itemAttributes.properties)
+                {
+                    manifestItem.properties = itemAttributes.properties;
+                }
+
+                /**
+                 * Extract files such as images and fonts to disk
+                 */
+                if (manifestItem["media-type"] !== 'application/xhtml+xml')
+                {
+                    /**
+                     * Get path in the archive, for example `EPUB/images/image.jpg`
+                     */
+                    const itemPathInArchive = path.join(this.epubContentPath, manifestItem.href).replace(/\\/g, '/');
+                    /**
+                     * Get path for the file, for example `../Documents/epub-reader/Books/8906f../content/misc/images/image.jpg`
+                     */
+                    const itemPathToSave = path.join(this.pathToSave, 'content', 'misc', manifestItem.href);
+                    /**
+                     * Directory path for the file, for example `../Documents/epub-reader/Books/8906f../content/misc/images`
+                     */
+                    const directoryToSaveFile = path.parse(itemPathToSave).dir;
+                    fs.access(directoryToSaveFile, fs.constants.F_OK, async (err) =>
+                    {
+                        try
+                        {
+                            if (err)
+                            {
+                                await fsPromises.mkdir(directoryToSaveFile, { recursive: true });
+                            }
+    
+                            this.zipArchive.extractEntryTo(itemPathInArchive, directoryToSaveFile, false, true);
+                        }
+                        catch (error)
+                        {
+                            console.error(error);
+                        }
+                    });
+                }
+
+
+                this.items.set(itemAttributes.id, manifestItem);
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
+    async parseSpine()
+    {
+        //
     }
 }
