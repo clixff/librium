@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { initConfig } from './config';
+import { startHTTPServer } from './misc/server';
 import { initPaths } from './paths';
 import './reader';
 
@@ -41,6 +42,7 @@ app.on('ready', async () =>
 {
     await initPaths();
     await initConfig();
+    await startHTTPServer();
     createWindow();
 });
 
