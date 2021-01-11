@@ -2,7 +2,7 @@ import AdmZip from "adm-zip";
 import path from 'path';
 import { Book } from "./book";
 import { IContainerXMLSchema, IMetadataSchema, IOPFSchema, MetadataItem } from "./misc/schema";
-import { parseXML } from "./parser";
+import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
 
 /**
  * `.epub` file
@@ -162,44 +162,28 @@ export class RawBook
                 return;
             }
 
-            const bookMetadata: IMetadataSchema = this.packageOpf.package.metadata[0];
+            const packageObject = this.packageOpf.package;
 
-            const bookTitleObject = bookMetadata['dc:title'][0];
-            this.bookRef.title = typeof bookTitleObject === 'string' ? bookTitleObject : (bookTitleObject["@_text"] || '');
+            const bookMetadataArray = packageObject.metadata ? packageObject.metadata : packageObject['opf:metadata'];
+
+            if (!bookMetadataArray || !bookMetadataArray.length)
+            {
+                throw new Error('Book metadata not found');
+            }
+            const bookMetadata: IMetadataSchema = bookMetadataArray[0];
+
+            this.bookRef.title = getFirstMetadataItemString(bookMetadata, 'dc:title');
 
             console.log(`Book title is ${this.bookRef.title}`);
 
-            const authorsDataList: Array<MetadataItem> | undefined = bookMetadata['dc:creator'];
-            if (authorsDataList)
-            {
-                for (const author of authorsDataList)
-                {
-                    const authorName: string | undefined = typeof author === 'string' ? author : author["@_text"];
-                    if (authorName)
-                    {
-                        this.bookRef.authors.push(authorName);
-                    }
-                }
-            }
+            this.bookRef.authors = getAllMetadataItemStrings(bookMetadata, 'dc:creator');
 
             console.log(`Authors: `, this.bookRef.authors);
 
-            const languageData: Array<MetadataItem> | undefined = bookMetadata['dc:language'];
+            this.bookRef.title = getFirstMetadataItemString(bookMetadata, 'dc:language');
+            console.log(`Book language is ${this.bookRef.title}`);
 
-            if (languageData && languageData.length)
-            {
-                this.bookRef.title = typeof languageData[0] === 'string' ? languageData[0] : (languageData[0]["@_text"] || '');
-            }
-
-            console.log(`Book's language is ${this.bookRef.title}`);
-
-            const publisherData: Array<MetadataItem> | undefined = bookMetadata['dc:publisher'];
-
-            if (publisherData && publisherData.length)
-            {
-                this.bookRef.publisher = typeof publisherData[0] === 'string' ? publisherData[0] : (publisherData[0]["@_text"] || '');
-            }
-
+            this.bookRef.publisher = getFirstMetadataItemString(bookMetadata, 'dc:publisher');
             console.log(`Book's publisher is ${this.bookRef.publisher}`);
 
         }

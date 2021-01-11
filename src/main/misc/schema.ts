@@ -123,9 +123,12 @@ export interface IReferenceSchema
 export interface IOPFSchema
 {
     package: {
-        metadata: [
+        metadata?: [
             IMetadataSchema
         ],
+        "opf:metadata"? : [
+            IMetadataSchema
+        ];
         manifest: [
             {
                 item: Array<IManifestItem>

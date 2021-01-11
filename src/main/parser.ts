@@ -1,4 +1,4 @@
-import {IXMLNode, IXMLObject } from "./misc/schema";
+import {IMetadataSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import xml2js from 'xml2js';
 
 /**
@@ -102,4 +102,41 @@ function fixXMLNode(xmlNode: IXMLNode): void
     {
         console.error(err);
     }
+}
+
+function getMetadataItemString(item: MetadataItem): string
+{
+    return (typeof item === 'string' ? item : (item["@_text"] || '') );
+}
+
+export function getFirstMetadataItemString(metadataObject: IMetadataSchema, key: string): string
+{
+    let outString = '';
+
+    const metadataItems: Array<MetadataItem> | undefined = metadataObject[key];
+
+    if (metadataItems && metadataItems.length)
+    {
+        const firstMetadataItem = metadataItems[0];
+        outString = getMetadataItemString(firstMetadataItem);
+    }
+
+    return outString;
+}
+
+export function getAllMetadataItemStrings(metadataObject: IMetadataSchema, key: string): Array<string>
+{
+    const outArray: Array<string> = [];
+
+    const metadataItems: Array<MetadataItem> | undefined = metadataObject[key];
+
+    if (metadataItems && metadataItems.length)
+    {
+        for (const metadataitem of metadataItems)
+        {
+            outArray.push(getMetadataItemString(metadataitem));
+        }
+    }
+
+    return outArray;
 }
