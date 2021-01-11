@@ -2,7 +2,7 @@ import AdmZip from "adm-zip";
 import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, MetadataItem } from "./misc/schema";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, MetadataItem } from "./misc/schema";
 import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
 
 /**
@@ -43,6 +43,11 @@ export class RawBook
      * If the book has a metadata element `cover`, then use it for cover image.
      */
     coverMetaID = '';
+
+    /**
+     * Array with HTML file names
+     */
+    readingOrder: Array<string> = [];
     constructor(epubContent: Buffer, pathToSave: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -169,6 +174,10 @@ export class RawBook
             await this.parseGuide();
             
             await this.parseSpine();
+
+            await this.parsePages();
+
+            console.log(`Reading order: \n`, this.readingOrder);
 
             /**
              * TODO: Parse toc.ncx
@@ -336,9 +345,42 @@ export class RawBook
             console.error(error);
         }
     }
-    async parseSpine()
+    async parseSpine(): Promise<void>
     {
-        //
+        try
+        {
+            if (!this.packageOpf)
+            {
+                return;
+            }
+            const spineElement: ISpineSchema = this.packageOpf.package.spine[0];
+
+            if (spineElement && spineElement.itemref && spineElement.itemref.length)
+            {
+                for (const itemRef of spineElement.itemref)
+                {
+                    if (!itemRef["@_attr"])
+                    {
+                        continue;
+                    }
+                    const itemRefId = itemRef["@_attr"].idref;
+                    // console.log(`Item ref id is `, itemRefId);
+                    if (this.items.has(itemRefId))
+                    {
+                        const manifestItem: IManifestItem | undefined = this.items.get(itemRefId);
+
+                        if (manifestItem)
+                        {
+                            this.readingOrder.push(manifestItem.href);
+                        }
+                    }
+                }
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
     }
     async parseGuide(): Promise<void>
     {
@@ -373,5 +415,34 @@ export class RawBook
         {
             console.error(error);
         }
+    }
+    parsePages(): Promise<void>
+    {
+        return new Promise((resolve) => 
+        {
+            const bookChunksDirectoryPath = path.join(this.pathToSave, 'content', 'chunks');
+            fs.access(bookChunksDirectoryPath, fs.constants.F_OK, async (err) => 
+            {
+                try
+                {
+                    if (err)
+                    {
+                        await fsPromises.mkdir(bookChunksDirectoryPath, { recursive: true });
+                    }
+
+                    for (const filePath of this.readingOrder)
+                    {
+                        
+                    }
+
+                    resolve();
+                }
+                catch (error)
+                {
+                    console.error(error);
+                }
+
+            });
+        });
     }
 }

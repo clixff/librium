@@ -71,8 +71,10 @@ export interface IMetadataSchema
  */
 export interface IItemRefSchema
 {
-    idref: string;
-    linear?: string;
+    "@_attr"?: {
+        idref: string;
+        linear?: string;
+    }
 }
 
 /**
