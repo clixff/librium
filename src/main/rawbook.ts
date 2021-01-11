@@ -2,7 +2,7 @@ import AdmZip from "adm-zip";
 import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, MetadataItem } from "./misc/schema";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, MetadataItem } from "./misc/schema";
 import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
 
 /**
@@ -39,6 +39,10 @@ export class RawBook
      * Directory path in archive to the book content
      */
     epubContentPath = '';
+    /**
+     * If the book has a metadata element `cover`, then use it for cover image.
+     */
+    coverMetaID = '';
     constructor(epubContent: Buffer, pathToSave: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -80,6 +84,10 @@ export class RawBook
             
             await this.parseOpfFile();
 
+            if (this.bookRef)
+            {
+                await this.bookRef.saveMeta();
+            }
         }
         catch (error)
         {
@@ -153,14 +161,15 @@ export class RawBook
                 throw new Error('Failed to parse the ".opf" file');
             }
 
-            this.bookRef = new Book();
+            this.bookRef = new Book(this.pathToSave);
 
             await this.parseMetadata();
             await this.parseManifest();
-            await this.parseSpine();
-            // console.log('Items: ', this.items);
 
-            console.log('Base path is ', this.epubContentPath);
+            await this.parseGuide();
+            
+            await this.parseSpine();
+
             /**
              * TODO: Parse toc.ncx
              */
@@ -208,7 +217,7 @@ export class RawBook
             /**
              * Parse book language
              */
-            this.bookRef.title = getFirstMetadataItemString(bookMetadata, 'dc:language');
+            this.bookRef.language = getFirstMetadataItemString(bookMetadata, 'dc:language');
             console.log(`Book language is ${this.bookRef.title}`);
             
             /**
@@ -216,6 +225,26 @@ export class RawBook
              */
             this.bookRef.publisher = getFirstMetadataItemString(bookMetadata, 'dc:publisher');
             console.log(`Book's publisher is ${this.bookRef.publisher}`);
+
+
+            const metaElements: Array<MetadataItem> | undefined = bookMetadata.meta;
+            if (metaElements && metaElements.length)
+            {
+                for (const metaElement of metaElements)
+                {
+                    if (typeof metaElement === 'object')
+                    {
+                        const metaAtributes = metaElement["@_attr"];
+                        if (metaAtributes)
+                        {
+                            if (metaAtributes['name'] === 'cover')
+                            {
+                                this.coverMetaID = metaAtributes['content'];
+                            }
+                        }
+                    }
+                }
+            }
 
         }
         catch (error)
@@ -251,7 +280,7 @@ export class RawBook
                 /**
                  * Extract files such as images and fonts to disk
                  */
-                if (manifestItem["media-type"] !== 'application/xhtml+xml')
+                if (manifestItem["media-type"] !== 'application/xhtml+xml' && manifestItem["media-type"] !== 'application/x-dtbncx+xml')
                 {
                     /**
                      * Get path in the archive, for example `EPUB/images/image.jpg`
@@ -283,6 +312,21 @@ export class RawBook
                     });
                 }
 
+                if (manifestItem.properties === 'cover-image')
+                {
+                    if (this.bookRef)
+                    {
+                        this.bookRef.cover = manifestItem.href;
+                    }
+                }
+
+                if (this.coverMetaID && this.coverMetaID === itemAttributes.id)
+                {
+                    if (this.bookRef)
+                    {
+                        this.bookRef.cover = manifestItem.href;
+                    }
+                }
 
                 this.items.set(itemAttributes.id, manifestItem);
             }
@@ -295,5 +339,39 @@ export class RawBook
     async parseSpine()
     {
         //
+    }
+    async parseGuide(): Promise<void>
+    {
+        try
+        {
+            if (!this.packageOpf)
+            {
+                return;
+            }
+
+            const guideElementArray = this.packageOpf.package.guide;
+            if (guideElementArray)
+            {
+                const guideElement = guideElementArray[0];
+                const referencesList: Array<IReferenceSchema> | undefined = guideElement.reference;
+                if (referencesList)
+                {
+                    for (const reference of referencesList)
+                    {
+                        if (reference.type === 'cover')
+                        {
+                            if (this.bookRef)
+                            {
+                                this.bookRef.cover = reference.href;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
     }
 }

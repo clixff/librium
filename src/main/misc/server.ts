@@ -6,6 +6,12 @@ import fs from 'fs';
 
 const app = express();
 
+/**
+ * Send book content by path
+ * 
+ * @book is book ID
+ * @path is relative to the file
+ */
 app.get('/file/:book/:path', async (req, res) => 
 {
     try

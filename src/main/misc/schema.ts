@@ -137,7 +137,9 @@ export interface IOPFSchema
             ISpineSchema
         ],
         guide?: [
-            Record<string, Array<IReferenceSchema>>
+            {
+                reference?: Array<IReferenceSchema>
+            }
         ]
     }
 }
