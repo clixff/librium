@@ -29,7 +29,7 @@ ipcMain.on('open-file-click', async (event) =>
         {
             const filePath: string = fileContent.filePaths[0];
             console.log(filePath);
-            openFile(filePath);
+            openFile(filePath, browserWindow);
         }
 
     }
@@ -43,7 +43,7 @@ ipcMain.on('open-file-click', async (event) =>
 /**
  * Opens .epub file, checks file signature, then converts it to the right format and open in GUI
  */
-async function openFile(filePath: string): Promise<void>
+async function openFile(filePath: string, browserWindow: BrowserWindow): Promise<void>
 {
     try
     {
@@ -94,6 +94,17 @@ async function openFile(filePath: string): Promise<void>
                     const rawBook = new RawBook(fileContent, pathToTheOpenedBook);
 
                     await rawBook.parse();
+
+                    /**
+                     * Send book data to the renderer process
+                     */
+                    if (rawBook.bookRef)
+                    {
+                        if (browserWindow && browserWindow.webContents)
+                        {
+                            browserWindow.webContents.send('book-loaded', rawBook.bookRef.getExportData());
+                        }
+                    }
                 }
             });
         });

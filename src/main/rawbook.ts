@@ -449,6 +449,10 @@ export class RawBook
                             const convertedChunk: IBookChunk | null = await this.convertXMLToBookChunk(xmlParsed);
                             if (convertedChunk)
                             {
+                                if (this.bookRef)
+                                {
+                                    this.bookRef.chunks.push(convertedChunk);
+                                }
                                 const bookChunkToSave: string = JSON.stringify(convertedChunk);
                                 await fsPromises.writeFile(path.join(bookChunksDirectoryPath, `${chunkID}.json`), bookChunkToSave, { encoding: 'utf-8' });
                                 chunkID++;

@@ -3,3 +3,15 @@ body
     background: black;
     color: white;
 }
+
+a, a:hover, a:visited, a:active
+{
+    color: #1d81f3;
+    text-decoration: none;
+}
+
+
+a:hover
+{
+    text-decoration: underline;
+}
