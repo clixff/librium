@@ -1,8 +1,9 @@
 import AdmZip from "adm-zip";
 import fs, { promises as fsPromises } from "fs";
 import path from 'path';
+import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, MetadataItem } from "./misc/schema";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
 
 /**
@@ -175,9 +176,10 @@ export class RawBook
             
             await this.parseSpine();
 
+            console.log(`Reading order: \n`, this.readingOrder);
+
             await this.parsePages();
 
-            console.log(`Reading order: \n`, this.readingOrder);
 
             /**
              * TODO: Parse toc.ncx
@@ -429,10 +431,29 @@ export class RawBook
                     {
                         await fsPromises.mkdir(bookChunksDirectoryPath, { recursive: true });
                     }
-
+                    
+                    let chunkID = 0;
                     for (const filePath of this.readingOrder)
                     {
-                        
+                        const relativeFilePath = path.join(this.epubContentPath, filePath);
+                        console.log(`File path is "${relativeFilePath}"`);
+                        const fileContent: string = await this.readFile(relativeFilePath);
+                        if (!fileContent)
+                        {
+                            console.log(`File "${relativeFilePath}" not found in archive`);
+                        }
+                        else
+                        {
+                            const xmlParsed: IXMLObject = await parseXML(fileContent, true);
+                            console.log('Parsed XML: ', xmlParsed);
+                            const convertedChunk: IBookChunk | null = await this.convertXMLToBookChunk(xmlParsed);
+                            if (convertedChunk)
+                            {
+                                const bookChunkToSave: string = JSON.stringify(convertedChunk);
+                                await fsPromises.writeFile(path.join(bookChunksDirectoryPath, `${chunkID}.json`), bookChunkToSave, { encoding: 'utf-8' });
+                                chunkID++;
+                            }
+                        }
                     }
 
                     resolve();
@@ -444,5 +465,107 @@ export class RawBook
 
             });
         });
+    }
+    async convertXMLToBookChunk(xmlObject: IXMLObject): Promise<IBookChunk | null>
+    {
+        try
+        {
+            const htmlNode: IXMLNode | undefined = xmlObject['html'];
+            if (!htmlNode || !htmlNode["@_children"] || !htmlNode["@_children"].length)
+            {
+                return null;
+            }
+
+            let bodyNode: IXMLNode | undefined = undefined;
+
+            for (const htmlChild of htmlNode["@_children"])
+            {
+                if (htmlChild["#name"] === 'body')
+                {
+                    bodyNode = htmlChild;
+                }
+            }
+        
+            if (!bodyNode)
+            {
+                return null;
+            }
+
+            const convertedBodyNode: IBookChunkNode | null = await this.convertXMLNodeToBookChunkNode(bodyNode);
+
+            if (!convertedBodyNode)
+            {
+                return null;
+            }
+
+            const bookChunk: IBookChunk = {
+                body: convertedBodyNode
+            };
+
+            return bookChunk;
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    
+        return null;
+    }
+    async convertXMLNodeToBookChunkNode(xmlNode: IXMLNode): Promise<IBookChunkNode | null>
+    {
+        try
+        {
+            const bookChunkNode: IBookChunkNode = {
+                name: xmlNode["#name"]
+            };
+
+            if (xmlNode["@_text"])
+            {
+                bookChunkNode.text = xmlNode["@_text"];
+            }
+
+            if (xmlNode["@_attr"])
+            {
+                /**
+                 * TODO: Rewrite this to `for (let ...)`
+                 */
+                bookChunkNode.attr = {};
+                for (const attrName in xmlNode['@_attr'])
+                {
+                    const xmlAttr = xmlNode['@_attr'][attrName];
+                    if (typeof xmlAttr === 'string')
+                    {
+                        bookChunkNode.attr[attrName] = xmlAttr;
+                    }
+                }
+            }
+
+            if (xmlNode["@_children"])
+            {
+                for (let i = 0; i < xmlNode["@_children"].length; i++)
+                {
+                    const xmlNodeChild: IXMLNode = xmlNode["@_children"][i];
+                    const bookChunkNodeChild: IBookChunkNode | null = await this.convertXMLNodeToBookChunkNode(xmlNodeChild);
+
+                    if (bookChunkNodeChild)
+                    {
+                        if (!bookChunkNode.children)
+                        {
+                            bookChunkNode.children = [];
+                        }
+
+                        bookChunkNode.children.push(bookChunkNodeChild);
+                    }
+                }
+            }
+
+            return bookChunkNode;
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+
+        return null;
     }
 }
