@@ -91,7 +91,7 @@ async function openFile(filePath: string, browserWindow: BrowserWindow): Promise
                      */
                     await fsPromises.mkdir(pathToTheOpenedBook, { recursive: true }); 
                     
-                    const rawBook = new RawBook(fileContent, pathToTheOpenedBook);
+                    const rawBook = new RawBook(fileContent, pathToTheOpenedBook, fileCheckSum);
 
                     await rawBook.parse();
 

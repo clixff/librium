@@ -49,10 +49,13 @@ export class RawBook
      * Array with HTML file names
      */
     readingOrder: Array<string> = [];
-    constructor(epubContent: Buffer, pathToSave: string)
+    currentHTMLFile = '';
+    bookID = '';
+    constructor(epubContent: Buffer, pathToSave: string, bookID: string)
     {
         this.zipArchive = new AdmZip(epubContent);
         this.pathToSave = pathToSave;
+        this.bookID = bookID;
     }
     /**
      * Reads file in the `zipArchive` and converts it to the string
@@ -298,11 +301,11 @@ export class RawBook
                      */
                     const itemPathInArchive = path.join(this.epubContentPath, manifestItem.href).replace(/\\/g, '/');
                     /**
-                     * Get path for the file, for example `../Documents/epub-reader/Books/8906f../content/misc/images/image.jpg`
+                     * Get path for the file, for example `../Documents/epub-reader/Books/8906f../content/EPUB/images/image.jpg`
                      */
-                    const itemPathToSave = path.join(this.pathToSave, 'content', 'misc', manifestItem.href);
+                    const itemPathToSave = path.join(this.pathToSave, 'content', this.epubContentPath, manifestItem.href);
                     /**
-                     * Directory path for the file, for example `../Documents/epub-reader/Books/8906f../content/misc/images`
+                     * Directory path for the file, for example `../Documents/epub-reader/Books/8906f../content/EPUB/images/`
                      */
                     const directoryToSaveFile = path.parse(itemPathToSave).dir;
                     fs.access(directoryToSaveFile, fs.constants.F_OK, async (err) =>
@@ -422,7 +425,7 @@ export class RawBook
     {
         return new Promise((resolve) => 
         {
-            const bookChunksDirectoryPath = path.join(this.pathToSave, 'content', 'chunks');
+            const bookChunksDirectoryPath = path.join(this.pathToSave, 'chunks');
             fs.access(bookChunksDirectoryPath, fs.constants.F_OK, async (err) => 
             {
                 try
@@ -437,6 +440,7 @@ export class RawBook
                     {
                         const relativeFilePath = path.join(this.epubContentPath, filePath);
                         console.log(`File path is "${relativeFilePath}"`);
+                        this.currentHTMLFile = relativeFilePath;
                         const fileContent: string = await this.readFile(relativeFilePath);
                         if (!fileContent)
                         {
@@ -543,6 +547,32 @@ export class RawBook
                     }
                 }
             }
+        
+            if (bookChunkNode.attr)
+            {
+                if (bookChunkNode.name === 'img')
+                {
+                    if (bookChunkNode.attr['src'])
+                    {
+                        bookChunkNode.attr['src'] = this.convertRelativePathToHTTP(bookChunkNode.attr['src'], this.currentHTMLFile);
+                    }
+                }
+                else if (bookChunkNode.name === 'image')
+                {
+                    if (bookChunkNode.attr['xlink:href'])
+                    {
+                        bookChunkNode.attr['xlink:href'] = this.convertRelativePathToHTTP(bookChunkNode.attr['xlink:href'], this.currentHTMLFile);
+                    }
+                }
+                else if (bookChunkNode.name === 'source')
+                {
+                    if (bookChunkNode.attr['srcset'])
+                    {
+                        bookChunkNode.attr['srcset'] = this.convertRelativePathToHTTP(bookChunkNode.attr['srcset'], this.currentHTMLFile);
+                    }
+                }
+            }
+
 
             if (xmlNode["@_children"])
             {
@@ -571,5 +601,20 @@ export class RawBook
         }
 
         return null;
+    }
+    /**
+     * Converts file path in format `./media/image.src` to the 'http://127.0.0.1:45506/file/8906ffe8.../media%5Cimage.src'
+     */
+    convertRelativePathToHTTP(filePath: string, htmlPath: string): string
+    {
+        if (filePath.startsWith('http://') || filePath.startsWith('https://') || filePath.startsWith('data:'))
+        {
+            return filePath;
+        }
+        const httpServerPort = 45506;
+        const htmlParsedPath: path.ParsedPath = path.parse(htmlPath);
+        const htmlDirPath: string = htmlParsedPath.dir;
+        const finalRelativePath = path.join(htmlDirPath, filePath);
+        return `http://127.0.0.1:${httpServerPort}/file/${this.bookID}/${encodeURIComponent(finalRelativePath)}`;
     }
 }

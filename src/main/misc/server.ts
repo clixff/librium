@@ -17,15 +17,22 @@ app.get('/file/:book/:path', async (req, res) =>
     try
     {
         const bookID = req.params.book;
-        let filePath = req.params.path;
+        const filePath = req.params.path;
         if (bookID && filePath && typeof bookID === 'string' && typeof filePath === 'string')
         {
             const bookIDRegex = /^[0-9|a-f]{40}$/;
             if (bookID.length === 40 && bookIDRegex.test(bookID))
             {
-                filePath = filePath.replace(/(\.\.\\)/g, '');
+                // filePath = filePath.replace(/(\.\.\\)/g, '');
                 const booksDirectory = getConfig().booksDir;
-                const absoluteFilePath: string = path.join(booksDirectory, bookID, 'content', 'misc', filePath);
+                const baseFilePath = path.join(booksDirectory, bookID, 'content');
+                const absoluteFilePath: string = path.join(baseFilePath, filePath);
+                
+                if (!absoluteFilePath.startsWith(baseFilePath))
+                {
+                    res.sendStatus(400).end();
+                    return;
+                }
 
                 fs.access(absoluteFilePath, fs.constants.F_OK, (err) =>
                 {
@@ -35,7 +42,7 @@ app.get('/file/:book/:path', async (req, res) =>
                     }
                     else
                     {
-                        res.sendStatus(400).end();
+                        res.sendStatus(404).end();
                     }
                 });
             }
