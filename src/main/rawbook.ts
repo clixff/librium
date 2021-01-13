@@ -548,28 +548,32 @@ export class RawBook
                 }
             }
         
-            if (bookChunkNode.attr)
+            /**
+             * Convert media relative paths to the local server URL 
+             */
+
+            const attributesList = bookChunkNode.attr;
+            if (attributesList)
             {
-                if (bookChunkNode.name === 'img')
+                switch (bookChunkNode.name)
                 {
-                    if (bookChunkNode.attr['src'])
-                    {
-                        bookChunkNode.attr['src'] = this.convertRelativePathToHTTP(bookChunkNode.attr['src'], this.currentHTMLFile);
-                    }
-                }
-                else if (bookChunkNode.name === 'image')
-                {
-                    if (bookChunkNode.attr['xlink:href'])
-                    {
-                        bookChunkNode.attr['xlink:href'] = this.convertRelativePathToHTTP(bookChunkNode.attr['xlink:href'], this.currentHTMLFile);
-                    }
-                }
-                else if (bookChunkNode.name === 'source')
-                {
-                    if (bookChunkNode.attr['srcset'])
-                    {
-                        bookChunkNode.attr['srcset'] = this.convertRelativePathToHTTP(bookChunkNode.attr['srcset'], this.currentHTMLFile);
-                    }
+                    case 'img':
+                    case 'video':
+                    case 'track':
+                    case 'audio':
+                        this.fixNodeAttributeRelativePath(attributesList, 'src');
+                        break;
+                    case 'image':
+                        this.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
+                        break;
+                    case 'source':
+                        this.fixNodeAttributeRelativePath(attributesList, 'srcset');
+                        this.fixNodeAttributeRelativePath(attributesList, 'src');
+                        break;
+                    case 'video':
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -616,5 +620,12 @@ export class RawBook
         const htmlDirPath: string = htmlParsedPath.dir;
         const finalRelativePath = path.join(htmlDirPath, filePath);
         return `http://127.0.0.1:${httpServerPort}/file/${this.bookID}/${encodeURIComponent(finalRelativePath)}`;
+    }
+    fixNodeAttributeRelativePath(attributesList: Record<string, string>, attributeName: string): void
+    {
+        if (attributesList[attributeName])
+        {
+            attributesList[attributeName] = this.convertRelativePathToHTTP(attributesList[attributeName], this.currentHTMLFile);
+        }
     }
 }
