@@ -9,6 +9,24 @@ const rendererBaseConfig = {
         path: path.resolve(__dirname, '../', 'dist', 'renderer'),
         filename: 'bundle.js'
     },
+    module: {
+        rules: [
+            {
+                test: /.svg$/,
+                use: [
+                    {
+                        loader: 'babel-loader'
+                    },
+                    {
+                        loader: 'react-svg-loader',
+                        options: {
+                            jsx: true
+                        }
+                    }
+                ]
+            }
+        ]
+    },
     target: 'electron-renderer',
     plugins: [
         new HtmlWebpackPlugin({

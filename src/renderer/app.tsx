@@ -4,6 +4,7 @@ import './styles/style.css';
 import { ipcRenderer } from 'electron';
 import { IBook } from './misc/book';
 import { Book } from './components/book';
+import { TitleBar } from './components/core/titlebar';
 
 interface IAppState
 {
@@ -42,7 +43,8 @@ class App extends React.Component<unknown, IAppState>
     }
     render(): JSX.Element
     {
-        return (<div>
+        return (<React.Fragment>
+            <TitleBar />
             <h1> Foo Bar </h1>
             <button onClick={this.handleOpenFileClick}> Open File </button>
             {
@@ -51,7 +53,7 @@ class App extends React.Component<unknown, IAppState>
                     <Book book={this.state.book} />
                 ) : null
             }
-        </div>);
+        </React.Fragment>);
     }
 }
 

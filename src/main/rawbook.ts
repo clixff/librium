@@ -51,6 +51,10 @@ export class RawBook
     readingOrder: Array<string> = [];
     currentHTMLFile = '';
     bookID = '';
+    /**
+     * Number of parsed symbols
+     */
+    parsedSymbols = 0;
     constructor(epubContent: Buffer, pathToSave: string, bookID: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -423,10 +427,10 @@ export class RawBook
     }
     parsePages(): Promise<void>
     {
-        return new Promise((resolve) => 
+        return new Promise((resolve, reject) => 
         {
             const bookChunksDirectoryPath = path.join(this.pathToSave, 'chunks');
-            fs.access(bookChunksDirectoryPath, fs.constants.F_OK, async (err) => 
+            fs.access(bookChunksDirectoryPath, fs.constants.F_OK, async (err) =>
             {
                 try
                 {
@@ -463,12 +467,18 @@ export class RawBook
                             }
                         }
                     }
+                    
+                    if (this.bookRef)
+                    {
+                        this.bookRef.symbols = this.parsedSymbols;
+                    }
 
                     resolve();
                 }
                 catch (error)
                 {
                     console.error(error);
+                    reject(error);
                 }
 
             });
@@ -530,6 +540,7 @@ export class RawBook
             if (xmlNode["@_text"])
             {
                 bookChunkNode.text = xmlNode["@_text"];
+                this.parsedSymbols = (bookChunkNode.text || '').length;
             }
 
             if (xmlNode["@_attr"])

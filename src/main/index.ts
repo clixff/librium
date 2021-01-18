@@ -4,6 +4,7 @@ import { initConfig } from './config';
 import { startHTTPServer } from './misc/server';
 import { initPaths } from './paths';
 import './reader';
+import './misc/windows';
 
 const NODE_ENV: 'production' | 'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
 
@@ -13,6 +14,7 @@ function createWindow(): void
         width: 1280,
         height: 720,
         show: false,
+        frame: false,
         webPreferences: {
             enableRemoteModule: false,
             nodeIntegration: true
@@ -44,5 +46,10 @@ app.on('ready', async () =>
     await initConfig();
     await startHTTPServer();
     createWindow();
+});
+
+app.on('window-all-closed', async () =>
+{
+    app.quit();
 });
 
