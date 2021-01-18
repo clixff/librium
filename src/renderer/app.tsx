@@ -5,6 +5,8 @@ import { ipcRenderer } from 'electron';
 import { IBook } from './misc/book';
 import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
+import { Provider } from 'react-redux';
+import store from './misc/redux/store';
 
 interface IAppState
 {
@@ -43,17 +45,21 @@ class App extends React.Component<unknown, IAppState>
     }
     render(): JSX.Element
     {
-        return (<React.Fragment>
-            <TitleBar />
-            <h1> Foo Bar </h1>
-            <button onClick={this.handleOpenFileClick}> Open File </button>
-            {
-                this.state.book ?
-                (
-                    <Book book={this.state.book} />
-                ) : null
-            }
-        </React.Fragment>);
+        return (
+        <Provider store={store}>
+            <React.Fragment>
+                <TitleBar />
+                <h1> Foo Bar </h1>
+                <button onClick={this.handleOpenFileClick}> Open File </button>
+                {
+                    this.state.book ?
+                    (
+                        <Book book={this.state.book} />
+                    ) : null
+                }
+            </React.Fragment>
+        </Provider>
+        );
     }
 }
 
