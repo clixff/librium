@@ -25,9 +25,10 @@
     max-width: var(--tab-widht);
     border-radius: 5px 5px 0px 0px;
     position: relative;
-    cursor: pointer;
+    cursor: default;
     color: #989898;
     z-index: 1;
+    user-select: none;
 }
 
 /* .tab::after 
@@ -81,7 +82,7 @@
     width: 100px;
     height: 100%;
     position: absolute;
-    background: rgb(35, 35, 35);
-    cursor: pointer;
+    background: rgb(50, 50, 50);
+    cursor: default;
     z-index: 2;
 }

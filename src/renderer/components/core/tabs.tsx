@@ -41,6 +41,103 @@ interface ITabsListProps
     active: number;
 }
 
+/**
+ * #tabs-module__scrollbar
+ */
+let scrollbarElement: HTMLElement | null = null;
+/**
+ * #tabs-module__scrollbar-thumb
+ */
+let scrollbarThumbElement: HTMLElement | null = null;
+/**
+ * #tabs-module__container
+ */
+let tabsContainerElement: HTMLElement | null = null;
+let bIsScrolling = false;
+let scrollbarThumbOffset = 0;
+let xCooordThumbClickedOn = 0;
+
+/**
+ * Saves tabs list elements for scrolling
+ */
+function getTabListElements(): void
+{
+    if (!scrollbarElement)
+    {
+        scrollbarElement = document.getElementById(TabsStyles.scrollbar);
+    }
+
+    if (!scrollbarThumbElement)
+    {
+        scrollbarThumbElement = document.getElementById(TabsStyles['scrollbar-thumb']);
+    }
+
+    if (!tabsContainerElement)
+    {
+        tabsContainerElement = document.getElementById(TabsStyles.container);
+    }
+}
+
+function handleScrollbarMove(event: MouseEvent): void
+{
+    if (!bIsScrolling || !scrollbarElement || !scrollbarThumbElement || !tabsContainerElement)
+    {
+        return;
+    }
+
+    const x = event.clientX;
+
+    scrollbarThumbOffset = x - xCooordThumbClickedOn;
+
+    const scrollbarWidth = scrollbarElement.clientWidth;
+    const scrollbarThumbWidth = scrollbarThumbElement.clientWidth;
+    const maxAllowedThumbOffset = scrollbarWidth - scrollbarThumbWidth;
+
+    if (maxAllowedThumbOffset < scrollbarThumbOffset)
+    {
+        scrollbarThumbOffset = maxAllowedThumbOffset;
+    }
+
+    if (scrollbarThumbOffset < 0)
+    {
+        scrollbarThumbOffset = 0;
+    }
+
+    const scrollingPercent = scrollbarThumbOffset / maxAllowedThumbOffset;
+
+    scrollbarThumbElement.style.marginLeft = `${scrollbarThumbOffset}px`;
+
+    const tabsContainerScrollWidth = tabsContainerElement.scrollWidth;
+    const maxScrollOffset = tabsContainerScrollWidth - scrollbarWidth;
+
+    tabsContainerElement.scrollLeft = maxScrollOffset * scrollingPercent;
+}
+
+function stopScrollbarMove(): void
+{
+    if (bIsScrolling)
+    {
+        document.body.style.userSelect = 'auto';
+    }
+    bIsScrolling = false;
+}
+
+function startScrollbarMove(event: React.MouseEvent): void
+{
+    getTabListElements();
+
+    bIsScrolling = true;
+    xCooordThumbClickedOn = event.clientX - scrollbarThumbOffset;
+
+    /**
+     * Disable text selecting on scroll
+     */
+    document.body.style.userSelect = 'none';
+}
+
+window.addEventListener('mouseup', stopScrollbarMove);
+window.addEventListener('mousemove', handleScrollbarMove);
+
 
 export function TabsList(): JSX.Element
 {
@@ -65,7 +162,7 @@ export function TabsList(): JSX.Element
             }
         </div>
         <div id={TabsStyles.scrollbar}>
-            <div id={TabsStyles['scrollbar-thumb']} />
+            <div id={TabsStyles['scrollbar-thumb']} onDragStart={() => false} onMouseDown={startScrollbarMove} />
         </div>
     </div>);
 }
