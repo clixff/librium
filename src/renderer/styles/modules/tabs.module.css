@@ -79,8 +79,8 @@
 
 #scrollbar-thumb
 {
-    width: 100px;
-    height: 100%;
+    /* width: 100px; */
+    height: 7px;
     position: absolute;
     background: rgb(50, 50, 50);
     cursor: default;

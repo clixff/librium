@@ -60,7 +60,7 @@ let xCooordThumbClickedOn = 0;
 /**
  * Saves tabs list elements for scrolling
  */
-function getTabListElements(): void
+function setTabsListVars(): void
 {
     if (!scrollbarElement)
     {
@@ -107,8 +107,9 @@ function handleScrollbarMove(event: MouseEvent): void
 
     scrollbarThumbElement.style.marginLeft = `${scrollbarThumbOffset}px`;
 
-    const tabsContainerScrollWidth = tabsContainerElement.scrollWidth;
-    const maxScrollOffset = tabsContainerScrollWidth - scrollbarWidth;
+    const tabsContainerVisibleWidth = scrollbarWidth;
+    const tabsContainerFullWidth = tabsContainerElement.scrollWidth;
+    const maxScrollOffset = tabsContainerFullWidth - tabsContainerVisibleWidth;
 
     tabsContainerElement.scrollLeft = maxScrollOffset * scrollingPercent;
 }
@@ -124,7 +125,7 @@ function stopScrollbarMove(): void
 
 function startScrollbarMove(event: React.MouseEvent): void
 {
-    getTabListElements();
+    setTabsListVars();
 
     bIsScrolling = true;
     xCooordThumbClickedOn = event.clientX - scrollbarThumbOffset;
@@ -135,6 +136,61 @@ function startScrollbarMove(event: React.MouseEvent): void
     document.body.style.userSelect = 'none';
 }
 
+function resizeScrollbar()
+{
+    setTabsListVars();
+    console.log('Resize1');
+
+    if (!scrollbarThumbElement || !tabsContainerElement)
+    {
+        return;
+    }
+
+    console.log('Resize2');
+
+    const minScrollbarThumbWidth = 30; // px
+
+    const tabsContainerVisibleWidth = tabsContainerElement.clientWidth;
+    const tabsContainerFullWidth = tabsContainerElement.scrollWidth;
+    const maxScrollOffset = tabsContainerFullWidth - tabsContainerVisibleWidth;
+
+    let scrollbarThumbWidth = minScrollbarThumbWidth;
+
+    if (!maxScrollOffset)
+    {
+        scrollbarThumbWidth = 0;
+    }
+
+    console.log(`Set width to ${scrollbarThumbWidth}`);
+
+    scrollbarThumbElement.style.width = `${scrollbarThumbWidth}px`;
+
+    if (!maxScrollOffset)
+    {
+        return;
+    }
+
+    /**
+     * Container scrollLeft
+     */
+    const currentScrollValue = tabsContainerElement.scrollLeft || 0;
+
+    const scrollingPercent = currentScrollValue / maxScrollOffset;
+    const maxScrollThumbOffset = tabsContainerVisibleWidth - scrollbarThumbWidth;
+    scrollbarThumbOffset = scrollingPercent * maxScrollThumbOffset;
+    if (scrollbarThumbOffset < 0)
+    {
+        scrollbarThumbOffset = 0;
+    }
+    else if (scrollbarThumbOffset > maxScrollThumbOffset)
+    {
+        scrollbarThumbOffset = maxScrollThumbOffset;
+    }
+    console.log(`tabsContainerVisibleWidth: ${tabsContainerVisibleWidth}\ntabsContainerFullWidth: ${tabsContainerFullWidth}\nmaxScrollOffset: ${maxScrollOffset}\ncurrentScrollValue: ${currentScrollValue}\nscrollingPercent: ${scrollingPercent}\nscrollbarThumbOffset: ${scrollbarThumbOffset}\n`);
+    scrollbarThumbElement.style.marginLeft = `${scrollbarThumbOffset}px`;
+}
+
+window.addEventListener('resize', resizeScrollbar);
 window.addEventListener('mouseup', stopScrollbarMove);
 window.addEventListener('mousemove', handleScrollbarMove);
 
