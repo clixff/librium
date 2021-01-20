@@ -52,19 +52,6 @@
 {
 
 }
-/* 
-#container::-webkit-scrollbar
-{
-    height: 10px;
-    background: transparent;
-    z-index: 1005;
-}
-
-#container::-webkit-scrollbar-thumb
-{
-    height: 10px;
-    background: blue;
-} */
 
 #scrollbar
 {
@@ -73,7 +60,6 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    background: green;
     /* z-index: -2; */
 }
 
@@ -85,4 +71,5 @@
     background: rgb(50, 50, 50);
     cursor: default;
     z-index: 2;
+    border-radius: 10px;
 }

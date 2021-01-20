@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import TabsStyles from '../../styles/modules/tabs.module.css';
 import { ITab } from '../../misc/tabs';
 import { IAppState } from '../../misc/redux/store';
@@ -26,9 +26,13 @@ function Tab(props: ITabProps): JSX.Element
         console.log(`Tab ${props.index} clicked`);
     }
     return (<div className={`${TabsStyles.tab} ${props.data.active ? TabsStyles.active : ''}`} onClick={handleTabClick}>
-        {
-            props.data.name
-        }
+        <div className={TabsStyles['tab-content']}>
+            <div className={TabsStyles['tab-name']}>
+            {
+                props.data.name
+            }
+            </div>
+        </div>
     </div>);
 }
 
@@ -41,94 +45,120 @@ interface ITabsListProps
     active: number;
 }
 
-/**
- * #tabs-module__scrollbar
- */
-let scrollbarElement: HTMLElement | null = null;
-/**
- * #tabs-module__scrollbar-thumb
- */
-let scrollbarThumbElement: HTMLElement | null = null;
-/**
- * #tabs-module__container
- */
-let tabsContainerElement: HTMLElement | null = null;
-let bIsScrolling = false;
-let scrollbarThumbOffset = 0;
-let xCooordThumbClickedOn = 0;
+interface ITabsScrollbarVars
+{
+    elements: {
+        /**
+         * `#tabs-module__scrollbar`
+         */
+        scrollbar: HTMLElement | null;
+        /**
+         * `#tabs-module__scrollbar-thumb`
+         */
+        thumb: HTMLElement | null;
+        /**
+         * `#tabs-module__container`
+         */
+        container: HTMLElement | null;
+    },
+    bIsScrolling: boolean;
+    /**
+     * `margin-left` of the scrollbar thumb
+     */
+    thumbOffset: number;
+    /**
+     * Clicked X coordinate on the scrollbar thumb
+     */
+    clickedXCoordOnThumb: number;
+    /**
+     * Width in px of the scrollbar thumb
+     */
+    thumbWidth: number;
+}
+
+const tabsScrollVars: ITabsScrollbarVars = {
+    elements: {
+        scrollbar: null,
+        thumb: null,
+        container: null
+    },
+    bIsScrolling: false,
+    thumbOffset: 0,
+    clickedXCoordOnThumb: 0,
+    thumbWidth: 0
+};
 
 /**
  * Saves tabs list elements for scrolling
  */
 function setTabsListVars(): void
 {
-    if (!scrollbarElement)
+    if (!tabsScrollVars.elements.scrollbar)
     {
-        scrollbarElement = document.getElementById(TabsStyles.scrollbar);
+        tabsScrollVars.elements.scrollbar = document.getElementById(TabsStyles.scrollbar);
     }
 
-    if (!scrollbarThumbElement)
+    if (!tabsScrollVars.elements.thumb)
     {
-        scrollbarThumbElement = document.getElementById(TabsStyles['scrollbar-thumb']);
+        tabsScrollVars.elements.thumb = document.getElementById(TabsStyles['scrollbar-thumb']);
     }
 
-    if (!tabsContainerElement)
+    if (!tabsScrollVars.elements.container)
     {
-        tabsContainerElement = document.getElementById(TabsStyles.container);
+        tabsScrollVars.elements.container = document.getElementById(TabsStyles.container);
     }
 }
 
-function handleScrollbarMove(event: MouseEvent): void
+function handleScrollbarThumbMove(event: MouseEvent): void
 {
-    if (!bIsScrolling || !scrollbarElement || !scrollbarThumbElement || !tabsContainerElement)
+    if (!tabsScrollVars.bIsScrolling || !tabsScrollVars.elements.scrollbar || !tabsScrollVars.elements.thumb || !tabsScrollVars.elements.container)
     {
         return;
     }
 
     const x = event.clientX;
 
-    scrollbarThumbOffset = x - xCooordThumbClickedOn;
+    tabsScrollVars.thumbOffset = x - tabsScrollVars.clickedXCoordOnThumb;
 
-    const scrollbarWidth = scrollbarElement.clientWidth;
-    const scrollbarThumbWidth = scrollbarThumbElement.clientWidth;
-    const maxAllowedThumbOffset = scrollbarWidth - scrollbarThumbWidth;
+    const scrollbarWidth = tabsScrollVars.elements.scrollbar.clientWidth;
+    const maxAllowedThumbOffset = scrollbarWidth - tabsScrollVars.thumbWidth;
 
-    if (maxAllowedThumbOffset < scrollbarThumbOffset)
+    if (maxAllowedThumbOffset < tabsScrollVars.thumbOffset)
     {
-        scrollbarThumbOffset = maxAllowedThumbOffset;
+        tabsScrollVars.thumbOffset = maxAllowedThumbOffset;
     }
 
-    if (scrollbarThumbOffset < 0)
+    if (tabsScrollVars.thumbOffset < 0)
     {
-        scrollbarThumbOffset = 0;
+        tabsScrollVars.thumbOffset = 0;
     }
 
-    const scrollingPercent = scrollbarThumbOffset / maxAllowedThumbOffset;
+    const scrollingRatio = tabsScrollVars.thumbOffset / maxAllowedThumbOffset;
 
-    scrollbarThumbElement.style.marginLeft = `${scrollbarThumbOffset}px`;
+    tabsScrollVars.elements.thumb.style.marginLeft = `${tabsScrollVars.thumbOffset}px`;
 
     const tabsContainerVisibleWidth = scrollbarWidth;
-    const tabsContainerFullWidth = tabsContainerElement.scrollWidth;
+    const tabsContainerFullWidth = tabsScrollVars.elements.container.scrollWidth;
     const maxScrollOffset = tabsContainerFullWidth - tabsContainerVisibleWidth;
 
-    tabsContainerElement.scrollLeft = maxScrollOffset * scrollingPercent;
+    tabsScrollVars.elements.container.scrollLeft = maxScrollOffset * scrollingRatio;
 }
 
 function stopScrollbarMove(): void
 {
-    if (bIsScrolling)
+    if (tabsScrollVars.bIsScrolling)
     {
         document.body.style.userSelect = 'auto';
     }
-    bIsScrolling = false;
+    tabsScrollVars.bIsScrolling = false;
 }
 
 function startScrollbarMove(event: React.MouseEvent): void
 {
     setTabsListVars();
 
-    bIsScrolling = true;
-    xCooordThumbClickedOn = event.clientX - scrollbarThumbOffset;
+    tabsScrollVars.bIsScrolling = true;
+    tabsScrollVars.clickedXCoordOnThumb = event.clientX - tabsScrollVars.thumbOffset;
 
     /**
      * Disable text selecting on scroll
@@ -136,34 +166,36 @@ function startScrollbarMove(event: React.MouseEvent): void
     document.body.style.userSelect = 'none';
 }
 
+
 function resizeScrollbar()
 {
     setTabsListVars();
-    console.log('Resize1');
 
-    if (!scrollbarThumbElement || !tabsContainerElement)
+    if (!tabsScrollVars.elements.thumb || !tabsScrollVars.elements.container)
     {
         return;
     }
 
-    console.log('Resize2');
-
     const minScrollbarThumbWidth = 30; // px
 
-    const tabsContainerVisibleWidth = tabsContainerElement.clientWidth;
-    const tabsContainerFullWidth = tabsContainerElement.scrollWidth;
+    const tabsContainerVisibleWidth = tabsScrollVars.elements.container.clientWidth;
+    const tabsContainerFullWidth = tabsScrollVars.elements.container.scrollWidth;
     const maxScrollOffset = tabsContainerFullWidth - tabsContainerVisibleWidth;
 
-    let scrollbarThumbWidth = minScrollbarThumbWidth;
+    tabsScrollVars.thumbWidth = 0;
 
-    if (!maxScrollOffset)
+    const scrollingRatio = tabsContainerVisibleWidth / tabsContainerFullWidth;
+
+    if (scrollingRatio < 1)
     {
-        scrollbarThumbWidth = 0;
+        tabsScrollVars.thumbWidth = scrollingRatio * tabsContainerVisibleWidth;
+        if (tabsScrollVars.thumbWidth < minScrollbarThumbWidth)
+        {
+            tabsScrollVars.thumbWidth = minScrollbarThumbWidth;
+        }
     }
 
-    console.log(`Set width to ${scrollbarThumbWidth}`);
-
-    scrollbarThumbElement.style.width = `${scrollbarThumbWidth}px`;
+    tabsScrollVars.elements.thumb.style.width = `${tabsScrollVars.thumbWidth}px`;
 
     if (!maxScrollOffset)
     {
@@ -173,26 +205,25 @@ function resizeScrollbar()
     /**
      * Container scrollLeft
      */
-    const currentScrollValue = tabsContainerElement.scrollLeft || 0;
+    const currentScrollValue = tabsScrollVars.elements.container.scrollLeft || 0;
 
     const scrollingPercent = currentScrollValue / maxScrollOffset;
-    const maxScrollThumbOffset = tabsContainerVisibleWidth - scrollbarThumbWidth;
-    scrollbarThumbOffset = scrollingPercent * maxScrollThumbOffset;
-    if (scrollbarThumbOffset < 0)
+    const maxScrollThumbOffset = tabsContainerVisibleWidth - tabsScrollVars.thumbWidth;
+    tabsScrollVars.thumbOffset = scrollingPercent * maxScrollThumbOffset;
+    if (tabsScrollVars.thumbOffset < 0)
     {
-        scrollbarThumbOffset = 0;
+        tabsScrollVars.thumbOffset = 0;
     }
-    else if (scrollbarThumbOffset > maxScrollThumbOffset)
+    else if (tabsScrollVars.thumbOffset > maxScrollThumbOffset)
     {
-        scrollbarThumbOffset = maxScrollThumbOffset;
+        tabsScrollVars.thumbOffset = maxScrollThumbOffset;
     }
-    console.log(`tabsContainerVisibleWidth: ${tabsContainerVisibleWidth}\ntabsContainerFullWidth: ${tabsContainerFullWidth}\nmaxScrollOffset: ${maxScrollOffset}\ncurrentScrollValue: ${currentScrollValue}\nscrollingPercent: ${scrollingPercent}\nscrollbarThumbOffset: ${scrollbarThumbOffset}\n`);
-    scrollbarThumbElement.style.marginLeft = `${scrollbarThumbOffset}px`;
+    tabsScrollVars.elements.thumb.style.marginLeft = `${tabsScrollVars.thumbOffset}px`;
 }
 
 window.addEventListener('resize', resizeScrollbar);
 window.addEventListener('mouseup', stopScrollbarMove);
-window.addEventListener('mousemove', handleScrollbarMove);
+window.addEventListener('mousemove', handleScrollbarThumbMove);
 
 
 export function TabsList(): JSX.Element
@@ -207,6 +238,15 @@ export function TabsList(): JSX.Element
             active: state.tabs.active
         };
     });
+
+    useEffect(() => 
+    {
+        /**
+         * Resize scrollbar when number of tabs changes
+         */
+        resizeScrollbar();
+    }, [stateProps.list.length]);
+
 
     return (<div id={TabsStyles.wrapper}>
         <div id={TabsStyles.container}>
