@@ -9,7 +9,6 @@ export interface ITab
 {
     name: string;
     type: ETabType;
-    active: boolean;
     icon: string | null;
     /** Random key string */
     key: string;

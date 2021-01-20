@@ -1,57 +1,66 @@
 #wrapper
 {
     z-index: 1001;
-    min-width: 400px;
     overflow: hidden;
+    height: inherit;
     max-width: calc(100% - 300px);
-    -webkit-app-region: no-drag;
     position: relative;
 }
 
 #container
 {
+    width: inherit;
+    height: inherit;
     overflow: hidden;
     display: flex;
     flex-direction: row;
+    -webkit-app-region: no-drag;
 }
 
 .tab
 {
-    --tab-widht: 143px;
+    --tab-width: 143px;
     font-size: 11px;
     height: 33px;
-    width: var(--tab-widht);
-    min-width: var(--tab-widht);
-    max-width: var(--tab-widht);
+    width: var(--tab-width);
+    min-width: var(--tab-width);
+    max-width: var(--tab-width);
     border-radius: 5px 5px 0px 0px;
     position: relative;
     cursor: default;
-    color: #989898;
     z-index: 1;
     user-select: none;
+    margin-top: 3px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background-color 0.125s linear;
 }
 
-/* .tab::after 
+.tab-content
 {
-    content: "";
-    width: 100%;
-    height: 10px;
-    position: absolute;
-    bottom: -9px;
-    left: 0;
-    background: green;
-    z-index: 1007;
-} */
+    height: 15px;
+    width: calc(100% - 20px);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.tab-title
+{
+    color: #c5c5c5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .active
 {
     background: #000;
 }
 
-.active
-{
-
-}
 
 #scrollbar
 {
@@ -60,6 +69,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
+    -webkit-app-region: no-drag;
     /* z-index: -2; */
 }
 
@@ -72,4 +82,123 @@
     cursor: default;
     z-index: 2;
     border-radius: 10px;
+}
+
+#new-tab-button
+{
+    --new-tab-button-width: 26px;
+    --new-tab-button-height: inherit;
+    width: var(--new-tab-button-width);
+    min-width: var(--new-tab-button-width);
+    max-width: var(--new-tab-button-width);
+    height: var(--new-tab-button-height);
+    min-height: var(--new-tab-button-height);
+    max-height: var(--new-tab-button-height);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0 10px;
+    position: relative;
+}
+
+#new-tab-button::after
+{
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    width: var(--new-tab-button-width);
+    min-width: var(--new-tab-button-width);
+    max-width: var(--new-tab-button-width);
+    height: var(--new-tab-button-width);
+    min-height: var(--new-tab-button-width);
+    max-height: var(--new-tab-button-width);
+    transition: background-color 0.1s linear;
+    z-index: 1;
+}
+
+#new-tab-button > svg 
+{
+    --icon-size: 10px;
+    fill: #b4b4b4;
+    transition: fill 0.1s linear;
+    z-index: 2;
+}
+
+#new-tab-button:hover::after
+{
+    background-color: rgb(70, 70, 70);
+}
+
+#new-tab-button:hover > svg 
+{
+    fill: white !important;
+}
+
+.tab-right-line
+{
+    background-color: rgb(45, 45, 45);
+    width: 1px;
+    height: 21px;
+    position: absolute;
+    right: 0;
+    transition: background-color 0.125s linear;
+}
+
+.tab:not(.active):hover
+{
+    background-color: rgb(50, 50, 50);
+}
+
+.tab:not(.active):hover .tab-right-line
+{
+    background-color: rgb(50, 50, 50);
+}
+
+.close
+{
+    --tab-close-button-size: 9px;
+    width: var(--tab-close-button-size);
+    min-width: var(--tab-close-button-size);
+    max-width: var(--tab-close-button-size);
+    height: var(--tab-close-button-size);
+    min-height: var(--tab-close-button-size);
+    max-height: var(--tab-close-button-size);
+    /* pointer-events: none;
+    opacity: 0; */
+    transition: opacity 0.125s linear;
+}
+
+.close > svg
+{
+    --icon-size: var(--tab-close-button-size);
+    fill: rgb(146, 146, 146);
+}
+
+.close:hover > svg
+{
+    fill: white;
+    transition: fill 0.125s linear;
+}
+
+.tab:hover .close
+{
+    opacity: 1;
+    pointer-events: all;
+}
+
+.tab-content-left
+{
+    --tab-content-left-width: 110px;
+    display: flex;
+    flex-direction: row;
+    height: inherit;
+    width: var(--tab-content-left-width);
+    min-width: var(--tab-content-left-width);
+    max-width: var(--tab-content-left-width);
+}
+
+.tab:first-child
+{
+    margin-left: 10px;
 }

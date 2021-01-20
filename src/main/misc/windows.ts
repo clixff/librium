@@ -30,3 +30,12 @@ ipcMain.on('titlebar-button-clicked', (event, type: TitlebarButtonType) =>
             break;
     }
 });
+
+ipcMain.on('close-this-window', (event) => 
+{
+    const browserWindow: BrowserWindow | null = BrowserWindow.fromWebContents(event.sender);
+    if (browserWindow)
+    {
+        browserWindow.close();
+    }
+});

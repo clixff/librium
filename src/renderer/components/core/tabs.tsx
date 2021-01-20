@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import TabsStyles from '../../styles/modules/tabs.module.css';
-import { ITab } from '../../misc/tabs';
+import { ETabType, generateKeyForTab, ITab } from '../../misc/tabs';
 import { IAppState } from '../../misc/redux/store';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { NewTabSVG, CloseTitlebarSVG as CloseSVG } from '../../misc/icons';
+import { tabsActions } from '../../misc/redux/features/tabs';
+import { ipcRenderer } from 'electron';
 
 interface ITabProps
 {
@@ -17,22 +20,55 @@ interface ITabProps
 function Tab(props: ITabProps): JSX.Element
 {   
     let bRenderRightLine = true;
-    if (props.data.active)
+    const isTabActive = props.index === props.activeIndex;
+    if (isTabActive)
     {
         bRenderRightLine = false;
     }
+    /**
+     * If tab on the right is active
+     */
+    else if ((props.index + 1) === props.activeIndex)
+    {
+        bRenderRightLine = false;
+    }
+
+
+    const dispatch = useDispatch();
+
     function handleTabClick(): void
     {
         console.log(`Tab ${props.index} clicked`);
+        if (isTabActive)
+        {
+            return;
+        }
+        dispatch(tabsActions.changeActiveTabIndex(props.index));
     }
-    return (<div className={`${TabsStyles.tab} ${props.data.active ? TabsStyles.active : ''}`} onClick={handleTabClick}>
+
+    function handleCloseTabClick(event: React.MouseEvent): void
+    {
+        console.log(`Clicked close tab #${props.index}`);
+        event.stopPropagation();
+        dispatch(tabsActions.closeTab(props.index));
+    }
+
+    return (<div className={`${TabsStyles.tab} ${isTabActive ? TabsStyles.active : ''}`} onClick={handleTabClick} title={props.data.name}>
         <div className={TabsStyles['tab-content']}>
-            <div className={TabsStyles['tab-name']}>
-            {
-                props.data.name
-            }
+            <div className={TabsStyles['tab-content-left']}>
+                <div className={TabsStyles['tab-title']}>
+                {
+                    props.data.name
+                }
+                </div>
+            </div>
+            <div className={TabsStyles['close']} title="" onClick={handleCloseTabClick}>
+                <CloseSVG />
             </div>
         </div>
+        {
+            bRenderRightLine ? (<div className={TabsStyles['tab-right-line']}/>) : null
+        }
     </div>);
 }
 
@@ -225,6 +261,8 @@ window.addEventListener('resize', resizeScrollbar);
 window.addEventListener('mouseup', stopScrollbarMove);
 window.addEventListener('mousemove', handleScrollbarThumbMove);
 
+let bTabsInitialized = false;
+
 
 export function TabsList(): JSX.Element
 {
@@ -241,12 +279,35 @@ export function TabsList(): JSX.Element
 
     useEffect(() => 
     {
+        if (bTabsInitialized)
+        {
+            if (stateProps.list.length === 0)
+            {
+                ipcRenderer.send('close-this-window');
+                return;
+            }
+        }
         /**
          * Resize scrollbar when number of tabs changes
          */
         resizeScrollbar();
+        bTabsInitialized = true;
     }, [stateProps.list.length]);
 
+    const dispatch = useDispatch();
+
+    function handleNewTabButtonClicked(): void
+    {
+        /**
+         * TODO: Scroll to this tab
+         */
+        dispatch(tabsActions.openNewTab({
+            icon: null,
+            name: 'New Tab',
+            type: ETabType.newTab,
+            key: generateKeyForTab('New Tab')
+        }));
+    }
 
     return (<div id={TabsStyles.wrapper}>
         <div id={TabsStyles.container}>
@@ -256,6 +317,9 @@ export function TabsList(): JSX.Element
                     return (<Tab data={tab} index={index} key={tab.key} activeIndex={stateProps.active}/>);
                 })
             }
+            <div id={TabsStyles['new-tab-button']} onClick={handleNewTabButtonClicked}>
+                <NewTabSVG />
+            </div>
         </div>
         <div id={TabsStyles.scrollbar}>
             <div id={TabsStyles['scrollbar-thumb']} onDragStart={() => false} onMouseDown={startScrollbarMove} />

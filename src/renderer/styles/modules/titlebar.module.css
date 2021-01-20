@@ -52,6 +52,7 @@
 .control-button > svg
 {
     --icon-size: 10px;
+    fill: white;
 }
 
 #control-minimize:hover,
