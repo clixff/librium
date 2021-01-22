@@ -41,6 +41,11 @@ function createWindow(): void
     {
         window.loadFile(path.resolve(__dirname, '../', 'renderer', 'index.html'));
     }
+
+    /**
+     * This disables Ctrl+W shortcut
+     */
+    window.setMenu(null);
 }
 
 app.on('ready', async () => 
@@ -69,4 +74,3 @@ app.on('window-all-closed', async () =>
 {
     app.quit();
 });
-

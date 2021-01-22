@@ -3,10 +3,18 @@ import TitlebarStyles from '../../styles/modules/titlebar.module.css';
 import { MinimizeSVG, MaximizeSVG, CloseTitlebarSVG } from '../../misc/icons';
 import { ipcRenderer } from 'electron';
 import { TitlebarButtonType } from '../../../shared/misc';
-import { TabsList } from './tabs';
+import { ITabsCallbacks, TabsList } from './tabs';
+import { Tab } from '../../misc/tabs';
 
 
-export function TitleBar(): JSX.Element
+interface ITitlebarProps
+{
+    tabsList: Array<Tab>;
+    activeTab: number;
+    tabsCallbacks: ITabsCallbacks;
+}
+
+export function TitleBar(props: ITitlebarProps): JSX.Element
 {
     function handleControlButtonClick(type: TitlebarButtonType): void
     {
@@ -15,7 +23,7 @@ export function TitleBar(): JSX.Element
     
     return (<div id={TitlebarStyles.wrapper}>
         <div id={TitlebarStyles.drag}/>
-        <TabsList />
+        <TabsList list={props.tabsList} activeTab={props.activeTab} callbacks={props.tabsCallbacks}/>
         <div id={TitlebarStyles.controls}>
             <div className={TitlebarStyles['control-button']} id={TitlebarStyles['control-minimize']} onClick={() => { handleControlButtonClick('minimize'); }}>
                 <MinimizeSVG />

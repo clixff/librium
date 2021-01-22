@@ -1,23 +1,21 @@
 import React, { useEffect } from 'react';
 import TabsStyles from '../../styles/modules/tabs.module.css';
-import { ETabType, generateKeyForTab, ITab } from '../../misc/tabs';
-import { IAppState } from '../../misc/redux/store';
-import { useDispatch, useSelector } from 'react-redux';
+import { Tab } from '../../misc/tabs';
 import { NewTabSVG, CloseTitlebarSVG as CloseSVG } from '../../misc/icons';
-import { tabsActions } from '../../misc/redux/features/tabs';
 import { ipcRenderer } from 'electron';
 
 interface ITabProps
 {
-    data: ITab;
+    data: Tab;
     index: number;
     /**
      * Index of active tab
      */
     activeIndex: number;
+    callbacks: ITabsCallbacks
 }
 
-function Tab(props: ITabProps): JSX.Element
+function TabComponent(props: ITabProps): JSX.Element
 {   
     let bRenderRightLine = true;
     const isTabActive = props.index === props.activeIndex;
@@ -33,9 +31,6 @@ function Tab(props: ITabProps): JSX.Element
         bRenderRightLine = false;
     }
 
-
-    const dispatch = useDispatch();
-
     function handleTabClick(): void
     {
         console.log(`Tab ${props.index} clicked`);
@@ -43,19 +38,24 @@ function Tab(props: ITabProps): JSX.Element
         {
             return;
         }
-        dispatch(tabsActions.changeActiveTabIndex(props.index));
+        props.callbacks.onTabClick(props.index);
     }
 
     function handleCloseTabClick(event: React.MouseEvent): void
     {
         console.log(`Clicked close tab #${props.index}`);
         event.stopPropagation();
-        dispatch(tabsActions.closeTab(props.index));
+        props.callbacks.onTabCloseClick(props.index);
     }
 
     return (<div className={`${TabsStyles.tab} ${isTabActive ? TabsStyles.active : ''}`} onClick={handleTabClick} title={props.data.name}>
         <div className={TabsStyles['tab-content']}>
             <div className={TabsStyles['tab-content-left']}>
+                {
+                    props.data.icon ? 
+                        (<div className={TabsStyles['tab-icon']} style={ { backgroundImage: `url(${props.data.icon})` } }/>)
+                    : null
+                }
                 <div className={TabsStyles['tab-title']}>
                 {
                     props.data.name
@@ -72,14 +72,6 @@ function Tab(props: ITabProps): JSX.Element
     </div>);
 }
 
-interface ITabsListProps
-{
-    list: Array<ITab>;
-    /**
-     * Index of active tab
-     */
-    active: number;
-}
 
 interface ITabsScrollbarVars
 {
@@ -263,25 +255,27 @@ window.addEventListener('mousemove', handleScrollbarThumbMove);
 
 let bTabsInitialized = false;
 
-
-export function TabsList(): JSX.Element
+export interface ITabsCallbacks
 {
-    /**
-     * Props from the Redux state
-     */
-    const stateProps: ITabsListProps = useSelector((state: IAppState) => 
-    {
-        return {
-            list: state.tabs.list,
-            active: state.tabs.active
-        };
-    });
+    onOpenNewTabClick: () => void;
+    onTabCloseClick: (tabId: number) => void;
+    onTabClick: (tabId: number) => void;
+}
 
+interface ITabsListProps
+{
+    list: Array<Tab>;
+    activeTab: number;
+    callbacks: ITabsCallbacks;
+}
+
+export function TabsList(props: ITabsListProps): JSX.Element
+{
     useEffect(() => 
     {
         if (bTabsInitialized)
         {
-            if (stateProps.list.length === 0)
+            if (props.list.length === 0)
             {
                 ipcRenderer.send('close-this-window');
                 return;
@@ -292,29 +286,19 @@ export function TabsList(): JSX.Element
          */
         resizeScrollbar();
         bTabsInitialized = true;
-    }, [stateProps.list.length]);
-
-    const dispatch = useDispatch();
+    }, [props.list.length]);
 
     function handleNewTabButtonClicked(): void
     {
-        /**
-         * TODO: Scroll to this tab
-         */
-        dispatch(tabsActions.openNewTab({
-            icon: null,
-            name: 'New Tab',
-            type: ETabType.newTab,
-            key: generateKeyForTab('New Tab')
-        }));
+        props.callbacks.onOpenNewTabClick();
     }
 
     return (<div id={TabsStyles.wrapper}>
         <div id={TabsStyles.container}>
             {
-                stateProps.list.map((tab, index) =>
+                props.list.map((tab, index) =>
                 {
-                    return (<Tab data={tab} index={index} key={tab.key} activeIndex={stateProps.active}/>);
+                    return (<TabComponent data={tab} index={index} key={tab.key} activeIndex={props.activeTab} callbacks={props.callbacks}/>);
                 })
             }
             <div id={TabsStyles['new-tab-button']} onClick={handleNewTabButtonClicked}>
