@@ -1,0 +1,75 @@
+#wrapper
+{
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+#toolbar-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: inherit;
+    min-width: inherit;
+    max-width: inherit;
+    --toolbar-height: 40px;
+    height: var(--toolbar-height);
+    min-height: var(--toolbar-height);
+    max-height: var(--toolbar-height);
+    background: #131313;
+}
+
+#toolbar-left
+{
+    /*  
+    */
+}
+
+#toolbar-right
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: inherit;
+}
+
+.toolbar-button
+{
+    --toolbar-button-size: 22px;
+    width: var(--toolbar-button-size);
+    min-width: var(--toolbar-button-size);
+    max-width: var(--toolbar-button-size);
+    height: var(--toolbar-button-size);
+    min-height: var(--toolbar-button-size);
+    max-height: var(--toolbar-button-size);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.toolbar-button > svg
+{
+    --icon-size: 16px;
+    fill: rgb(136, 136, 136);
+    transition: fill 0.125s linear;
+}
+
+.toolbar-button:hover > svg
+{
+    fill: rgb(200, 200, 200);
+}
+
+.toolbar-button:last-child
+{
+    margin-right: 12px !important;
+}

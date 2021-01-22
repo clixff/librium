@@ -5,8 +5,7 @@ import { ipcRenderer } from 'electron';
 import { IBook } from './misc/book';
 import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
-import { Provider } from 'react-redux';
-import { AppContent } from './components/core/content';
+import { AppContent, IAppContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
 
@@ -40,6 +39,7 @@ class App extends React.Component<unknown, IAppState>
         this.handleOpenNewTabButtonClicked = this.handleOpenNewTabButtonClicked.bind(this);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.handleCloseTabClicked = this.handleCloseTabClicked.bind(this);
+        this.handlePreferencesClick = this.handlePreferencesClick.bind(this);
     }
     componentDidMount(): void
     {
@@ -107,6 +107,43 @@ class App extends React.Component<unknown, IAppState>
             });
         }
     }
+    /**
+     * Opens preferences tab
+     */
+    handlePreferencesClick(): void
+    {
+        const tabsList = this.state.tabs;
+        const activeTab = tabsList[this.state.activeTab];
+        if (activeTab.type === ETabType.preferences)
+        {
+            return;
+        }
+
+        let preferencesTabId = -1;
+        /**
+         * Check if preferences tab already exists
+         */
+        for (let i = 0; i < tabsList.length; i++)
+        {
+            const tab = tabsList[i];
+            if (tab.type === ETabType.preferences)
+            {
+                preferencesTabId = i;
+                break;
+            }
+        }
+
+        if (preferencesTabId === -1)
+        {
+            tabsList.push(new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences')));
+            preferencesTabId = tabsList.length - 1;
+        }
+
+        this.setState({
+            tabs: tabsList,
+            activeTab: preferencesTabId
+        });
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -115,10 +152,14 @@ class App extends React.Component<unknown, IAppState>
             onTabCloseClick: this.handleCloseTabClicked
         };
 
+        const appContentCallback: IAppContentCallbacks = {
+            onPreferencesClick: this.handlePreferencesClick
+        };
+
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <AppContent />
+            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} />
             {/* <h1> Foo Bar </h1>
             <button onClick={this.handleOpenFileClick}> Open File </button>
             {
