@@ -1,19 +1,38 @@
 import path from 'path';
 import { promises as fsPromises } from 'fs';
 import { IBookChunk } from '../shared/schema';
+import { ipcMain } from "electron";
+import { getConfig } from './config';
 
-/**
- * This is used when sending book data to a enderer process
- */
-interface IBookToExport
+
+interface IBookDataBase
 {
     title: string;
     authors: Array<string>;
     language: string;
     publisher: string;
-    chunks: Array<IBookChunk>;
     symbols: number;
     lastTimeOpened: number;
+    cover: string;
+}
+
+/**
+ * This is used when sending book data to a enderer process
+ */
+interface IBookToExport extends IBookDataBase
+{
+    chunks: Array<IBookChunk>;
+}
+
+/**
+ * This is used when saving book data to disk
+ */
+interface IBookDataToSave extends IBookDataBase
+{
+    /**
+     * Version of the converter
+     */
+    version: string;
 }
 
 export class Book
@@ -39,7 +58,7 @@ export class Book
      */
     symbols = 0;
     /**
-     * The number of seconds elapsed since the last time the book was opened
+     * Seconds from 1970 until the last time the book was opened
      */
     lastTimeOpened = 0;
     constructor(saveDirectory: string)
@@ -53,16 +72,14 @@ export class Book
     {
         try
         {
-            const bookMetadata: Record<string, unknown> = {
+            const bookMetadata: IBookDataToSave = {
                 title: this.title,
                 authors: this.authors,
                 language: this.language,
                 publisher: this.publisher,
                 cover: this.cover,
                 lastTimeOpened: this.lastTimeOpened,
-                /**
-                 * Version of the converter
-                 */
+                symbols: this.symbols,
                 version: '0.1' 
             };
             const filePath = path.join(this.saveDirectory, 'book.json');
@@ -85,9 +102,92 @@ export class Book
             publisher: this.publisher,
             chunks: this.chunks,
             symbols: this.symbols,
-            lastTimeOpened: this.lastTimeOpened
+            lastTimeOpened: this.lastTimeOpened,
+            cover: this.cover
         };
 
         return bookExportData;
     }
+    loadMetadataFromDisk(metadata: IBookDataBase): void
+    {
+        this.title = metadata.title;
+        this.authors = metadata.authors;
+        this.cover = metadata.cover;
+        this.language = metadata.language;
+        this.publisher = metadata.publisher;
+        this.lastTimeOpened = metadata.lastTimeOpened;
+    }
+    updateLastTimeOpened(): void
+    {
+        this.lastTimeOpened = Math.floor(Date.now() / 1000);
+    }
 }
+
+const savedBooks: Map<string, Book> = new Map();
+
+async function getBookDataFromDisk(bookPath: string, bookId: string): Promise<IBookToExport | null>
+{
+    try
+    {
+        const bIsDirectory = (await fsPromises.stat(bookPath)).isDirectory;
+        if (!bIsDirectory)
+        {
+            return null;
+        }
+
+        const bookDataPath: string = path.join(bookPath, 'book.json');
+        const bookDataRaw: string = await fsPromises.readFile(bookDataPath, { encoding: 'utf-8' });
+        const bookDataParsed: IBookDataBase = JSON.parse(bookDataRaw);
+        if (bookDataParsed)
+        {
+            const book = new Book(bookPath);
+            book.loadMetadataFromDisk(bookDataParsed);
+            savedBooks.set(bookId, book);
+            return book.getExportData();
+        }
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+    return null;
+}
+
+async function getBooksList(): Promise<Array<IBookToExport>>
+{
+    try
+    {
+        const booksToExport: Array<IBookToExport> = [];
+
+        const config = getConfig();
+        
+        if (config && config.booksDir)
+        {
+            const booksDirPath: string = config.booksDir;
+            const subDirectories = await fsPromises.readdir(booksDirPath);
+            for (const subDirectory of subDirectories)
+            {
+                const bookData: IBookToExport | null = await getBookDataFromDisk(path.join(booksDirPath, subDirectory), subDirectory);
+                if (bookData)
+                {
+                    booksToExport.push(bookData);
+                }
+            }
+        }
+
+        return booksToExport;
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+    return [];
+}
+
+ipcMain.handle('load-saved-books', async () => 
+{
+    const booksToExport: Array<IBookToExport> = await getBooksList();
+    console.log(`BookToExport: `, booksToExport);
+
+    return booksToExport;
+});

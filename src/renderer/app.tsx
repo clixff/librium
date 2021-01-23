@@ -24,7 +24,6 @@ class App extends React.Component<unknown, IAppState>
     constructor(props)
     {
         super(props);
-        this.handleOpenFileClick = this.handleOpenFileClick.bind(this);
         this.state = {
             book: null,
             tabs: [
@@ -44,6 +43,10 @@ class App extends React.Component<unknown, IAppState>
     componentDidMount(): void
     {
         ipcRenderer.on('book-loaded', this.handleBookLoaded);
+        ipcRenderer.invoke('load-saved-books').then((books) => 
+        {
+            console.log(`Loaded books: `, books);
+        });
     }
     componentWillUnmount(): void
     {

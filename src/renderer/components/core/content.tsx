@@ -2,6 +2,8 @@ import React from 'react';
 import { ETabType, Tab } from '../../misc/tabs';
 import ContentStyles from '../../styles/modules/content.module.css';
 import { PreferencesSVG, BookmarkSVG, FullscreenSVG, ListSVG, SearchSVG, TextSVG } from '../../misc/icons';
+import { ipcRenderer } from 'electron';
+
 
 class NewTabContent extends React.Component
 {
@@ -9,15 +11,23 @@ class NewTabContent extends React.Component
     {
         super(props);
         console.log(`NewTab Content constructor`);
+        this.handleImportBookClick = this.handleImportBookClick.bind(this);
     }
     componentDidMount(): void
     {
         console.log(`NewTab Content did mount`);
     }
+    handleImportBookClick()
+    {
+        ipcRenderer.send('open-file-click');
+    }
     render(): JSX.Element
     {
         console.log(`NewTab Content rendered`);
-        return (<div><h1>  New Tab </h1></div>);
+        return (<div
+        ><h1>  New Tab </h1>
+        <button onClick={this.handleImportBookClick}> Open Book </button>
+        </div>);
     }
 }
 

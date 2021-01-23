@@ -3,7 +3,7 @@ import path from 'path';
 import { initConfig } from './config';
 import { startHTTPServer } from './misc/server';
 import { initPaths } from './paths';
-import installExtension, { REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import './reader';
 import './misc/windows';
 
@@ -58,7 +58,7 @@ app.on('ready', async () =>
     {
         try 
         {
-            const name = await installExtension([REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]);
+            const name = await installExtension([REACT_DEVELOPER_TOOLS]);
             console.log(`Extension ${name} successfully installed`);
         }
         catch (error)

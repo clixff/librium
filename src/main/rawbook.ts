@@ -175,6 +175,7 @@ export class RawBook
             }
 
             this.bookRef = new Book(this.pathToSave);
+            this.bookRef.updateLastTimeOpened();
 
             await this.parseMetadata();
             await this.parseManifest();
@@ -334,7 +335,7 @@ export class RawBook
                 {
                     if (this.bookRef)
                     {
-                        this.bookRef.cover = manifestItem.href;
+                        this.updateCover(manifestItem.href);
                     }
                 }
 
@@ -342,7 +343,7 @@ export class RawBook
                 {
                     if (this.bookRef)
                     {
-                        this.bookRef.cover = manifestItem.href;
+                        this.updateCover(manifestItem.href);
                     }
                 }
 
@@ -413,7 +414,7 @@ export class RawBook
                         {
                             if (this.bookRef)
                             {
-                                this.bookRef.cover = reference.href;
+                                this.updateCover(reference.href);
                             }
                         }
                     }
@@ -626,11 +627,17 @@ export class RawBook
         {
             return filePath;
         }
+
         const httpServerPort = 45506;
+        const convertedFilePathComponent = this.convertRelativePathToHTTPComponent(filePath, htmlPath);
+        return `http://127.0.0.1:${httpServerPort}/file/${convertedFilePathComponent}`;
+    }
+    convertRelativePathToHTTPComponent(filePath: string, htmlPath: string): string
+    {
         const htmlParsedPath: path.ParsedPath = path.parse(htmlPath);
         const htmlDirPath: string = htmlParsedPath.dir;
         const finalRelativePath = path.join(htmlDirPath, filePath);
-        return `http://127.0.0.1:${httpServerPort}/file/${this.bookID}/${encodeURIComponent(finalRelativePath)}`;
+        return `${this.bookID}/${encodeURIComponent(finalRelativePath)}`;
     }
     fixNodeAttributeRelativePath(attributesList: Record<string, string>, attributeName: string): void
     {
@@ -638,5 +645,16 @@ export class RawBook
         {
             attributesList[attributeName] = this.convertRelativePathToHTTP(attributesList[attributeName], this.currentHTMLFile);
         }
+    }
+    updateCover(coverPath: string): void
+    {
+        if (!this.bookRef)
+        {
+            return;
+        }
+
+        const fullCoverPath = path.join(this.epubContentPath, coverPath);
+
+        this.bookRef.cover = this.convertRelativePathToHTTPComponent(fullCoverPath, this.currentHTMLFile);
     }
 }
