@@ -174,7 +174,7 @@ export class RawBook
                 throw new Error('Failed to parse the ".opf" file');
             }
 
-            this.bookRef = new Book(this.pathToSave);
+            this.bookRef = new Book(this.pathToSave, this.bookID);
             this.bookRef.updateLastTimeOpened();
 
             await this.parseMetadata();
@@ -656,5 +656,9 @@ export class RawBook
         const fullCoverPath = path.join(this.epubContentPath, coverPath);
 
         this.bookRef.cover = this.convertRelativePathToHTTPComponent(fullCoverPath, this.currentHTMLFile);
+        /**
+         * Remove prefix with book ID
+         */
+        this.bookRef.cover = this.bookRef.cover.slice(41);
     }
 }

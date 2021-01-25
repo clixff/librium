@@ -22,6 +22,7 @@ interface IBookDataBase
 interface IBookToExport extends IBookDataBase
 {
     chunks: Array<IBookChunk>;
+    id: string;
 }
 
 /**
@@ -61,9 +62,14 @@ export class Book
      * Seconds from 1970 until the last time the book was opened
      */
     lastTimeOpened = 0;
-    constructor(saveDirectory: string)
+    /**
+     * Unique book id
+     */
+    id = '';
+    constructor(saveDirectory: string, bookId: string)
     {
         this.saveDirectory = saveDirectory;
+        this.id = bookId;
     }
     /**
      * Saves book info to disk
@@ -103,7 +109,8 @@ export class Book
             chunks: this.chunks,
             symbols: this.symbols,
             lastTimeOpened: this.lastTimeOpened,
-            cover: this.cover
+            cover: this.cover,
+            id: this.id
         };
 
         return bookExportData;
@@ -140,7 +147,7 @@ async function getBookDataFromDisk(bookPath: string, bookId: string): Promise<IB
         const bookDataParsed: IBookDataBase = JSON.parse(bookDataRaw);
         if (bookDataParsed)
         {
-            const book = new Book(bookPath);
+            const book = new Book(bookPath, bookId);
             book.loadMetadataFromDisk(bookDataParsed);
             savedBooks.set(bookId, book);
             return book.getExportData();

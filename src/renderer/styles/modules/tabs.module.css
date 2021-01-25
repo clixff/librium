@@ -113,7 +113,7 @@
     /* width: 100px; */
     height: 7px;
     position: absolute;
-    background: rgb(50, 50, 50);
+    background: rgb(76, 76, 76);
     cursor: default;
     z-index: 2;
     border-radius: 10px;
@@ -172,7 +172,7 @@
 
 .tab-right-line
 {
-    background-color: rgb(45, 45, 45);
+    background-color: rgb(67, 67, 67);
     width: 1px;
     height: 21px;
     position: absolute;

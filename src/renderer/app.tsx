@@ -17,6 +17,7 @@ interface IAppState
      * Index of the active tab
      */
     activeTab: number;
+    savedBooks: Array<IBook>;
 }
 
 class App extends React.Component<unknown, IAppState>
@@ -32,7 +33,8 @@ class App extends React.Component<unknown, IAppState>
                 new Tab('Dolor sit amet', ETabType.book, 'http://127.0.0.1:45506/file/36e6a91ad0b3f28e016ea685fa7b36a1493bcd02/OPS%5Cimages%5Ccover.jpg'),
                 new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences')),
             ],
-            activeTab: 0
+            activeTab: 0,
+            savedBooks: []
         };
         this.handleBookLoaded = this.handleBookLoaded.bind(this);
         this.handleOpenNewTabButtonClicked = this.handleOpenNewTabButtonClicked.bind(this);
@@ -45,7 +47,11 @@ class App extends React.Component<unknown, IAppState>
         ipcRenderer.on('book-loaded', this.handleBookLoaded);
         ipcRenderer.invoke('load-saved-books').then((books) => 
         {
-            console.log(`Loaded books: `, books);
+            const loadedBooks: Array<IBook> = this.sortSavedBooks(books);
+            console.log(`Loaded books: `, loadedBooks);
+            this.setState({
+                savedBooks: loadedBooks
+            });
         });
     }
     componentWillUnmount(): void
@@ -55,8 +61,12 @@ class App extends React.Component<unknown, IAppState>
     handleBookLoaded(event, book: IBook): void
     {
         console.log('Book loaded: ', book);
+        let savedBooks = this.state.savedBooks;
+        savedBooks.push(book);
+        savedBooks = this.sortSavedBooks(savedBooks);
         this.setState({
-            book: book
+            book: book,
+            savedBooks: savedBooks
         });
     }
     handleOpenFileClick(): void
@@ -147,6 +157,23 @@ class App extends React.Component<unknown, IAppState>
             activeTab: preferencesTabId
         });
     }
+    sortSavedBooks(savedBooks: Array<IBook>): Array<IBook>
+    {
+        savedBooks.sort((a, b) =>
+        {
+            if (a.lastTimeOpened < b.lastTimeOpened)
+            {
+                return 1;
+            }
+            else if (a.lastTimeOpened > b.lastTimeOpened)
+            {
+                return -1;
+            }
+
+            return 0;
+        });
+        return savedBooks;
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -162,7 +189,7 @@ class App extends React.Component<unknown, IAppState>
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} />
+            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} savedBooks={this.state.savedBooks} />
             {/* <h1> Foo Bar </h1>
             <button onClick={this.handleOpenFileClick}> Open File </button>
             {

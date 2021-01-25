@@ -116,18 +116,6 @@ async function openFile(filePath: string, browserWindow: BrowserWindow): Promise
 }
 
 
-/**
- * Shows book in the GUI
- */
-function showBook(): void
-{
-    showBook();
-}
-
-
-
-
-
 
 
 

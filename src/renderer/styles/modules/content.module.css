@@ -8,6 +8,7 @@
     width: 100%;
     min-width: 100%;
     max-width: 100%;
+    justify-content: center;
 }
 
 #toolbar-wrapper
@@ -23,7 +24,7 @@
     height: var(--toolbar-height);
     min-height: var(--toolbar-height);
     max-height: var(--toolbar-height);
-    background: #131313;
+    background: rgb(24, 24, 24);
 }
 
 #toolbar-left

@@ -2,34 +2,9 @@ import React from 'react';
 import { ETabType, Tab } from '../../misc/tabs';
 import ContentStyles from '../../styles/modules/content.module.css';
 import { PreferencesSVG, BookmarkSVG, FullscreenSVG, ListSVG, SearchSVG, TextSVG } from '../../misc/icons';
-import { ipcRenderer } from 'electron';
+import { IBook } from '../../misc/book';
+import { NewTabContent } from '../pages/newTab';
 
-
-class NewTabContent extends React.Component
-{
-    constructor(props)
-    {
-        super(props);
-        console.log(`NewTab Content constructor`);
-        this.handleImportBookClick = this.handleImportBookClick.bind(this);
-    }
-    componentDidMount(): void
-    {
-        console.log(`NewTab Content did mount`);
-    }
-    handleImportBookClick()
-    {
-        ipcRenderer.send('open-file-click');
-    }
-    render(): JSX.Element
-    {
-        console.log(`NewTab Content rendered`);
-        return (<div
-        ><h1>  New Tab </h1>
-        <button onClick={this.handleImportBookClick}> Open Book </button>
-        </div>);
-    }
-}
 
 class BookContent extends React.Component
 {
@@ -68,30 +43,6 @@ class PreferencesContent extends React.Component
     }
 }
 
-
-
-export function GenerateTabJSX(props: { type: ETabType }): JSX.Element
-{
-    let ContentTabClass: typeof React.Component | null = null;
-    switch (props.type)
-    {
-        case ETabType.newTab:
-            ContentTabClass = NewTabContent;
-            break;
-        case ETabType.book:
-            ContentTabClass = BookContent;
-            break;
-        case ETabType.preferences:
-            ContentTabClass = PreferencesContent;
-            break;
-    }
-    if (ContentTabClass)
-    {
-        return (<ContentTabClass />);
-    }
-
-    return (<React.Fragment />);
-}
 
 interface IToolbarButtonProps
 {
@@ -152,6 +103,7 @@ interface IAppContentProps
     tabsList: Array<Tab>;
     activeTab: number;
     callbacks: IAppContentCallbacks;
+    savedBooks: Array<IBook>;
 }
 
 export function AppContent(props: IAppContentProps): JSX.Element
@@ -168,7 +120,7 @@ export function AppContent(props: IAppContentProps): JSX.Element
         <Toolbar bBookMenu={activeTab.type === ETabType.book} callbacks={props.callbacks}/>
         {
             activeTab.type === ETabType.newTab ?
-            <NewTabContent key={activeTab.key} /> 
+            <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} /> 
             : activeTab.type === ETabType.book ?
             <BookContent key={activeTab.key}/>
             : <PreferencesContent key={activeTab.key}/>

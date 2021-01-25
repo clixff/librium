@@ -7,4 +7,7 @@ export interface IBook
     language: string;
     publisher: string;
     chunks: Array<IBookChunk>;
+    lastTimeOpened: number;
+    cover: string;
+    id: string;
 }
