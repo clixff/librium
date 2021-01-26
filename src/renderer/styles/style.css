@@ -39,3 +39,53 @@ svg
     min-height: var(--icon-size);
     max-height: var(--icon-size);
 }
+
+body
+{
+    /*
+     * View type buttons
+     */ 
+    --view-type-button-icon: rgb(136, 136, 136);
+    --view-type-button-icon-hover: rgb(196, 196, 196);
+    --view-type-button-icon-active: white;
+
+    /*
+     * New Tab menu buttons
+     */
+    --new-tab-menu-element: rgb(129, 129, 129);
+    --new-tab-menu-element-hover: rgb(170, 170, 170);
+    --new-tab-menu-element-active: white;
+
+    /*
+     * New Tab search
+     */
+    --search-placeholder-color: rgb(135, 135, 135);
+    --search-placeholder-hover: rgb(167, 167, 167);
+    --search-active-color: white;
+
+}
+
+body.light
+{
+    background: white !important;
+    /*
+     * View type buttons
+     */ 
+    --view-type-button-icon: rgb(148, 148, 148);
+    --view-type-button-icon-hover: rgb(92, 92, 92);
+    --view-type-button-icon-active: black;
+
+    /*
+     * New Tab menu buttons
+     */ 
+    --new-tab-menu-element: rgb(155, 155, 155);
+    --new-tab-menu-element-hover: rgb(88, 88, 88);
+    --new-tab-menu-element-active: black;
+    
+    /*
+     * New Tab search
+     */
+    --search-placeholder-color: rgb(126, 126, 126);
+    --search-placeholder-hover: rgb(54, 54, 54);
+    --search-active-color: black;
+}

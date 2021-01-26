@@ -5,6 +5,7 @@
     align-items: center;
     width: calc(100% - 60px);
     margin-left: 30px;
+    margin-top: 22px;
 }
 
 #menu-wrapper
@@ -12,7 +13,13 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
+    --menu-wrapper-height: 37px;
+    height: var(--menu-wrapper-height);
+    min-height: var(--menu-wrapper-height);
+    max-height: var(--menu-wrapper-height);
+    user-select: none;
 }
 
 #menu-left
@@ -20,4 +27,156 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+.menu-element
+{
+    color: var(--new-tab-menu-element);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 26px;
+    margin-right: 35px;
+    transition: color 0.125s linear;
+}
+
+.menu-element:not(.menu-element-active):hover
+{
+    color: var(--new-tab-menu-element-hover);
+}
+
+.menu-element-active
+{
+    color: var(--new-tab-menu-element-active);
+    cursor: default !important;
+}
+
+#menu-right
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#menu-search
+{
+    --menu-search-width: 177px;
+    --menu-search-height: 31px;
+    width: var(--menu-search-width);
+    min-width: var(--menu-search-width);
+    max-width: var(--menu-search-width);
+    height: var(--menu-search-height);
+    min-height: var(--menu-search-height);
+    max-height: var(--menu-search-height);
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    --placeholder-color: var(--search-placeholder-color);
+    --placeholder-hover: var(--search-placeholder-hover);
+    --active-color: var(--search-active-color);
+}
+
+#menu-search > input
+{
+    width: calc(100% - 27px);
+    height: inherit;
+    border: none;
+    outline: none;
+    appearance: none;
+    padding-left: 27px;
+    background: transparent;
+    color: var(--active-color);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#menu-search > input::placeholder
+{
+    color: var(--placeholder-color);
+    transition: color 0.125s linear;
+}
+
+#menu-search-icon
+{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    height: inherit;
+    --menu-search-icon-size: 12px;
+    width: var(--menu-search-icon-size);
+    pointer-events: none;
+}
+
+#menu-search-icon > svg
+{
+    --icon-size: var(--menu-search-icon-size);
+    fill: var(--placeholder-color);
+    transition: fill 0.125s linear;
+}
+
+#menu-search > input:not(:placeholder-shown) + #menu-search-icon > svg
+{
+    fill: var(--active-color) !important;
+}
+
+#menu-search > input:placeholder-shown:hover + #menu-search-icon > svg,
+#menu-search > input:placeholder-shown:focus + #menu-search-icon > svg
+{
+    fill: var(--placeholder-hover);
+}
+
+#menu-search > input:hover::placeholder,
+#menu-search > input:focus::placeholder
+{
+    color: var(--placeholder-hover);
+}
+
+#view-type-buttons
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.view-type-button
+{
+    --view-type-size: var(--menu-wrapper-height);
+    width: var(--view-type-size);
+    min-width: var(--view-type-size);
+    max-width: var(--view-type-size);
+    height: var(--view-type-size);
+    min-height: var(--view-type-size);
+    max-height: var(--view-type-size);
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-type-button > svg
+{
+    --icon-size: 13px;
+    fill: var(--view-type-button-icon);
+    transition: fill 0.125s linear;
+}
+
+.view-type-button:hover > svg
+{
+    fill: var(--view-type-button-icon-hover);
+}
+
+.view-type-button-active
+{
+    cursor: default;
+}
+
+.view-type-button-active > svg
+{
+    fill: var(--view-type-button-icon-active) !important;
 }

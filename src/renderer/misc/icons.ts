@@ -8,6 +8,7 @@ import SearchSVG from '../assets/svg/tools/search.svg';
 import ListSVG from '../assets/svg/misc/list.svg';
 import BookmarkSVG from '../assets/svg/tools/bookmark.svg';
 import TextSVG from '../assets/svg/tools/text.svg';
+import GridSVG from '../assets/svg/misc/grid.svg';
 
 export {
     MinimizeSVG,
@@ -19,5 +20,6 @@ export {
     SearchSVG,
     ListSVG,
     BookmarkSVG,
-    TextSVG
+    TextSVG,
+    GridSVG
 };
