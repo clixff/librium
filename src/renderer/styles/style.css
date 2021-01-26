@@ -1,6 +1,7 @@
 body
 {
-    background: #060606;
+    --app-background: rgb(6, 6, 6);
+    background: var(--app-background);
     color: white;
     font-family: var(--default-font);
 }
@@ -27,6 +28,7 @@ body, html, #root
     padding: 0;
     margin: 0;
     overflow: hidden;
+    height: 100%;
 }
 
 svg
@@ -63,11 +65,19 @@ body
     --search-placeholder-hover: rgb(167, 167, 167);
     --search-active-color: white;
 
+    /*
+     *  Scrollbar
+     */
+    --global-scrollbar-thumb-color: rgb(45, 45, 45);
+    --global-scrollbar-thumb-hover: rgb(75, 75, 75);
+
+    --text-color: white;
+    --subtext-color: rgb(182, 182, 182);
 }
 
 body.light
 {
-    background: white !important;
+    --app-background: white !important;
     /*
      * View type buttons
      */ 
@@ -88,4 +98,30 @@ body.light
     --search-placeholder-color: rgb(126, 126, 126);
     --search-placeholder-hover: rgb(54, 54, 54);
     --search-active-color: black;
+
+    --global-scrollbar-thumb-color: rgb(150, 150, 150);
+    --global-scrollbar-thumb-hover: rgb(75, 75, 75);
+
+    --text-color: black;
+    --subtext-color: rgb(63, 63, 63);
+}
+
+
+*::-webkit-scrollbar
+{
+    background: transparent;
+    width: 9px;
+    height: 9px;
+}
+
+*::-webkit-scrollbar-thumb
+{
+    background: var(--global-scrollbar-thumb-color);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:active
+{
+    background: var(--global-scrollbar-thumb-hover);
 }

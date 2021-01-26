@@ -3,7 +3,7 @@
     outline: none;
     border: none;
     appearance: none;
-    padding: 10px 17px;
+    padding: 10px 20px;
     font-weight: 600;
     --buton-color: white;
     color: var(--buton-color);
@@ -31,4 +31,6 @@
 {
     --button-background: #0A54C2;
     --button-background-hover: #074199;
+    height: 37px;
+    font-size: 13px;
 }

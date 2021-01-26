@@ -1,9 +1,17 @@
 #wrapper
 {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#page-content
+{
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: calc(100% - 60px);
+    width: calc(100% - 51px);
     margin-left: 30px;
     margin-top: 22px;
 }
@@ -20,6 +28,7 @@
     min-height: var(--menu-wrapper-height);
     max-height: var(--menu-wrapper-height);
     user-select: none;
+    margin-bottom: 35px;
 }
 
 #menu-left
@@ -179,4 +188,127 @@
 .view-type-button-active > svg
 {
     fill: var(--view-type-button-icon-active) !important;
+}
+
+#grid-view
+{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: calc(100% + 65px);
+    margin-left: 65px;
+}
+
+.book-card
+{
+    --book-card-width: 118px;
+    --book-card-height: 234px;
+    widtH: var(--book-card-width);
+    min-widtH: var(--book-card-width);
+    max-widtH: var(--book-card-width);
+    height: auto;
+    max-height: var(--book-card-height);
+    margin-right: 65px;
+    margin-bottom: 40px;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+}
+
+.book-cover
+{
+    width: inherit;
+    height: 175px;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.book-cover > img
+{
+    width: inherit;
+    height: inherit;
+}
+
+.book-card-info
+{
+    display: flex;
+    flex-direction: column;
+    max-height: 59px;
+    height: auto;
+}
+
+.book-card-title, .book-card-author
+{
+    font-size: 12px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;  
+}
+
+.book-card-title
+{
+    -webkit-line-clamp: 2;
+    margin-top: 8px;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.book-card-author
+{
+    margin-top: 3px;
+    -webkit-line-clamp: 1;
+    color: var(--subtext-color);
+    word-break: break-all;
+}
+
+.book-custom-cover
+{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.book-cover-border
+{
+    position: absolute;
+    width: calc(100% - 14px);
+    height: calc(100% - 14px);
+    border: solid 1px rgb(255, 255, 255, 0.15);
+    top: 6px;
+    left: 6px;
+    bottom: 6px;
+    right: 6px;
+}
+
+.book-cover-title, .book-cover-author
+{
+    font-size: 12px;
+
+    text-align: center;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+.book-cover-title
+{
+    margin-top: 28px;
+    -webkit-line-clamp: 4;
+    font-weight: 600;
+    width: 88px;
+    max-width: 88px;
+    color: white;
+}
+
+.book-cover-author
+{
+    position: absolute;
+    /* height: 18px; */
+    bottom: 18px;
+    width: 96px;
+    max-width: 96px;
+    -webkit-line-clamp: 2;
+    word-break: keep-all;
+    color: rgb(222, 222, 222);
 }
