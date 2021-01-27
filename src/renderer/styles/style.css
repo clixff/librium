@@ -73,6 +73,8 @@ body
 
     --text-color: white;
     --subtext-color: rgb(182, 182, 182);
+
+    --book-list-element-metadata-color: rgb(115, 115, 115);
 }
 
 body.light

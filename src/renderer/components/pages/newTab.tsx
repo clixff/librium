@@ -78,6 +78,8 @@ interface INewTabMenuProps
     viewType: EViewType;
     setActiveMenu: (type: EMenuElementType) => void;
     setViewType: (type: EViewType) => void;
+    searchValue: string;
+    setSearchValue: (value: string) => void;
 }
 
 function NewTabMenu(props: INewTabMenuProps): JSX.Element
@@ -85,6 +87,12 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
     function handleImportBookClick(): void
     {
         ipcRenderer.send('open-file-click');
+    }
+
+    function handleSearchInput(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        const searchString = event.target.value;
+        props.setSearchValue(searchString);
     }
 
     return (
@@ -99,7 +107,7 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
                     props.activeMenu === EMenuElementType.Books ?
                     (
                         <div id={newTabStyles['menu-search']}>
-                            <input type="text" placeholder={`Search`} />
+                            <input type="text" placeholder={`Search`} value={props.searchValue} onChange={handleSearchInput} />
                             <div id={newTabStyles['menu-search-icon']}>
                                 <SearchSVG />
                             </div>
@@ -114,6 +122,43 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
         </div>);
 }
 
+function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Array<IBook>, string]
+{
+    const filteredBooks: Array<IBook> = [];
+    let booksKeys = '';
+
+    for (let i = 0; i < allBooks.length; i++)
+    {
+        const book = allBooks[i];
+        const lowerCasedTitle = book.title.trim().toLowerCase();
+        let bFoundResult = false;
+        if (lowerCasedTitle.includes(searchQuery))
+        {
+            bFoundResult = true;
+        }
+        else
+        {
+            const allBookAuthors = book.authors;
+            for (let j = 0; j < allBookAuthors.length; j++)
+            {
+                const lowerCasedBookAuthor = allBookAuthors[j].trim().toLowerCase();
+                if (lowerCasedBookAuthor.includes(searchQuery))
+                {
+                    bFoundResult = true;
+                    break;
+                }
+            }
+        }
+
+        if (bFoundResult)
+        {
+            booksKeys += book.id;
+            filteredBooks.push(book);
+        }
+    }
+
+    return [filteredBooks, booksKeys];
+}
 
 
 function NewTabPage(props: INewTabPageProps): JSX.Element
@@ -121,19 +166,40 @@ function NewTabPage(props: INewTabPageProps): JSX.Element
 
     const [activeMenu, setActiveMenu] = useState(EMenuElementType.Books);
     const [viewType, setViewType] = useState(EViewType.Grid);
+    const [searchValue, setSearchValue] = useState('');
 
     /**
-     * TODO: Implement search
+     * Formatted search value
      */
-    const booksArray = props.savedBooks;
+    const searchQuery = searchValue.trim().toLowerCase();
+
+    const [booksArray, bookKeys] = searchQuery ? filterBooksBySearch(props.savedBooks, searchQuery) : [props.savedBooks, 'ALL'];
+    
+    const bIsBooksArrayEmpty = booksArray.length === 0;
 
     return (<div id={newTabStyles.wrapper}>
         <div id={newTabStyles['page-content']}>
-            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={setActiveMenu} setViewType={setViewType} />
+            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={setActiveMenu} setViewType={setViewType} searchValue={searchValue} setSearchValue={setSearchValue}/>
             {
                 activeMenu === EMenuElementType.Books ?
                 (
-                    viewType === EViewType.Grid ? <BooksGridView books={booksArray}/> : <BooksListView books={booksArray} />
+                    bIsBooksArrayEmpty ?
+                    (
+                        <div id={newTabStyles['no-books-warning']}>
+                            {
+                                searchQuery ? (
+                                    <div id={newTabStyles['no-books-text']}>
+                                        {
+                                            `No result for "${searchValue.trim()}"`
+                                        }
+                                    </div>
+                                ) : null
+                            }
+                        </div>
+                    ) : (
+                        viewType === EViewType.Grid ? <BooksGridView books={booksArray} keys={bookKeys}/> : <BooksListView books={booksArray} keys={bookKeys}/>
+                    )
+
                 ) : null
             }
         </div>

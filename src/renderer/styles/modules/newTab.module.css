@@ -217,7 +217,7 @@
 
 .book-cover
 {
-    width: inherit;
+    width: 118px;
     height: 175px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -299,6 +299,7 @@
     width: 88px;
     max-width: 88px;
     color: white;
+    word-break: break-word;
 }
 
 .book-cover-author
@@ -311,4 +312,97 @@
     -webkit-line-clamp: 2;
     word-break: keep-all;
     color: rgb(222, 222, 222);
+}
+
+#no-books-warning
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#no-books-text
+{
+    font-weight: 600;
+    font-size: 23px;
+    color: var(--text-color)
+}
+
+#list-view
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.book-list-element
+{
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    user-select: none;
+    height: 200px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgb(64, 64, 64);
+}
+
+.book-list-element:last-child
+{
+    border-bottom: none !important;
+}
+
+.book-element-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 175px;
+}
+
+.book-element-right
+{
+    display: flex;
+    flex-direction: column;
+    margin-left: 30px;
+}
+
+.book-element-right > *:not(:last-child)
+{
+    margin-bottom: 16px;
+}
+
+.book-element-right > *
+{
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    font-weight: 600;
+}
+
+.book-element-title
+{
+    color: var(--text-color);
+    -webkit-line-clamp: 3;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.book-element-authors
+{
+    color: var(--subtext-color);
+}
+
+.book-element-authors,
+.book-element-publisher,
+.book-element-percent
+{
+    font-size: 14px;
+    -webkit-line-clamp: 1;
+}
+
+.book-element-publisher,
+.book-element-percent
+{
+    color: var(--book-list-element-metadata-color);
 }

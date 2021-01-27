@@ -58,18 +58,33 @@ function BookCover(props: IBookCoverProps): JSX.Element
     </div>);
 }
 
-interface IBookCardProps
+interface IBookElementProps
 {
     book: IBook;
 }
 
-function BookCard(props: IBookCardProps): JSX.Element
+interface IBookDataForRender
 {
-    const authorName = props.book.authors[0];
-    const allAuthorsNames = props.book.authors.join(', ');
-    const hoverText = `${props.book.title} — ${allAuthorsNames}`
+    authorName: string | string;
+    allAuthorsNames: string;
+    hoverText: string;
+}
+
+function getBookDataForRender(book: IBook): IBookDataForRender
+{
+    const allAuthorsNames = book.authors.join(', ');
+    return {
+        authorName: book.authors[0],
+        allAuthorsNames: allAuthorsNames,
+        hoverText: `${book.title} — ${allAuthorsNames}`
+    };
+}
+
+function BookCard(props: IBookElementProps): JSX.Element
+{
+    const { authorName, hoverText } = getBookDataForRender(props.book);
     return (<div className={newTabStyles['book-card']} title={hoverText}>
-        <BookCover cover={props.book.cover} author={props.book.authors[0]} title={props.book.title} id={props.book.id}/>
+        <BookCover cover={props.book.cover} author={authorName} title={props.book.title} id={props.book.id}/>
         <div className={newTabStyles['book-card-info']}>
             <div className={newTabStyles['book-card-title']} >
                 {
@@ -85,26 +100,82 @@ function BookCard(props: IBookCardProps): JSX.Element
     </div>);
 }
 
+
+function BookListElement(props: IBookElementProps): JSX.Element
+{
+    const { allAuthorsNames, hoverText } = getBookDataForRender(props.book);
+    return (<div className={newTabStyles['book-list-element']} title={hoverText}>
+        <div className={newTabStyles['book-element-wrapper']}>
+            <BookCover cover={props.book.cover} id={props.book.id} title={props.book.title} author={props.book.authors[0]} />
+            <div className={newTabStyles['book-element-right']}>
+                <div className={newTabStyles['book-element-title']}>
+                    {
+                        props.book.title
+                    }
+                </div>
+                {
+                    allAuthorsNames ?
+                    (
+                        <div className={newTabStyles['book-element-authors']}>
+                            {
+                                allAuthorsNames
+                            }
+                        </div>
+                    ) : null
+                }
+                {
+                    props.book.publisher ?
+                    (
+                        <div className={newTabStyles['book-element-publisher']}>
+                            {
+                                props.book.publisher
+                            }
+                        </div>
+                    ) : null
+                }
+                <div className={newTabStyles['book-element-percent']}>
+                    {
+                        `${0}%`
+                    }
+                </div>
+            </div>
+        </div>
+    </div>);
+}
+
 interface IBooksViewProps
 {
     books: Array<IBook>;
+    keys: string;
 }
 
-export function BooksGridView(props: IBooksViewProps): JSX.Element
+
+function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksViewProps): boolean
+{
+    return prevProps.keys === nextProps.keys;
+}
+
+export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element => 
 {
     return (<div id={newTabStyles['grid-view']}>
         {
             props.books.map((book) => 
             {
-                return (<BookCard book={book}/>);
+                return (<BookCard book={book} key={book.id} />);
             })
         }
     </div>);
-}
+}, bAreBooksViewPropsEqual);
 
-export function BooksListView(props: IBooksViewProps): JSX.Element
+
+export const BooksListView = React.memo((props: IBooksViewProps): JSX.Element =>
 {
-    return (<div>
-
-    </div>);
-}
+    return (<div id={newTabStyles['list-view']}>
+        {
+            props.books.map((book) =>
+            {
+                return (<BookListElement book={book} key={book.id} />);
+            })
+        }
+    </div>);  
+}, bAreBooksViewPropsEqual);
