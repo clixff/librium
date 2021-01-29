@@ -2,12 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
-import { IBook } from './misc/book';
+import { IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
 import { AppContent, IAppContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
+import { IRawCategory, ICategory, parseCategories } from './misc/category';
 
 interface IAppState
 {
@@ -18,10 +19,12 @@ interface IAppState
      */
     activeTab: number;
     savedBooks: Array<IBook>;
+    categories: Array<ICategory>;
 }
 
 class App extends React.Component<unknown, IAppState>
 {
+    booksMap: Map<string, IBook> = new Map();
     constructor(props)
     {
         super(props);
@@ -34,23 +37,28 @@ class App extends React.Component<unknown, IAppState>
                 new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences')),
             ],
             activeTab: 0,
-            savedBooks: []
+            savedBooks: [],
+            categories: []
         };
         this.handleBookLoaded = this.handleBookLoaded.bind(this);
         this.handleOpenNewTabButtonClicked = this.handleOpenNewTabButtonClicked.bind(this);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.handleCloseTabClicked = this.handleCloseTabClicked.bind(this);
         this.handlePreferencesClick = this.handlePreferencesClick.bind(this);
+        
     }
     componentDidMount(): void
     {
         ipcRenderer.on('book-loaded', this.handleBookLoaded);
-        ipcRenderer.invoke('load-saved-books').then((books) => 
+        ipcRenderer.invoke('load-saved-books').then((result: [Array<IBookBase>, Array<IRawCategory>]) => 
         {
-            const loadedBooks: Array<IBook> = this.sortSavedBooks(books);
+            const loadedBooks: Array<IBook> = this.sortSavedBooks(rawBooksToBooks(result[0], this.booksMap));
             console.log(`Loaded books: `, loadedBooks);
+            console.log(this.booksMap);
+            const categories = parseCategories(result[1], this.booksMap);
             this.setState({
-                savedBooks: loadedBooks
+                savedBooks: loadedBooks,
+                categories: categories
             });
         });
     }
@@ -58,20 +66,17 @@ class App extends React.Component<unknown, IAppState>
     {
         ipcRenderer.removeListener('book-loaded', this.handleBookLoaded);
     }
-    handleBookLoaded(event, book: IBook): void
+    handleBookLoaded(event, rawBook: IBookBase): void
     {
-        console.log('Book loaded: ', book);
+        console.log('Book loaded: ', rawBook);
         let savedBooks = this.state.savedBooks;
+        const book = rawBookToBook(rawBook);
+        this.booksMap.set(book.id, book);
         savedBooks.push(book);
         savedBooks = this.sortSavedBooks(savedBooks);
         this.setState({
-            book: book,
             savedBooks: savedBooks
         });
-    }
-    handleOpenFileClick(): void
-    {
-        ipcRenderer.send('open-file-click');
     }
     handleOpenNewTabButtonClicked(): void
     {
@@ -190,8 +195,7 @@ class App extends React.Component<unknown, IAppState>
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
             <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} savedBooks={this.state.savedBooks} />
-            {/* <h1> Foo Bar </h1>
-            <button onClick={this.handleOpenFileClick}> Open File </button>
+            {/*
             {
                 this.state.book ?
                 (

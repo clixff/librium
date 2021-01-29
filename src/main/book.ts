@@ -3,6 +3,7 @@ import { promises as fsPromises } from 'fs';
 import { IBookChunk } from '../shared/schema';
 import { ipcMain } from "electron";
 import { getConfig } from './config';
+import { ICategory, loadCategories } from './misc/category';
 
 
 interface IBookDataBase
@@ -195,6 +196,7 @@ ipcMain.handle('load-saved-books', async () =>
 {
     const booksToExport: Array<IBookToExport> = await getBooksList();
     console.log(`BookToExport: `, booksToExport);
+    const categoriesList: Array<ICategory> = await loadCategories();
 
-    return booksToExport;
+    return [booksToExport, categoriesList];
 });
