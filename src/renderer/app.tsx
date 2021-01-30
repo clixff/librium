@@ -45,7 +45,8 @@ class App extends React.Component<unknown, IAppState>
         this.handleTabClick = this.handleTabClick.bind(this);
         this.handleCloseTabClicked = this.handleCloseTabClicked.bind(this);
         this.handlePreferencesClick = this.handlePreferencesClick.bind(this);
-        
+        this.handleCategoryDeleteClick = this.handleCategoryDeleteClick.bind(this);
+        this.deleteCategory = this.deleteCategory.bind(this);
     }
     componentDidMount(): void
     {
@@ -179,6 +180,24 @@ class App extends React.Component<unknown, IAppState>
         });
         return savedBooks;
     }
+    handleCategoryDeleteClick(categoryId: number): void
+    {
+        /**
+         * TODO: Open dialog with the confirmation
+         */
+        this.deleteCategory(categoryId);
+    }
+    deleteCategory(categoryId: number): void
+    {
+        const CategoriesList = this.state.categories;
+        if (CategoriesList[categoryId])
+        {
+            CategoriesList.splice(categoryId, 1);
+            this.setState({
+                categories: CategoriesList
+            });
+        }
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -188,13 +207,14 @@ class App extends React.Component<unknown, IAppState>
         };
 
         const appContentCallback: IAppContentCallbacks = {
-            onPreferencesClick: this.handlePreferencesClick
+            onPreferencesClick: this.handlePreferencesClick,
+            onCategoryDelete: this.handleCategoryDeleteClick
         };
 
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} savedBooks={this.state.savedBooks} />
+            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} />
             {/*
             {
                 this.state.book ?

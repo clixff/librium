@@ -4,6 +4,7 @@ import ContentStyles from '../../styles/modules/content.module.css';
 import { PreferencesSVG, BookmarkSVG, FullscreenSVG, ListSVG, SearchSVG, TextSVG } from '../../misc/icons';
 import { IBook } from '../../misc/book';
 import { NewTabContent } from '../pages/newTab';
+import { ICategory } from '../../misc/category';
 
 
 class BookContent extends React.Component
@@ -96,6 +97,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
 export interface IAppContentCallbacks
 {
     onPreferencesClick: () => void;
+    onCategoryDelete: (id: number) => void;
 }
 
 interface IAppContentProps
@@ -104,6 +106,7 @@ interface IAppContentProps
     activeTab: number;
     callbacks: IAppContentCallbacks;
     savedBooks: Array<IBook>;
+    categories: Array<ICategory>;
 }
 
 export function AppContent(props: IAppContentProps): JSX.Element
@@ -120,7 +123,7 @@ export function AppContent(props: IAppContentProps): JSX.Element
         <Toolbar bBookMenu={activeTab.type === ETabType.book} callbacks={props.callbacks}/>
         {
             activeTab.type === ETabType.newTab ?
-            <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} /> 
+            <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks}/> 
             : activeTab.type === ETabType.book ?
             <BookContent key={activeTab.key}/>
             : <PreferencesContent key={activeTab.key}/>

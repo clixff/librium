@@ -190,7 +190,7 @@
     fill: var(--view-type-button-icon-active) !important;
 }
 
-#grid-view
+.grid-view
 {
     display: flex;
     flex-direction: row;
@@ -217,7 +217,10 @@
 
 .book-cover
 {
-    width: 118px;
+    --book-cover-width: 118px;
+    width: var(--book-cover-width);
+    min-width: var(--book-cover-width);
+    max-width: var(--book-cover-width);
     height: 175px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -328,7 +331,7 @@
     color: var(--text-color)
 }
 
-#list-view
+.list-view
 {
     display: flex;
     flex-direction: column;
@@ -349,6 +352,7 @@
 .book-list-element:last-child
 {
     border-bottom: none !important;
+    margin-bottom: 0px !important;
 }
 
 .book-element-wrapper
@@ -405,4 +409,88 @@
 .book-element-percent
 {
     color: var(--book-list-element-metadata-color);
+}
+
+#categories-container
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.category-wrapper
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 35px;
+}
+
+.category-header
+{
+    display: flex;
+    flex-direction: row;
+    height: 22px;
+    align-items: center;
+}
+
+.category-button
+{
+    width: 10px;
+    height: inherit;
+    cursor: pointer;
+}
+
+.category-button > svg
+{
+    --icon-size: 12px;
+    fill: var(--category-button);
+    transition: fill 0.125s linear;
+}
+
+.category-button:hover > svg
+{
+    fill: var(--category-button-hover);
+}
+
+.category-hide-button
+{
+    padding-right: 10px;
+}
+
+.category-delete-button
+{
+    margin-left: 10px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.125s linear;
+}
+
+.category-name
+{
+    background: transparent;
+    appearance: none;
+    border: none;
+    outline: none;
+    color: var(--category-name);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.category-wrapper > .list-view,
+.category-wrapper > .grid-view
+{
+    margin-top: 25px;
+    margin-left: 0px !important;
+}
+
+.category-header:hover > .category-delete-button
+{
+    pointer-events: all;
+    opacity: 1;
+}
+
+.category-wrapper > .grid-view
+{
+    margin-bottom: -35px;
 }

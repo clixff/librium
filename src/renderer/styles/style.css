@@ -75,6 +75,10 @@ body
     --subtext-color: rgb(182, 182, 182);
 
     --book-list-element-metadata-color: rgb(115, 115, 115);
+
+    --category-name: rgb(192, 191, 191);
+    --category-button: rgb(115, 115, 115);
+    --category-button-hover: rgb(151, 151, 151);
 }
 
 body.light
@@ -106,6 +110,10 @@ body.light
 
     --text-color: black;
     --subtext-color: rgb(63, 63, 63);
+
+    --category-name: rgb(71, 71, 71);
+    --category-button: rgb(135, 135, 135);
+    --category-button-hover: rgb(100, 100, 100);
 }
 
 

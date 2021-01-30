@@ -5,11 +5,9 @@ import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { ListSVG, SearchSVG, GridSVG } from '../../misc/icons';
 import { BooksGridView, BooksListView } from '../core/book';
-
-interface INewTabPageProps
-{
-    savedBooks: Array<IBook>;
-}
+import { ICategory } from '../../misc/category';
+import { CategoriesList } from '../core/category';
+import { IAppContentCallbacks } from '../core/content';
 
 enum EMenuElementType
 {
@@ -42,7 +40,7 @@ function MenuElement(props: IMenuElementProps): JSX.Element
     </div>);
 }
 
-enum EViewType
+export enum EViewType
 {
     Grid,
     List
@@ -161,7 +159,7 @@ function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Arra
 }
 
 
-function NewTabPage(props: INewTabPageProps): JSX.Element
+function NewTabPage(props: INewTabContentProps): JSX.Element
 {
 
     const [activeMenu, setActiveMenu] = useState(EMenuElementType.Books);
@@ -200,7 +198,7 @@ function NewTabPage(props: INewTabPageProps): JSX.Element
                         viewType === EViewType.Grid ? <BooksGridView books={booksArray} keys={bookKeys}/> : <BooksListView books={booksArray} keys={bookKeys}/>
                     )
 
-                ) : null
+                ) : <CategoriesList list={props.categories} viewType={viewType} callbacks={props.callbacks}/>
             }
         </div>
     </div>);
@@ -208,7 +206,9 @@ function NewTabPage(props: INewTabPageProps): JSX.Element
 
 interface INewTabContentProps
 {
-    savedBooks: Array<IBook>
+    savedBooks: Array<IBook>;
+    categories: Array<ICategory>;
+    callbacks: IAppContentCallbacks;
 }
 
 export class NewTabContent extends React.Component<INewTabContentProps>
@@ -225,6 +225,6 @@ export class NewTabContent extends React.Component<INewTabContentProps>
     render(): JSX.Element
     {
         console.log(`NewTab Content rendered`);
-        return (<NewTabPage savedBooks={this.props.savedBooks}/>);
+        return (<NewTabPage {...this.props}/>);
     }
 }

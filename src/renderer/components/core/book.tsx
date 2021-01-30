@@ -157,7 +157,7 @@ function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksVi
 
 export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element => 
 {
-    return (<div id={newTabStyles['grid-view']}>
+    return (<div className={newTabStyles['grid-view']}>
         {
             props.books.map((book) => 
             {
@@ -170,7 +170,7 @@ export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element =>
 
 export const BooksListView = React.memo((props: IBooksViewProps): JSX.Element =>
 {
-    return (<div id={newTabStyles['list-view']}>
+    return (<div className={newTabStyles['list-view']}>
         {
             props.books.map((book) =>
             {
