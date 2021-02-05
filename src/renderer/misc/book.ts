@@ -21,15 +21,8 @@ export interface IBook extends IBookBase
 export function rawBookToBook(rawBook: IBookBase): IBook
 {
     return {
-        authors: rawBook.authors,
+        ...rawBook,
         categories: [],
-        chunks: rawBook.chunks || [],
-        cover: rawBook.cover,
-        id: rawBook.id,
-        language: rawBook.language,
-        lastTimeOpened: rawBook.lastTimeOpened,
-        publisher: rawBook.publisher,
-        title: rawBook.title
     };
 }
 

@@ -6,7 +6,7 @@ import { Button } from '../common/button';
 import { ListSVG, SearchSVG, GridSVG } from '../../misc/icons';
 import { BooksGridView, BooksListView } from '../core/book';
 import { ICategory } from '../../misc/category';
-import { CategoriesList } from '../core/category';
+import { CategoriesPage } from '../core/category';
 import { IAppContentCallbacks } from '../core/content';
 
 enum EMenuElementType
@@ -101,17 +101,12 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
                 <Button text={`Import book`} moduleClass="import-book" onClick={handleImportBookClick}/>
             </div>
             <div id={newTabStyles['menu-right']}>
-                {
-                    props.activeMenu === EMenuElementType.Books ?
-                    (
-                        <div id={newTabStyles['menu-search']}>
-                            <input type="text" placeholder={`Search`} value={props.searchValue} onChange={handleSearchInput} />
-                            <div id={newTabStyles['menu-search-icon']}>
-                                <SearchSVG />
-                            </div>
-                        </div>
-                    ) : null
-                }
+                <div id={newTabStyles['menu-search']}>
+                    <input type="text" placeholder={`Search`} value={props.searchValue} onChange={handleSearchInput} />
+                    <div id={newTabStyles['menu-search-icon']}>
+                        <SearchSVG />
+                    </div>
+                </div>
                 <div id={newTabStyles['view-type-buttons']}>
                     <ViewTypeButton type={EViewType.Grid} activeType={props.viewType} setActiveType={props.setViewType} />
                     <ViewTypeButton type={EViewType.List} activeType={props.viewType} setActiveType={props.setViewType} />
@@ -120,7 +115,7 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
         </div>);
 }
 
-function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Array<IBook>, string]
+export function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Array<IBook>, string]
 {
     const filteredBooks: Array<IBook> = [];
     let booksKeys = '';
@@ -171,7 +166,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
      */
     const searchQuery = searchValue.trim().toLowerCase();
 
-    const [booksArray, bookKeys] = searchQuery ? filterBooksBySearch(props.savedBooks, searchQuery) : [props.savedBooks, 'ALL'];
+    const [booksArray, bookKeys] = searchQuery && activeMenu === EMenuElementType.Books ? filterBooksBySearch(props.savedBooks, searchQuery) : [props.savedBooks, 'ALL'];
     
     const bIsBooksArrayEmpty = booksArray.length === 0;
 
@@ -198,7 +193,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
                         viewType === EViewType.Grid ? <BooksGridView books={booksArray} keys={bookKeys}/> : <BooksListView books={booksArray} keys={bookKeys}/>
                     )
 
-                ) : <CategoriesList list={props.categories} viewType={viewType} callbacks={props.callbacks}/>
+                ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={props.callbacks}/>
             }
         </div>
     </div>);

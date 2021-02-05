@@ -15,12 +15,27 @@
     --button-background-hover: rgb(35, 35, 35);
     --buton-color-hover: white;
     transition: background-color 0.125s linear, color 0.125s linear;
+    user-select: none;
 }
 
 .button:hover, .button:focus
 {
     background-color: var(--button-background-hover) !important;
     color: var(--buton-color-hover) !important;
+}
+
+.button > div
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.button svg
+{
+    fill: white;
+    --icon-size: 11px;
+    margin-right: 8px;
 }
 
 /*
@@ -33,4 +48,10 @@
     --button-background-hover: #074199;
     height: 37px;
     font-size: 13px;
+}
+
+.red
+{
+    --button-background: #C20A0A;
+    --button-background-hover: #a00b0b;
 }

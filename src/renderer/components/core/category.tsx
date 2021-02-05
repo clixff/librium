@@ -1,94 +1,242 @@
 import React, { ChangeEvent, useState } from 'react';
+import { IBook } from '../../misc/book';
 import { ICategory } from '../../misc/category';
-import { ArrowSVG, CrossSVG } from '../../misc/icons';
+import { ArrowSVG, CrossSVG, PencilSVG } from '../../misc/icons';
 import newTabStyles from '../../styles/modules/newTab.module.css';
+import { Button } from '../common/button';
 import { EViewType } from '../pages/newTab';
-import { BooksGridView, BooksListView } from './book';
+import { BooksGridView, BooksListView, BookCover } from './book';
 import { IAppContentCallbacks } from './content';
+
+
+interface ICategoryCallbacks extends IAppContentCallbacks
+{
+    backToCategories: () => void;
+}
+
 
 interface ICategoryProps
 {
     category: ICategory;
     viewType: EViewType;
     index: number;
-    callbacks: IAppContentCallbacks;
+    callbacks: ICategoryCallbacks;
 }
-
-export function Category(props: ICategoryProps): JSX.Element
+function Category(props: ICategoryProps): JSX.Element
 {
-    const [bVisible, setVisible] = useState(false);
+    const [categoryName, setCategoryName] = useState(props.category.name);
+    const [bIsRenaming, setIsRenaming] = useState(false);
 
-    const [categoryName, _setCategoryName] = useState(props.category.name);
+    const inputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
-    function setCategoryName(name: string)
+    function handleRenameClick(): void
     {
-        _setCategoryName(name);
-        props.category.name = name;
+        setIsRenaming(true);
+
+        console.log(`Input ref is `, inputRef);
+
+        if (inputRef && inputRef.current)
+        {
+            inputRef.current.disabled = false;
+            inputRef.current.focus();
+        }
     }
 
-    function handleChangeName(event: ChangeEvent<HTMLInputElement>): void
+    function handleSaveNameClick(): void
     {
-        const name: string = event.target.value;
-        setCategoryName(name);
-    }
-
-    function handleBlurName(): void
-    {
-        const formattedCategoryName = categoryName.trim();
+        setIsRenaming(false);
+        const formattedCategoryName = categoryName.trim().replace(/(\s){2,}/g, ' ');
         if (formattedCategoryName !== categoryName)
         {
             setCategoryName(formattedCategoryName);
         }
+        props.category.name = formattedCategoryName;
     }
 
-    function handleCategoryHideClick(): void
+    function handleNameChange(event: React.ChangeEvent<HTMLInputElement>): void
     {
-        setVisible(!bVisible);
+        if (!bIsRenaming)
+        {
+            return;
+        }
+
+        const categoryName = event.target.value;
+        setCategoryName(categoryName);
+    }
+
+    function handleBackButtonClick(): void
+    {
+        if (typeof props.callbacks.backToCategories === 'function')
+        {
+            props.callbacks.backToCategories();
+        }
     }
 
     function handleDeleteButtonClick(): void
     {
-        if (props.callbacks && typeof props.callbacks.onCategoryDelete === 'function')
+        if (typeof props.callbacks.onCategoryDelete === 'function')
         {
             props.callbacks.onCategoryDelete(props.index);
         }
+
+        handleBackButtonClick();
     }
 
-    return (<div className={newTabStyles['category-wrapper']}>
-        <div className={newTabStyles['category-header']}>
-            <div className={`${newTabStyles['category-button']} ${newTabStyles['category-hide-button']}`} onClick={handleCategoryHideClick}>
-                <ArrowSVG style={ { transform: `rotate(${bVisible ? 90 : 0 }deg)` } } />
+    return (<div id={newTabStyles['category-wrapper']}>
+        <div id={newTabStyles['category-header']}>
+            <div id={newTabStyles['category-header-left']}>
+                <div id={newTabStyles['category-back-button']} onClick={handleBackButtonClick}>
+                    <ArrowSVG />
+                </div>
+                <input type="text" id={newTabStyles['category-name']} className={`${bIsRenaming ? '' : newTabStyles['category-name-disabled'] }`} value={categoryName} onChange={handleNameChange} placeholder={`${'Category name'}`} disabled={!bIsRenaming} ref={inputRef} />
             </div>
-
-            <input type="text" value={categoryName} onChange={handleChangeName} className={newTabStyles['category-name']} onBlur={handleBlurName}/>
-
-            <div className={`${newTabStyles['category-button']} ${newTabStyles['category-delete-button']}`} title={`Delete category`} onClick={handleDeleteButtonClick}>
-                <CrossSVG />
+            <div id={newTabStyles['category-header-right']}>
+                {
+                    bIsRenaming ?
+                    (<Button text={'Save'} moduleClass="grey" onClick={handleSaveNameClick} />) :
+                    (
+                        <React.Fragment>
+                            <Button moduleClass="grey" title={`Rename category`} onClick={handleRenameClick} >
+                                <React.Fragment>
+                                    <PencilSVG />
+                                    <div>
+                                        {'Rename'}
+                                    </div>
+                                </React.Fragment>
+                            </Button>
+                            <Button moduleClass="red" title={`Delete category`} onClick={handleDeleteButtonClick} >
+                                <React.Fragment>
+                                    <CrossSVG />
+                                    <div>
+                                        {'Delete'}
+                                    </div>
+                                </React.Fragment>
+                            </Button>
+                        </React.Fragment>
+                    )
+                }
             </div>
         </div>
+        
+    </div>);
+}
+
+interface ICategoriesListElementProps
+{
+    category: ICategory;
+    index: number;
+    callbacks: ICategoriesListCallbacks;
+}
+
+/**
+ * Rendered by Categories List
+ */
+function CategoriesListElement(props: ICategoriesListElementProps): JSX.Element
+{
+    /**
+     * First book in the category, used as cover
+     */
+    const firstBook: IBook | undefined = props.category.books[0];
+
+    function handleDeleteClick(event: React.MouseEvent<HTMLDivElement>): void
+    {
+        if (typeof props.callbacks.onCategoryDelete === 'function')
         {
-            bVisible ? (
-                props.viewType === EViewType.Grid ? <BooksGridView books={props.category.books} keys="" /> : <BooksListView books={props.category.books} keys="" />
-            ) : null 
+            props.callbacks.onCategoryDelete(props.index);
+        }
+        event.stopPropagation();
+    }
+    
+    function handleElementClick(): void
+    {
+        if (typeof props.callbacks.onCategoryClick === 'function')
+        {
+            props.callbacks.onCategoryClick(props.index);
+        }
+    }
+
+    return (<div className={newTabStyles['categories-list-element']} onClick={handleElementClick} >
+        <div className={newTabStyles['categories-element-cover']}>
+            {
+                firstBook ?
+                (
+                    <BookCover cover={firstBook.cover} id={firstBook.id} title={firstBook.title} author={firstBook.authors[0]} />
+                ) : null
+            }
+        </div>
+        <div className={newTabStyles['categoriest-element-data']}>
+            <div className={newTabStyles['categories-element-name']}>
+                {
+                    props.category.name
+                }
+            </div>
+            <div className={newTabStyles['categories-element-number']}>
+                {
+                    `${`Books`}: ${props.category.books.length}`
+                }
+            </div>
+        </div>
+        <div className={newTabStyles['categories-element-delete']} title={`Delete category`} onClick={handleDeleteClick} >
+            <CrossSVG />
+        </div>
+    </div>);
+}
+
+interface ICategoriesListCallbacks extends IAppContentCallbacks
+{
+    onCategoryClick: (id: number) => void;
+}
+
+interface ICategoriesListProps extends ICategoriesPageProps
+{
+    callbacks: ICategoriesListCallbacks;
+}
+
+function CategoriesList(props: ICategoriesListProps): JSX.Element
+{
+    return (<div id={newTabStyles['categories-container']}>
+        {
+            props.list.map((category, index) =>
+            {
+                return (<CategoriesListElement category={category} key={category.key} index={index} callbacks={props.callbacks} />);
+            })
         }
     </div>);
 }
 
-interface ICategoriesListProps
+interface ICategoriesPageProps
 {
     list: Array<ICategory>;
     viewType: EViewType;
     callbacks: IAppContentCallbacks;
 }
 
-export function CategoriesList(props: ICategoriesListProps): JSX.Element
+export function CategoriesPage(props: ICategoriesPageProps): JSX.Element
 {
-    return (<div id={newTabStyles['categories-container']}>
+    const [activeCategory, setActiveCategory] = useState(-1);
+    
+    function backToCategoriestList(): void
+    {
+        setActiveCategory(-1);
+    }
+
+    const categoryCallbacks: ICategoryCallbacks = {
+        ...props.callbacks,
+        backToCategories: backToCategoriestList
+    };
+
+    const categoriestListCallbacks: ICategoriesListCallbacks =
+    {
+        ...props.callbacks,
+        onCategoryClick: setActiveCategory
+    };
+
+    return (<div id={newTabStyles['categories-page']}>
         {
-            props.list.map((category, index) =>
-            {
-                return (<Category category={category} key={category.key} viewType={props.viewType} index={index} callbacks={props.callbacks}/>);
-            })
+            activeCategory !== -1 ?
+            (
+                <Category category={props.list[activeCategory]} callbacks={categoryCallbacks} index={activeCategory} viewType={props.viewType} />
+            ) : <CategoriesList {...props} callbacks={categoriestListCallbacks} />
         }
     </div>);
 }

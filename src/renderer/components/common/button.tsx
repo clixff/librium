@@ -3,11 +3,13 @@ import buttonStyles from '../../styles/modules/common/button.module.css';
 
 interface IButtonProps
 {
-    text: string;
+    text?: string;
     onClick?: () => void;
     tabIndex?: number;
     class?: string | Array<string>;
     moduleClass?: string | Array<string>;
+    children?: JSX.Element | string;
+    title?: string;
 }
 
 function addClassNames(className: string, newClassNames: string | Array<string>, bUseStyleModule: boolean): string
@@ -59,10 +61,18 @@ export function Button(props: IButtonProps): JSX.Element
     }
     
     className = className.trim();
-    return (<button onClick={props.onClick} className={className} tabIndex={props.tabIndex}>
+    const customProps: Record<string, unknown> = {
+        
+    };
+
+    if (props.title)
+    {
+        customProps.title = props.title;
+    }
+    return (<button onClick={props.onClick} className={className} tabIndex={props.tabIndex} {...customProps} >
         <div>
             {
-                props.text
+                props.text ? props.text : props.children
             }
         </div>
     </button>);

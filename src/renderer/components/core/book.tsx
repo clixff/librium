@@ -10,7 +10,7 @@ interface IBookCoverProps
     id: string;
 }
 
-function BookCover(props: IBookCoverProps): JSX.Element
+export function BookCover(props: IBookCoverProps): JSX.Element
 {
     const bUseCustomCover = props.cover === '';
     
