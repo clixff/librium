@@ -1,6 +1,7 @@
 import React from 'react';
 import { IBook } from '../../misc/book';
 import newTabStyles from '../../styles/modules/newTab.module.css';
+import { EViewType } from '../pages/newTab';
 
 interface IBookCoverProps
 {
@@ -179,3 +180,13 @@ export const BooksListView = React.memo((props: IBooksViewProps): JSX.Element =>
         }
     </div>);  
 }, bAreBooksViewPropsEqual);
+
+
+export function getBooksViewComponent(viewType: EViewType, books: Array<IBook>, keys: string): JSX.Element
+{
+    const props = {
+        books: books,
+        keys: keys
+    }
+    return (viewType === EViewType.Grid ? <BooksGridView {...props} /> : <BooksListView {...props} /> );
+}

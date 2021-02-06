@@ -5,7 +5,7 @@ import { ArrowSVG, CrossSVG, PencilSVG } from '../../misc/icons';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { EViewType, NoResultWarning } from '../pages/newTab';
-import { BooksGridView, BooksListView, BookCover } from './book';
+import { BooksGridView, BooksListView, BookCover, getBooksViewComponent } from './book';
 import { IAppContentCallbacks } from './content';
 
 
@@ -105,6 +105,11 @@ function Category(props: ICategoryProps): JSX.Element
         handleBackButtonClick();
     }
 
+    const searchQuery = props.searchQuery.toLowerCase().trim();
+    const booksList = props.category.books;
+
+    const bCategoryIsEmpty = booksList.length === 0;
+
     return (<div id={newTabStyles['category-wrapper']}>
         <div id={newTabStyles['category-header']}>
             <div id={newTabStyles['category-header-left']}>
@@ -140,7 +145,11 @@ function Category(props: ICategoryProps): JSX.Element
                 }
             </div>
         </div>
-        
+        {
+            bCategoryIsEmpty ?
+                <NoResultWarning message="No books found" searchQuery={props.searchQuery} />
+            : getBooksViewComponent(props.viewType, booksList, 'ALL')
+        }
     </div>);
 }
 

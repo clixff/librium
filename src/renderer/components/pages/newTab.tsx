@@ -4,7 +4,7 @@ import { ipcRenderer } from 'electron';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { ListSVG, SearchSVG, GridSVG } from '../../misc/icons';
-import { BooksGridView, BooksListView } from '../core/book';
+import { BooksGridView, BooksListView, getBooksViewComponent } from '../core/book';
 import { ICategory } from '../../misc/category';
 import { CategoriesPage, ICategoriesPageCallbacks } from '../core/category';
 import { IAppContentCallbacks } from '../core/content';
@@ -163,7 +163,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
      */
     const searchQuery = searchValue.trim().toLowerCase();
 
-    const [booksArray, bookKeys] = searchQuery && activeMenu === EMenuElementType.Books ? filterBooksBySearch(props.savedBooks, searchQuery) : [props.savedBooks, 'ALL'];
+    const [booksArray, booksKeys] = searchQuery && activeMenu === EMenuElementType.Books ? filterBooksBySearch(props.savedBooks, searchQuery) : [props.savedBooks, 'ALL'];
     
     const bIsBooksArrayEmpty = booksArray.length === 0;
 
@@ -181,9 +181,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
                     bIsBooksArrayEmpty ?
                     (
                         <NoResultWarning message="No books found" searchQuery={searchValue} />
-                    ) : (
-                        viewType === EViewType.Grid ? <BooksGridView books={booksArray} keys={bookKeys}/> : <BooksListView books={booksArray} keys={bookKeys}/>
-                    )
+                    ) : getBooksViewComponent(viewType, booksArray, booksKeys)
 
                 ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={categoriestCallbacks} searchQuery={searchValue} />
             }

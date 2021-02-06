@@ -190,6 +190,20 @@
     fill: var(--view-type-button-icon-active) !important;
 }
 
+@media screen and (min-width: 1920px)
+{
+    .grid-view
+    {
+        width: calc(100% + 75px) !important;
+        margin-left: 75px !important;
+    }
+
+    .book-card
+    {
+        margin-right: 75px !important;
+    }
+}
+
 .grid-view
 {
     display: flex;
@@ -213,6 +227,7 @@
     cursor: pointer;
     overflow: hidden;
     user-select: none;
+    transition: margin-right 0.125s linear;
 }
 
 .book-cover
@@ -576,4 +591,15 @@
 #category-header-right > *:first-child
 {
     margin-right: 15px;
+}
+
+#category-wrapper .grid-view
+{
+    margin-left: 0px !important;
+}
+
+#category-wrapper .grid-view,
+#category-wrapper .list-view
+{
+    margin-top: 35px;
 }
