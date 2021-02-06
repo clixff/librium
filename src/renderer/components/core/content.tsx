@@ -123,7 +123,7 @@ export function AppContent(props: IAppContentProps): JSX.Element
         <Toolbar bBookMenu={activeTab.type === ETabType.book} callbacks={props.callbacks}/>
         {
             activeTab.type === ETabType.newTab ?
-            <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks}/> 
+            <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 
             : activeTab.type === ETabType.book ?
             <BookContent key={activeTab.key}/>
             : <PreferencesContent key={activeTab.key}/>

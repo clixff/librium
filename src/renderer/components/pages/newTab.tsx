@@ -8,8 +8,9 @@ import { BooksGridView, BooksListView, getBooksViewComponent } from '../core/boo
 import { ICategory } from '../../misc/category';
 import { CategoriesPage, ICategoriesPageCallbacks } from '../core/category';
 import { IAppContentCallbacks } from '../core/content';
+import { TabState } from '../../misc/tabs';
 
-enum EMenuElementType
+export enum EMenuElementType
 {
     Books,
     Categories
@@ -27,12 +28,12 @@ function MenuElement(props: IMenuElementProps): JSX.Element
     const bIsActive = props.type === props.activeType;
     function handleClick(): void
     {
-        if (!bIsActive)
+        if (!bIsActive || props.type === EMenuElementType.Categories)
         {
             props.setActiveMenu(props.type);
         }
     }
-    return (<div className={`${newTabStyles['menu-element']} ${bIsActive ? newTabStyles['menu-element-active'] : ''}`}
+    return (<div className={`${newTabStyles['menu-element']} ${bIsActive ? newTabStyles['menu-element-active'] : ''} ${props.type === EMenuElementType.Categories ? newTabStyles['menu-element-categories'] : ''} `}
     onClick={handleClick}>
         {
             props.type === EMenuElementType.Books ? `Books` : `Categories`
@@ -139,10 +140,25 @@ export function NoResultWarning(props: INoResultWarningProps): JSX.Element
 
 function NewTabPage(props: INewTabContentProps): JSX.Element
 {
+    let defaultActiveMenu = EMenuElementType.Books;
+    let defaultActiveCategory = -1;
 
-    const [activeMenu, setActiveMenu] = useState(EMenuElementType.Books);
+    if (props.state)
+    {
+        if (props.state.menu !== undefined)
+        {
+            defaultActiveMenu = props.state.menu;
+        }
+        if (props.state.activeCategory !== undefined)
+        {
+            defaultActiveCategory = props.state.activeCategory;
+        }
+    }
+
+    const [activeMenu, setActiveMenu] = useState(defaultActiveMenu);
     const [viewType, setViewType] = useState(EViewType.Grid);
     const [searchValue, setSearchValue] = useState('');
+    const [activeCategry, setActiveCategory] = useState(defaultActiveCategory);
 
     function clearSearchValue(): void
     {
@@ -154,8 +170,37 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
     
     function handleMenuElementClick(menu: EMenuElementType): void
     {
+        /**
+         * If user is viewing a category, clicking on the `Categories` button will return to the list of categories
+         */
+        if (menu === EMenuElementType.Categories && activeCategry !== -1)
+        {
+            updateActiveCategory(-1);
+        }
+
         setActiveMenu(menu);
         clearSearchValue();
+
+        /**
+         * Update active menu in the tab state
+         */
+        if (props.state)
+        {
+            props.state.menu = menu;
+        }
+    }
+
+    function updateActiveCategory(category: number): void
+    {
+        setActiveCategory(category);
+
+        /**
+         * Update active category in the tab state
+         */
+        if (props.state)
+        {
+            props.state.activeCategory = category;
+        }
     }
 
     /**
@@ -169,7 +214,8 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
 
     const categoriestCallbacks: ICategoriesPageCallbacks = {
         ...props.callbacks,
-        clearSearchQuery: clearSearchValue
+        clearSearchQuery: clearSearchValue,
+        setActiveCategory: updateActiveCategory
     };
 
     return (<div id={newTabStyles.wrapper}>
@@ -183,7 +229,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
                         <NoResultWarning message="No books found" searchQuery={searchValue} />
                     ) : getBooksViewComponent(viewType, booksArray, booksKeys)
 
-                ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={categoriestCallbacks} searchQuery={searchValue} />
+                ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={categoriestCallbacks} searchQuery={searchValue} activeCategory={activeCategry} />
             }
         </div>
     </div>);
@@ -194,6 +240,7 @@ interface INewTabContentProps
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
     callbacks: IAppContentCallbacks;
+    state: TabState;
 }
 
 export class NewTabContent extends React.Component<INewTabContentProps>

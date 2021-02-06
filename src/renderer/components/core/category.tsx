@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IBook } from '../../misc/book';
+import { filterBooksBySearch, IBook } from '../../misc/book';
 import { filterCategoriesBySeach, ICategory } from '../../misc/category';
 import { ArrowSVG, CrossSVG, PencilSVG } from '../../misc/icons';
 import newTabStyles from '../../styles/modules/newTab.module.css';
@@ -106,7 +106,7 @@ function Category(props: ICategoryProps): JSX.Element
     }
 
     const searchQuery = props.searchQuery.toLowerCase().trim();
-    const booksList = props.category.books;
+    const [booksList, booksKeys] = searchQuery ? filterBooksBySearch(props.category.books, searchQuery) : [props.category.books, 'ALL'];
 
     const bCategoryIsEmpty = booksList.length === 0;
 
@@ -148,7 +148,7 @@ function Category(props: ICategoryProps): JSX.Element
         {
             bCategoryIsEmpty ?
                 <NoResultWarning message="No books found" searchQuery={props.searchQuery} />
-            : getBooksViewComponent(props.viewType, booksList, 'ALL')
+            : getBooksViewComponent(props.viewType, booksList, booksKeys)
         }
     </div>);
 }
@@ -265,6 +265,7 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
 export interface ICategoriesPageCallbacks extends IAppContentCallbacks
 {
     clearSearchQuery: () => void;
+    setActiveCategory: (id: number) => void;
 }
 
 interface ICategoriesPageProps
@@ -273,6 +274,7 @@ interface ICategoriesPageProps
     viewType: EViewType;
     callbacks: ICategoriesPageCallbacks;
     searchQuery: string;
+    activeCategory: number;
 }
 
 enum ECategoryPageContent
@@ -282,12 +284,10 @@ enum ECategoryPageContent
 }
 
 export function CategoriesPage(props: ICategoriesPageProps): JSX.Element
-{
-    const [activeCategory, setActiveCategory] = useState(-1);
-    
+{    
     function backToCategoriesList(): void
     {
-        setActiveCategory(-1);
+        props.callbacks.setActiveCategory(-1);
     }
 
     const categoryCallbacks: ICategoryCallbacks = {
@@ -298,10 +298,10 @@ export function CategoriesPage(props: ICategoriesPageProps): JSX.Element
     const categoriesListCallbacks: ICategoriesListCallbacks =
     {
         ...props.callbacks,
-        onCategoryClick: setActiveCategory
+        onCategoryClick: props.callbacks.setActiveCategory
     };
 
-    const activeContent: ECategoryPageContent = activeCategory === -1 ? ECategoryPageContent.list : ECategoryPageContent.category;
+    const activeContent: ECategoryPageContent = props.activeCategory === -1 ? ECategoryPageContent.list : ECategoryPageContent.category;
 
     let categoriesArray: Array<ICategory> = props.list;
     let categoriesListKeys = 'ALL';
@@ -317,7 +317,7 @@ export function CategoriesPage(props: ICategoriesPageProps): JSX.Element
         {
             activeContent === ECategoryPageContent.category ?
             (
-                <Category category={props.list[activeCategory]} callbacks={categoryCallbacks} index={activeCategory} viewType={props.viewType} searchQuery={props.searchQuery} />
+                <Category category={props.list[props.activeCategory]} callbacks={categoryCallbacks} index={props.activeCategory} viewType={props.viewType} searchQuery={props.searchQuery} />
             ) : <CategoriesList {...props} callbacks={categoriesListCallbacks} list={categoriesArray} keys={categoriesListKeys} />
         }
     </div>);

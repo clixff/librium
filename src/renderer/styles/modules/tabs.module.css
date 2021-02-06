@@ -36,7 +36,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: background-color 0.125s linear;
+    /* transition: background-color 0.125s linear; */
 }
 
 .tab-content

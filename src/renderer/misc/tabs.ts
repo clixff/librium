@@ -1,9 +1,19 @@
+import { EMenuElementType } from '../components/pages/newTab'
+
 export enum ETabType
 {
     newTab,
     book,
     preferences
 }
+
+export interface INewTabState
+{
+    menu: EMenuElementType;
+    activeCategory: number;
+}
+
+export type TabState = INewTabState | null;
 
 export class Tab
 {
@@ -12,12 +22,23 @@ export class Tab
     icon: string | null = null;
     key = '';
     content: JSX.Element | null = null;
+    state: TabState = null;
     constructor(name: string, type: ETabType, icon?: string | null, key?: string)
     {
         this.name = name;
         this.type = type;
         this.icon = icon ? icon : null;
         this.key = key ? key : Tab.generateKey(this.name);
+
+        switch (type)
+        {
+            case ETabType.newTab:
+                this.state = {
+                    menu: EMenuElementType.Books,
+                    activeCategory: -1
+                };
+                break;
+        }
     }
     static generateKey(tabName: string): string
     {
