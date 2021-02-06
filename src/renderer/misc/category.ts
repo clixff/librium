@@ -51,3 +51,44 @@ export function parseCategories(rawCategories: Array<IRawCategory>, booksMap: Ma
 
     return categoriesList;
 }
+
+interface ICategoriesSearchResult
+{
+    list: Array<ICategory>;
+    keys: string;
+}
+
+export function filterCategoriesBySeach(categoriesArray: Array<ICategory>, searchQuery: string): ICategoriesSearchResult
+{
+    const searchQueryLowerCased = searchQuery.toLowerCase().trim();
+
+    if (!searchQueryLowerCased)
+    {
+        return {
+            list: categoriesArray,
+            keys: 'ALL'
+        };
+    }
+    
+    const resultArray: Array<ICategory> = [];
+    let listKeys = '';
+
+    for (let i = 0; i < categoriesArray.length; i++)
+    {
+        const category = categoriesArray[i];
+        if (category)
+        {
+            const categoryName = category.name.toLowerCase().trim();
+            if (categoryName.includes(searchQueryLowerCased))
+            {
+                resultArray.push(category);
+                listKeys += category.key;
+            }
+        }
+    }
+
+    return {
+        list: resultArray,
+        keys: listKeys
+    };
+}

@@ -38,3 +38,41 @@ export function rawBooksToBooks(rawBooksArray: Array<IBookBase>, booksMap: Map<s
 
     return books;
 }
+
+export function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Array<IBook>, string]
+{
+    const filteredBooks: Array<IBook> = [];
+    let booksKeys = '';
+
+    for (let i = 0; i < allBooks.length; i++)
+    {
+        const book = allBooks[i];
+        const lowerCasedTitle = book.title.trim().toLowerCase();
+        let bFoundResult = false;
+        if (lowerCasedTitle.includes(searchQuery))
+        {
+            bFoundResult = true;
+        }
+        else
+        {
+            const allBookAuthors = book.authors;
+            for (let j = 0; j < allBookAuthors.length; j++)
+            {
+                const lowerCasedBookAuthor = allBookAuthors[j].trim().toLowerCase();
+                if (lowerCasedBookAuthor.includes(searchQuery))
+                {
+                    bFoundResult = true;
+                    break;
+                }
+            }
+        }
+
+        if (bFoundResult)
+        {
+            booksKeys += book.id;
+            filteredBooks.push(book);
+        }
+    }
+
+    return [filteredBooks, booksKeys];
+}

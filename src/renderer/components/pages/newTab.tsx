@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { IBook } from '../../misc/book';
+import { IBook, filterBooksBySearch } from '../../misc/book';
 import { ipcRenderer } from 'electron';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { ListSVG, SearchSVG, GridSVG } from '../../misc/icons';
 import { BooksGridView, BooksListView } from '../core/book';
 import { ICategory } from '../../misc/category';
-import { CategoriesPage } from '../core/category';
+import { CategoriesPage, ICategoriesPageCallbacks } from '../core/category';
 import { IAppContentCallbacks } from '../core/content';
 
 enum EMenuElementType
@@ -115,44 +115,27 @@ function NewTabMenu(props: INewTabMenuProps): JSX.Element
         </div>);
 }
 
-export function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string): [Array<IBook>, string]
+interface INoResultWarningProps
 {
-    const filteredBooks: Array<IBook> = [];
-    let booksKeys = '';
-
-    for (let i = 0; i < allBooks.length; i++)
-    {
-        const book = allBooks[i];
-        const lowerCasedTitle = book.title.trim().toLowerCase();
-        let bFoundResult = false;
-        if (lowerCasedTitle.includes(searchQuery))
-        {
-            bFoundResult = true;
-        }
-        else
-        {
-            const allBookAuthors = book.authors;
-            for (let j = 0; j < allBookAuthors.length; j++)
-            {
-                const lowerCasedBookAuthor = allBookAuthors[j].trim().toLowerCase();
-                if (lowerCasedBookAuthor.includes(searchQuery))
-                {
-                    bFoundResult = true;
-                    break;
-                }
-            }
-        }
-
-        if (bFoundResult)
-        {
-            booksKeys += book.id;
-            filteredBooks.push(book);
-        }
-    }
-
-    return [filteredBooks, booksKeys];
+    message: string;
+    searchQuery: string;
 }
 
+/**
+ * Renders when there's no books or no categories or no search result
+ */
+export function NoResultWarning(props: INoResultWarningProps): JSX.Element
+{
+    return (<div id={newTabStyles['no-result-warning']}>
+        <div id={newTabStyles['no-result-text']}>
+            {
+                props.searchQuery ?
+                    `No result for "${props.searchQuery}"`
+                : `${props.message}`
+            }
+        </div>
+    </div>);
+}
 
 function NewTabPage(props: INewTabContentProps): JSX.Element
 {
@@ -160,6 +143,20 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
     const [activeMenu, setActiveMenu] = useState(EMenuElementType.Books);
     const [viewType, setViewType] = useState(EViewType.Grid);
     const [searchValue, setSearchValue] = useState('');
+
+    function clearSearchValue(): void
+    {
+        if (searchValue !== '')
+        {
+            setSearchValue('');
+        }
+    }
+    
+    function handleMenuElementClick(menu: EMenuElementType): void
+    {
+        setActiveMenu(menu);
+        clearSearchValue();
+    }
 
     /**
      * Formatted search value
@@ -170,30 +167,25 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
     
     const bIsBooksArrayEmpty = booksArray.length === 0;
 
+    const categoriestCallbacks: ICategoriesPageCallbacks = {
+        ...props.callbacks,
+        clearSearchQuery: clearSearchValue
+    };
+
     return (<div id={newTabStyles.wrapper}>
         <div id={newTabStyles['page-content']}>
-            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={setActiveMenu} setViewType={setViewType} searchValue={searchValue} setSearchValue={setSearchValue}/>
+            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={handleMenuElementClick} setViewType={setViewType} searchValue={searchValue} setSearchValue={setSearchValue}/>
             {
                 activeMenu === EMenuElementType.Books ?
                 (
                     bIsBooksArrayEmpty ?
                     (
-                        <div id={newTabStyles['no-books-warning']}>
-                            {
-                                searchQuery ? (
-                                    <div id={newTabStyles['no-books-text']}>
-                                        {
-                                            `No result for "${searchValue.trim()}"`
-                                        }
-                                    </div>
-                                ) : null
-                            }
-                        </div>
+                        <NoResultWarning message="No books found" searchQuery={searchValue} />
                     ) : (
                         viewType === EViewType.Grid ? <BooksGridView books={booksArray} keys={bookKeys}/> : <BooksListView books={booksArray} keys={bookKeys}/>
                     )
 
-                ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={props.callbacks}/>
+                ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={categoriestCallbacks} searchQuery={searchValue} />
             }
         </div>
     </div>);

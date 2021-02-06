@@ -152,7 +152,7 @@ interface IBooksViewProps
 
 function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksViewProps): boolean
 {
-    return prevProps.keys === nextProps.keys;
+    return prevProps.keys === nextProps.keys && prevProps.books.length === nextProps.books.length;
 }
 
 export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element => 
