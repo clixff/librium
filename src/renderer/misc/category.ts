@@ -13,10 +13,16 @@ export interface ICategory
 export interface IRawCategory
 {
     name: string;
+    key: string;
     /**
      * Array of books IDs
      */
     books: Array<string>;
+}
+
+export function generateCategoryKey(name: string): string
+{
+    return `${name}-${Math.floor(Math.random() * 0xFFFFFFFF).toString(16)}`;
 }
 
 export function parseCategories(rawCategories: Array<IRawCategory>, booksMap: Map<string, IBook>): Array<ICategory>
@@ -33,7 +39,7 @@ export function parseCategories(rawCategories: Array<IRawCategory>, booksMap: Ma
 
         const category: ICategory = {
             name: rawCategory.name,
-            key: `${rawCategory.name}-${Math.floor(Math.random() * 0xFFFF).toString(16)}`,
+            key: rawCategory.key,
             books: []
         };
         for (let j = 0; j < rawCategory.books.length; j++)

@@ -1,10 +1,12 @@
 import path from 'path';
 import { getAppDataPath } from '../paths';
 import fs, { promises as fsPromises } from 'fs';
+import { ipcMain } from 'electron';
 
 export interface ICategory
 {
     name: string;
+    key: string;
     /**
      * Array of books IDs
      */
@@ -57,3 +59,35 @@ export async function loadCategories(): Promise<Array<ICategory>>
         });
     });
 }
+
+ipcMain.on('update-category-name', async (event, prevKey, newName, newKey) =>
+{
+    try
+    {
+        console.log(`Rename category ${prevKey} to ${newName}`);
+        if (categoriesList)
+        {
+            let bRenamed = false;
+            for (let i = 0; i < categoriesList.length; i++)
+            {
+                const category = categoriesList[i];
+                if (category && category.key === prevKey)
+                {
+                    category.name = newName;
+                    category.key = newKey;
+                    bRenamed = true;
+                    break;
+                }
+            }
+
+            if (bRenamed)
+            {
+                saveCategoriesFile();
+            }
+        }
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+});

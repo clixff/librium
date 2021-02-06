@@ -1,6 +1,7 @@
+import { ipcRenderer } from 'electron';
 import React, { useState } from 'react';
 import { filterBooksBySearch, IBook } from '../../misc/book';
-import { filterCategoriesBySeach, ICategory } from '../../misc/category';
+import { filterCategoriesBySeach, generateCategoryKey, ICategory } from '../../misc/category';
 import { ArrowSVG, CrossSVG, PencilSVG } from '../../misc/icons';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
@@ -33,8 +34,6 @@ function Category(props: ICategoryProps): JSX.Element
     {
         setIsRenaming(true);
 
-        console.log(`Input ref is `, inputRef);
-
         if (inputRef && inputRef.current)
         {
             inputRef.current.disabled = false;
@@ -46,9 +45,21 @@ function Category(props: ICategoryProps): JSX.Element
     {
         setIsRenaming(false);
         let formattedCategoryName = categoryName.trim().replace(/(\s){2,}/g, ' ');
+
         if (formattedCategoryName === '')
         {
             formattedCategoryName = props.category.name;
+        }
+
+        /**
+         * Save the new category name to disk if it's not equal to the previous name
+         */
+        if (formattedCategoryName !== props.category.name)
+        {
+            const prevCategoryKey = props.category.key;
+            props.category.key = generateCategoryKey(formattedCategoryName);
+            console.log(`Renaming category`);
+            ipcRenderer.send('update-category-name', prevCategoryKey, formattedCategoryName, props.category.key);
         }
 
         if (formattedCategoryName !== categoryName)
@@ -116,7 +127,7 @@ function Category(props: ICategoryProps): JSX.Element
                 <div id={newTabStyles['category-back-button']} onClick={handleBackButtonClick}>
                     <ArrowSVG />
                 </div>
-                <input type="text" id={newTabStyles['category-name']} value={categoryName} onChange={handleNameChange} placeholder={`${'Category name'}`} disabled={!bIsRenaming} ref={inputRef} onKeyUp={handleInputKeyUp} />
+                <input type="text" id={newTabStyles['category-name']} value={categoryName} onChange={handleNameChange} placeholder={`${'Category name'}`} disabled={!bIsRenaming} ref={inputRef} onKeyUp={handleInputKeyUp} title={categoryName} />
             </div>
             <div id={newTabStyles['category-header-right']}>
                 {
@@ -202,7 +213,7 @@ function CategoriesListElement(props: ICategoriesListElementProps): JSX.Element
             }
         </div>
         <div className={newTabStyles['categories-element-data']}>
-            <div className={newTabStyles['categories-element-name']}>
+            <div className={newTabStyles['categories-element-name']} title={props.category.name}>
                 {
                     props.category.name
                 }

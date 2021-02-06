@@ -455,6 +455,7 @@
     margin-bottom: 10px;
     cursor: pointer;
     width: fit-content;
+    max-width: 100%;
 }
 
 .categories-element-cover
@@ -487,6 +488,7 @@
     justify-content: center;
     margin-left: 15px;
     overflow: hidden;
+    width: calc(100% - 100px);
 }
 
 .categories-element-name
@@ -494,6 +496,9 @@
     font-size: 16px;
     font-weight: 600;
     color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .categories-element-number

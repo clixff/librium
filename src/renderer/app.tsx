@@ -9,6 +9,7 @@ import { AppContent, IAppContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
 import { IRawCategory, ICategory, parseCategories } from './misc/category';
+import { EMenuElementType } from './components/pages/newTab';
 
 interface IAppState
 {
@@ -197,6 +198,34 @@ class App extends React.Component<unknown, IAppState>
         if (CategoriesList[categoryId])
         {
             CategoriesList.splice(categoryId, 1);
+            
+            const tabsList = this.state.tabs;
+
+            /**
+             * Fix categories IDs in tab states
+             */
+            for (let i = 0; i < tabsList.length; i++)
+            {
+                const tab = tabsList[i];
+                if (tab.type === ETabType.newTab)
+                {
+                    if (tab.state && tab.state.menu === EMenuElementType.Categories)
+                    {
+                        /**
+                         * If there's a tab with category that needs to be removed, return to the list of categories in this tab
+                         */
+                        if (tab.state.activeCategory === categoryId)
+                        {
+                            tab.state.activeCategory = -1;
+                        } 
+                        else if (tab.state.activeCategory > categoryId)
+                        {
+                            tab.state.activeCategory--;
+                        }
+                    }
+                }
+            }
+
             this.setState({
                 categories: CategoriesList
             });
