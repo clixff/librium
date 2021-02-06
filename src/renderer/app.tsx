@@ -152,10 +152,14 @@ class App extends React.Component<unknown, IAppState>
             }
         }
 
+        /**
+         * If preferences tab not found, create it
+         */
         if (preferencesTabId === -1)
         {
-            tabsList.push(new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences')));
-            preferencesTabId = tabsList.length - 1;
+            const preferencesTab = new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences'));
+            preferencesTabId = this.state.activeTab + 1;
+            tabsList.splice(preferencesTabId, 0, preferencesTab);
         }
 
         this.setState({
