@@ -1,5 +1,6 @@
+import { ipcRenderer } from "electron";
 import { IBookChunk } from "../../shared/schema";
-import { ICategory } from "./category";
+import { deleteBookFromCategory, ICategory } from "./category";
 
 export interface IBookBase
 {
@@ -75,4 +76,18 @@ export function filterBooksBySearch(allBooks: Array<IBook>, searchQuery: string)
     }
 
     return [filteredBooks, booksKeys];
+}
+
+export function deleteBook(book: IBook): void
+{
+    ipcRenderer.send('delete-book', book.id);
+
+    if (book.categories.length)
+    {
+        for (let i = 0; i < book.categories.length; i++)
+        {
+            const category = book.categories[i];
+            deleteBookFromCategory(category, book);
+        }
+    }
 }

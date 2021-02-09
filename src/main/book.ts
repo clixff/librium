@@ -1,5 +1,5 @@
 import path from 'path';
-import { promises as fsPromises } from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import { IBookChunk } from '../shared/schema';
 import { ipcMain } from "electron";
 import { getConfig } from './config';
@@ -194,9 +194,38 @@ async function getBooksList(): Promise<Array<IBookToExport>>
 
 ipcMain.handle('load-saved-books', async () => 
 {
-    const booksToExport: Array<IBookToExport> = await getBooksList();
-    console.log(`BookToExport: `, booksToExport);
-    const categoriesList: Array<ICategory> = await loadCategories();
+    try
+    {
+        const booksToExport: Array<IBookToExport> = await getBooksList();
+        console.log(`BookToExport: `, booksToExport);
+        const categoriesList: Array<ICategory> = await loadCategories();
+    
+        return [booksToExport, categoriesList];
+    }
+    catch (error)
+    {
+        console.error(error);   
+    }
 
-    return [booksToExport, categoriesList];
+    return [[], []];
+});
+
+ipcMain.on('delete-book', async (event, bookId: string) => 
+{
+    try
+    {
+        const config = getConfig();
+        if (config && config.booksDir)
+        {
+            const booksDirPath: string = config.booksDir;
+            const bookPath: string = path.join(booksDirPath, bookId);
+            fs.rm(bookPath, { force: true, recursive: true }, () => {
+                console.log(`Book ${bookId} deleted`);
+            });
+        }
+    }
+    catch(error)
+    {
+        console.error(error);
+    }
 });

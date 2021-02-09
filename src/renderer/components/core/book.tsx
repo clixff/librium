@@ -90,8 +90,8 @@ function handleBookClick(event: React.MouseEvent<HTMLDivElement>, book: IBook, c
      */
     if (event.button === 2)
     {
-        const contextMenu = <BookContextMenu />;
-        callbacks.setContextMenu(contextMenu, event.pageX, event.pageY, 200, 200);
+        const contextMenu = <BookContextMenu book={book} callbacks={callbacks} />;
+        callbacks.setContextMenu(contextMenu, event.pageX, event.pageY, 216, 104);
     }
 
 }
@@ -178,7 +178,8 @@ interface IBooksViewProps
 
 function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksViewProps): boolean
 {
-    return prevProps.keys === nextProps.keys && prevProps.books.length === nextProps.books.length;
+    console.log(`prevLength: ${prevProps.books.length}. nextProps: ${nextProps.books.length}. equal: ${prevProps.books === nextProps.books}`);
+    return prevProps.keys === nextProps.keys && prevProps.books === nextProps.books && prevProps.books.length === nextProps.books.length;
 }
 
 export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element => 
@@ -209,6 +210,7 @@ export const BooksListView = React.memo((props: IBooksViewProps): JSX.Element =>
 export interface IBookCallbacks
 {
     setContextMenu: (context: JSX.Element | null, x: number, y: number, width: number, height: number) => void;
+    deleteBook: (book: IBook) => void;
 }
 
 export function getBooksViewComponent(viewType: EViewType, books: Array<IBook>, keys: string, callbacks: IBookCallbacks): JSX.Element

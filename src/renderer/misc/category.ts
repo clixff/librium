@@ -1,10 +1,11 @@
+import { ipcRenderer } from "electron";
 import { IBook } from "./book";
 
 export interface ICategory
 {
     name: string;
     books: Array<IBook>;
-    key: string;
+    id: string;
 }
 
 /**
@@ -13,14 +14,14 @@ export interface ICategory
 export interface IRawCategory
 {
     name: string;
-    key: string;
+    id: string;
     /**
      * Array of books IDs
      */
     books: Array<string>;
 }
 
-export function generateCategoryKey(name: string): string
+export function generateCategoryId(name: string): string
 {
     return `${name}-${Math.floor(Math.random() * 0xFFFFFFFF).toString(16)}`;
 }
@@ -39,7 +40,7 @@ export function parseCategories(rawCategories: Array<IRawCategory>, booksMap: Ma
 
         const category: ICategory = {
             name: rawCategory.name,
-            key: rawCategory.key,
+            id: rawCategory.id,
             books: []
         };
         for (let j = 0; j < rawCategory.books.length; j++)
@@ -88,7 +89,7 @@ export function filterCategoriesBySeach(categoriesArray: Array<ICategory>, searc
             if (categoryName.includes(searchQueryLowerCased))
             {
                 resultArray.push(category);
-                listKeys += category.key;
+                listKeys += category.id;
             }
         }
     }
@@ -97,4 +98,18 @@ export function filterCategoriesBySeach(categoriesArray: Array<ICategory>, searc
         list: resultArray,
         keys: listKeys
     };
+}
+
+export function deleteBookFromCategory(category: ICategory, book: IBook): void
+{
+    for (let i = 0; i < category.books.length; i++)
+    {
+        const tempBook = category.books[i];
+        if (tempBook.id === book.id)
+        {
+            category.books.splice(i, 1);
+            ipcRenderer.send('delete-book-from-category', category.id, book.id);
+            break;
+        }
+    }
 }

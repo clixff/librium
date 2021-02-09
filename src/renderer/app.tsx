@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
-import { IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
+import { deleteBook, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
@@ -62,7 +62,8 @@ class App extends React.Component<unknown, IAppState>
 
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
         'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
-        'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll']);
+        'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
+        'deleteBook', 'openDeletionBookWarning']);
     }
     componentDidMount(): void
     {
@@ -263,8 +264,60 @@ class App extends React.Component<unknown, IAppState>
             });
         }
     }
+    openDeletionBookWarning(book: IBook): void
+    {
+        /**
+         * TODO: Open a dialog with the book deletion warning
+         */
+        this.deleteBook(book);
+    }
+    deleteBook(book: IBook): void
+    {
+        if (book)
+        {
+            let booksList = this.state.savedBooks;
+            for (let i = 0; i < booksList.length; i++)
+            {
+                const tempBook = booksList[i];
+                if (tempBook.id === book.id)
+                {
+                    booksList.splice(i, 1);
+                    break;
+                }
+            }
+
+            booksList = [...booksList];
+
+            this.booksMap.delete(book.id);
+
+            deleteBook(book);
+
+            this.setState({
+                savedBooks: booksList
+            });
+        }
+    }
     setContextMenu(contextMenu: JSX.Element | null, posX: number, posY: number, width: number, height: number): void
     {
+        if (window)
+        {
+            const windowWidth: number = window.innerWidth - 20;
+            const windowHeight: number = window.innerHeight - 20;
+
+            const contextMenuRightCoord = posX + width;
+            const contextMenuBottomCoord = posY + height;
+
+            if (contextMenuRightCoord > windowWidth)
+            {
+                posX -= contextMenuRightCoord - windowWidth;
+            }
+
+            if (contextMenuBottomCoord > windowHeight)
+            {
+                posY -= contextMenuBottomCoord - windowHeight;
+            }
+        }
+
         this.setState({
             contextMenu: {
                 element: contextMenu,
@@ -290,7 +343,8 @@ class App extends React.Component<unknown, IAppState>
             onPreferencesClick: this.handlePreferencesClick,
             onCategoryDelete: this.handleCategoryDeleteClick,
             newTabBooksCallbacks: {
-                setContextMenu: this.setContextMenu
+                setContextMenu: this.setContextMenu,
+                deleteBook: this.openDeletionBookWarning
             }
         };
 
@@ -300,7 +354,7 @@ class App extends React.Component<unknown, IAppState>
             <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} />
             {
                 this.state.contextMenu && this.state.contextMenu.element ?
-                <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >
+                <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu}>
                     {
                         this.state.contextMenu.element
                     }

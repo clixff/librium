@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import React, { useState } from 'react';
 import { filterBooksBySearch, IBook } from '../../misc/book';
-import { filterCategoriesBySeach, generateCategoryKey, ICategory } from '../../misc/category';
+import { filterCategoriesBySeach, generateCategoryId, ICategory } from '../../misc/category';
 import { ArrowSVG, CrossSVG, PencilSVG } from '../../misc/icons';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
@@ -56,10 +56,10 @@ function Category(props: ICategoryProps): JSX.Element
          */
         if (formattedCategoryName !== props.category.name)
         {
-            const prevCategoryKey = props.category.key;
-            props.category.key = generateCategoryKey(formattedCategoryName);
+            const prevCategoryKey = props.category.id;
+            props.category.id = generateCategoryId(formattedCategoryName);
             console.log(`Renaming category`);
-            ipcRenderer.send('update-category-name', prevCategoryKey, formattedCategoryName, props.category.key);
+            ipcRenderer.send('update-category-name', prevCategoryKey, formattedCategoryName, props.category.id);
         }
 
         if (formattedCategoryName !== categoryName)
@@ -254,7 +254,7 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
         {
             props.list.map((category, index) =>
             {
-                return (<CategoriesListElement category={category} key={category.key} index={index} callbacks={props.callbacks} />);
+                return (<CategoriesListElement category={category} key={category.id} index={index} callbacks={props.callbacks} />);
             })
         }
     </div>);
