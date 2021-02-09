@@ -1,6 +1,7 @@
 import React from 'react';
 import { IBook } from '../../misc/book';
 import newTabStyles from '../../styles/modules/newTab.module.css';
+import { BookContextMenu } from '../misc/context';
 import { EViewType } from '../pages/newTab';
 
 interface IBookCoverProps
@@ -62,6 +63,7 @@ export function BookCover(props: IBookCoverProps): JSX.Element
 interface IBookElementProps
 {
     book: IBook;
+    callbacks: IBookCallbacks;
 }
 
 interface IBookDataForRender
@@ -81,10 +83,28 @@ function getBookDataForRender(book: IBook): IBookDataForRender
     };
 }
 
+function handleBookClick(event: React.MouseEvent<HTMLDivElement>, book: IBook, callbacks: IBookCallbacks): void
+{
+    /**
+     * Right mouse button click
+     */
+    if (event.button === 2)
+    {
+        const contextMenu = <BookContextMenu />;
+        callbacks.setContextMenu(contextMenu, event.pageX, event.pageY, 200, 200);
+    }
+
+}
+
 function BookCard(props: IBookElementProps): JSX.Element
 {
+    function handleClick(event: React.MouseEvent<HTMLDivElement>): void
+    {
+        handleBookClick(event, props.book, props.callbacks);
+    }
+
     const { authorName, hoverText } = getBookDataForRender(props.book);
-    return (<div className={newTabStyles['book-card']} title={hoverText}>
+    return (<div className={newTabStyles['book-card']} title={hoverText} onClick={handleClick} onContextMenu={handleClick}>
         <BookCover cover={props.book.cover} author={authorName} title={props.book.title} id={props.book.id}/>
         <div className={newTabStyles['book-card-info']}>
             <div className={newTabStyles['book-card-title']} >
@@ -104,8 +124,13 @@ function BookCard(props: IBookElementProps): JSX.Element
 
 function BookListElement(props: IBookElementProps): JSX.Element
 {
+    function handleClick(event: React.MouseEvent<HTMLDivElement>): void
+    {
+        handleBookClick(event, props.book, props.callbacks);
+    }
+
     const { allAuthorsNames, hoverText } = getBookDataForRender(props.book);
-    return (<div className={newTabStyles['book-list-element']} title={hoverText}>
+    return (<div className={newTabStyles['book-list-element']} title={hoverText} onClick={handleClick} onContextMenu={handleClick}>
         <div className={newTabStyles['book-element-wrapper']}>
             <BookCover cover={props.book.cover} id={props.book.id} title={props.book.title} author={props.book.authors[0]} />
             <div className={newTabStyles['book-element-right']}>
@@ -148,8 +173,8 @@ interface IBooksViewProps
 {
     books: Array<IBook>;
     keys: string;
+    callbacks: IBookCallbacks;
 }
-
 
 function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksViewProps): boolean
 {
@@ -162,7 +187,7 @@ export const BooksGridView = React.memo((props: IBooksViewProps): JSX.Element =>
         {
             props.books.map((book) => 
             {
-                return (<BookCard book={book} key={book.id} />);
+                return (<BookCard book={book} key={book.id} callbacks={props.callbacks} />);
             })
         }
     </div>);
@@ -175,18 +200,24 @@ export const BooksListView = React.memo((props: IBooksViewProps): JSX.Element =>
         {
             props.books.map((book) =>
             {
-                return (<BookListElement book={book} key={book.id} />);
+                return (<BookListElement book={book} key={book.id} callbacks={props.callbacks} />);
             })
         }
     </div>);  
 }, bAreBooksViewPropsEqual);
 
-
-export function getBooksViewComponent(viewType: EViewType, books: Array<IBook>, keys: string): JSX.Element
+export interface IBookCallbacks
 {
-    const props = {
+    setContextMenu: (context: JSX.Element | null, x: number, y: number, width: number, height: number) => void;
+}
+
+export function getBooksViewComponent(viewType: EViewType, books: Array<IBook>, keys: string, callbacks: IBookCallbacks): JSX.Element
+{
+    const props: IBooksViewProps = {
         books: books,
-        keys: keys
-    }
+        keys: keys,
+        callbacks: callbacks
+    };
+
     return (viewType === EViewType.Grid ? <BooksGridView {...props} /> : <BooksListView {...props} /> );
 }

@@ -4,10 +4,10 @@ import { ipcRenderer } from 'electron';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { ListSVG, SearchSVG, GridSVG } from '../../misc/icons';
-import { BooksGridView, BooksListView, getBooksViewComponent } from '../core/book';
+import { getBooksViewComponent, IBookCallbacks } from '../core/book';
 import { ICategory } from '../../misc/category';
 import { CategoriesPage, ICategoriesPageCallbacks } from '../core/category';
-import { IAppContentCallbacks } from '../core/content';
+import { ITabContentCallbacks } from '../core/content';
 import { TabState } from '../../misc/tabs';
 
 export enum EMenuElementType
@@ -142,6 +142,7 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
 {
     let defaultActiveMenu = EMenuElementType.Books;
     let defaultActiveCategory = -1;
+    let defaultViewType = EViewType.Grid;
 
     if (props.state)
     {
@@ -153,10 +154,14 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
         {
             defaultActiveCategory = props.state.activeCategory;
         }
+        if (props.state.viewType !== undefined)
+        {
+            defaultViewType = props.state.viewType;
+        }
     }
 
     const [activeMenu, setActiveMenu] = useState(defaultActiveMenu);
-    const [viewType, setViewType] = useState(EViewType.Grid);
+    const [viewType, setViewType] = useState(defaultViewType);
     const [searchValue, setSearchValue] = useState('');
     const [activeCategry, setActiveCategory] = useState(defaultActiveCategory);
 
@@ -203,6 +208,20 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
         }
     }
 
+    function updateViewType(type: EViewType): void
+    {
+        setViewType(type);
+        
+        /**
+         * Update view type in the tab state
+         */
+
+        if (props.state)
+        {
+            props.state.viewType = type;
+        }
+    }
+
     /**
      * Formatted search value
      */
@@ -218,16 +237,17 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
         setActiveCategory: updateActiveCategory
     };
 
+
     return (<div id={newTabStyles.wrapper}>
         <div id={newTabStyles['page-content']}>
-            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={handleMenuElementClick} setViewType={setViewType} searchValue={searchValue} setSearchValue={setSearchValue}/>
+            <NewTabMenu activeMenu={activeMenu} viewType={viewType} setActiveMenu={handleMenuElementClick} setViewType={updateViewType} searchValue={searchValue} setSearchValue={setSearchValue}/>
             {
                 activeMenu === EMenuElementType.Books ?
                 (
                     bIsBooksArrayEmpty ?
                     (
                         <NoResultWarning message="No books found" searchQuery={searchValue} />
-                    ) : getBooksViewComponent(viewType, booksArray, booksKeys)
+                    ) : getBooksViewComponent(viewType, booksArray, booksKeys, props.callbacks.newTabBooksCallbacks)
 
                 ) : <CategoriesPage list={props.categories} viewType={viewType} callbacks={categoriestCallbacks} searchQuery={searchValue} activeCategory={activeCategry} />
             }
@@ -239,7 +259,7 @@ interface INewTabContentProps
 {
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
-    callbacks: IAppContentCallbacks;
+    callbacks: ITabContentCallbacks;
     state: TabState;
 }
 

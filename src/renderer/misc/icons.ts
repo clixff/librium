@@ -12,6 +12,8 @@ import GridSVG from '../assets/svg/misc/grid.svg';
 import ArrowSVG from '../assets/svg/misc/arrow.svg';
 import CrossSVG from '../assets/svg/misc/cross.svg';
 import PencilSVG from '../assets/svg/misc/pencil.svg';
+import BookSVG from '../assets/svg/misc/book.svg';
+import TrashcanSVG from '../assets/svg/misc/trashcan.svg';
 
 export {
     MinimizeSVG,
@@ -27,5 +29,7 @@ export {
     GridSVG,
     ArrowSVG,
     CrossSVG,
-    PencilSVG
+    PencilSVG,
+    BookSVG,
+    TrashcanSVG
 };

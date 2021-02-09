@@ -5,6 +5,7 @@ import { PreferencesSVG, BookmarkSVG, FullscreenSVG, ListSVG, SearchSVG, TextSVG
 import { IBook } from '../../misc/book';
 import { NewTabContent } from '../pages/newTab';
 import { ICategory } from '../../misc/category';
+import { IBookCallbacks } from './book';
 
 
 class BookContent extends React.Component
@@ -67,8 +68,8 @@ function ToolbarButton(props: IToolbarButtonProps): JSX.Element
 
 interface ToolbarProps
 {
-    bBookMenu: boolean;
-    callbacks: IAppContentCallbacks;
+    bIsBookContent: boolean;
+    callbacks: ITabContentCallbacks;
 }
 
 function Toolbar(props: ToolbarProps): JSX.Element
@@ -79,7 +80,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
         </div>
         <div id={ContentStyles['toolbar-right']}>
             {
-                props.bBookMenu ? (
+                props.bIsBookContent ? (
                     <React.Fragment>
                         <ToolbarButton icon={TextSVG} />
                         <ToolbarButton icon={BookmarkSVG} />
@@ -94,22 +95,23 @@ function Toolbar(props: ToolbarProps): JSX.Element
     </div>);
 }
 
-export interface IAppContentCallbacks
+export interface ITabContentCallbacks
 {
     onPreferencesClick: () => void;
     onCategoryDelete: (id: number) => void;
+    newTabBooksCallbacks: IBookCallbacks;
 }
 
-interface IAppContentProps
+interface ITabContentProps
 {
     tabsList: Array<Tab>;
     activeTab: number;
-    callbacks: IAppContentCallbacks;
+    callbacks: ITabContentCallbacks;
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
 }
 
-export function AppContent(props: IAppContentProps): JSX.Element
+export function TabContent(props: ITabContentProps): JSX.Element
 {
     const tabsList = props.tabsList;
     const activeTab: Tab | undefined = tabsList[props.activeTab];
@@ -120,7 +122,7 @@ export function AppContent(props: IAppContentProps): JSX.Element
     }
 
     return (<div id={ContentStyles.wrapper}>
-        <Toolbar bBookMenu={activeTab.type === ETabType.book} callbacks={props.callbacks}/>
+        <Toolbar bIsBookContent={activeTab.type === ETabType.book} callbacks={props.callbacks}/>
         {
             activeTab.type === ETabType.newTab ?
             <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 

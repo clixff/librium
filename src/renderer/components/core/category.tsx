@@ -7,7 +7,7 @@ import newTabStyles from '../../styles/modules/newTab.module.css';
 import { Button } from '../common/button';
 import { EViewType, NoResultWarning } from '../pages/newTab';
 import { BooksGridView, BooksListView, BookCover, getBooksViewComponent } from './book';
-import { IAppContentCallbacks } from './content';
+import { ITabContentCallbacks } from './content';
 
 
 interface ICategoryCallbacks extends ICategoriesPageCallbacks
@@ -159,7 +159,7 @@ function Category(props: ICategoryProps): JSX.Element
         {
             bCategoryIsEmpty ?
                 <NoResultWarning message="No books found" searchQuery={props.searchQuery} />
-            : getBooksViewComponent(props.viewType, booksList, booksKeys)
+            : getBooksViewComponent(props.viewType, booksList, booksKeys, props.callbacks.newTabBooksCallbacks)
         }
     </div>);
 }
@@ -273,7 +273,7 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
     return prevProps.keys === nextProps.keys && prevProps.list.length === nextProps.list.length;
 });
 
-export interface ICategoriesPageCallbacks extends IAppContentCallbacks
+export interface ICategoriesPageCallbacks extends ITabContentCallbacks
 {
     clearSearchQuery: () => void;
     setActiveCategory: (id: number) => void;

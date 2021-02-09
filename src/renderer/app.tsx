@@ -5,11 +5,13 @@ import { ipcRenderer } from 'electron';
 import { IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
-import { AppContent, IAppContentCallbacks } from './components/core/content';
+import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
 import { IRawCategory, ICategory, parseCategories } from './misc/category';
 import { EMenuElementType } from './components/pages/newTab';
+import { ContextMenuWrapper } from './components/misc/context';
+import { bindFunctionsContext } from './misc/misc';
 
 interface IAppState
 {
@@ -21,6 +23,17 @@ interface IAppState
     activeTab: number;
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
+    contextMenu: {
+        element: JSX.Element | null;
+        /**
+         * X position on the screen
+         */
+        x: number;
+        /**
+         * Y position on the screen
+         */
+        y: number;
+    }
 }
 
 class App extends React.Component<unknown, IAppState>
@@ -39,15 +52,17 @@ class App extends React.Component<unknown, IAppState>
             ],
             activeTab: 0,
             savedBooks: [],
-            categories: []
+            categories: [],
+            contextMenu: {
+                element: null,
+                x: 0,
+                y: 0
+            }
         };
-        this.handleBookLoaded = this.handleBookLoaded.bind(this);
-        this.handleOpenNewTabButtonClicked = this.handleOpenNewTabButtonClicked.bind(this);
-        this.handleTabClick = this.handleTabClick.bind(this);
-        this.handleCloseTabClicked = this.handleCloseTabClicked.bind(this);
-        this.handlePreferencesClick = this.handlePreferencesClick.bind(this);
-        this.handleCategoryDeleteClick = this.handleCategoryDeleteClick.bind(this);
-        this.deleteCategory = this.deleteCategory.bind(this);
+
+        bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
+        'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
+        'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll']);
     }
     componentDidMount(): void
     {
@@ -63,19 +78,36 @@ class App extends React.Component<unknown, IAppState>
                 categories: categories
             });
         });
+
+        window.addEventListener('wheel', this.handleScroll);
     }
     componentWillUnmount(): void
     {
         ipcRenderer.removeListener('book-loaded', this.handleBookLoaded);
+        window.removeEventListener('wheel', this.handleScroll);
+    }
+    handleScroll(): void
+    {
+        console.log(`handleScroll`);
+        if (this.state.contextMenu && this.state.contextMenu.element)
+        {
+            this.removeContextMenu();
+        }
     }
     handleBookLoaded(event, rawBook: IBookBase): void
     {
         console.log('Book loaded: ', rawBook);
-        let savedBooks = this.state.savedBooks;
+
+        let savedBooks = [...this.state.savedBooks];
+
         const book = rawBookToBook(rawBook);
+
         this.booksMap.set(book.id, book);
+
         savedBooks.push(book);
+
         savedBooks = this.sortSavedBooks(savedBooks);
+        
         this.setState({
             savedBooks: savedBooks
         });
@@ -231,6 +263,21 @@ class App extends React.Component<unknown, IAppState>
             });
         }
     }
+    setContextMenu(contextMenu: JSX.Element | null, posX: number, posY: number, width: number, height: number): void
+    {
+        this.setState({
+            contextMenu: {
+                element: contextMenu,
+                x: posX,
+                y: posY
+            }
+        });
+    }
+    removeContextMenu(): void
+    {
+        console.log(`Removing context menu`);
+        this.setContextMenu(null, 0, 0, 0, 0);
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -239,15 +286,26 @@ class App extends React.Component<unknown, IAppState>
             onTabCloseClick: this.handleCloseTabClicked
         };
 
-        const appContentCallback: IAppContentCallbacks = {
+        const tabContentCallback: ITabContentCallbacks = {
             onPreferencesClick: this.handlePreferencesClick,
-            onCategoryDelete: this.handleCategoryDeleteClick
+            onCategoryDelete: this.handleCategoryDeleteClick,
+            newTabBooksCallbacks: {
+                setContextMenu: this.setContextMenu
+            }
         };
 
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <AppContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={appContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} />
+            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} />
+            {
+                this.state.contextMenu && this.state.contextMenu.element ?
+                <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >
+                    {
+                        this.state.contextMenu.element
+                    }
+                </ContextMenuWrapper> : null
+            }
             {/*
             {
                 this.state.book ?

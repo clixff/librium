@@ -1,4 +1,4 @@
-import { EMenuElementType } from '../components/pages/newTab'
+import { EMenuElementType, EViewType } from '../components/pages/newTab'
 
 export enum ETabType
 {
@@ -10,6 +10,7 @@ export enum ETabType
 export interface INewTabState
 {
     menu: EMenuElementType;
+    viewType: EViewType;
     activeCategory: number;
 }
 
@@ -35,7 +36,8 @@ export class Tab
             case ETabType.newTab:
                 this.state = {
                     menu: EMenuElementType.Books,
-                    activeCategory: -1
+                    activeCategory: -1,
+                    viewType: EViewType.Grid
                 };
                 break;
         }

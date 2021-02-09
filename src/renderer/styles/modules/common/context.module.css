@@ -1,0 +1,78 @@
+#context-wrapper
+{
+    position: fixed;
+    outline: none;
+
+}
+
+#book-context-menu
+{
+    background: rgb(27, 27, 27);
+    --context-width: 216px;
+    border-radius: 5px;
+    width: var(--context-width);
+    min-width: var(--context-width);
+    max-width: var(--context-width);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#context-container
+{
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
+    padding: 4px 0px;
+}
+
+.element
+{
+    --context-element-width: 216px;
+    --context-element-height: 32px;
+    width: var(--context-element-width);
+    max-width: var(--context-element-width);
+    min-width: var(--context-element-width);
+    height: var(--context-element-height);
+    min-height: var(--context-element-height);
+    max-height: var(--context-element-height);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: default;
+    overflow: hidden;
+    user-select: none;
+}
+
+.element:hover
+{
+    background: var(--context-menu-hover);
+}
+
+.element > svg
+{
+    --icon-size: 12px;
+    fill: var(--context-menu-color);
+    margin-right: 12px;
+}
+
+.element > *:first-child
+{
+    margin-left: 15px;
+}
+
+.element-text
+{
+    color: var(--context-menu-color);
+    font-size: 12px;
+}
+
+.delete-element > svg
+{
+    fill: var(--context-menu-delete) !important;
+}
+
+.delete-element > .element-text
+{
+    color: var(--context-menu-delete) !important;
+}
