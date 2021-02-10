@@ -47,17 +47,69 @@
 #wrapper > div:not(#background)
 {
     z-index: 1001;
-}
-
-#deletion-warning
-{
-    width: 200px;
-    height: 200px;
-    background: grey;
+    box-shadow: 0px 0px 55px 5px rgba(0, 0, 0, 0.25);
 }
 
 .wrapper-closing
 {
     animation: wrapperFadeOut 0.125s linear forwards !important;
     pointer-events: none !important;
+}
+
+#deletion-warning
+{
+    --modal-width: 230px;
+    width: var(--modal-width);
+    min-width: var(--modal-width);
+    max-width: var(--modal-width);
+    height: auto;
+    background: var(--modal-background);
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    user-select: none;
+}
+
+#deletion-warning-container
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px 20px;
+}
+
+#deletion-warning-container > svg
+{
+    --icon-size: 40px;
+    margin-bottom: 30px;
+    fill: var(--deletion-modal-icon);
+}
+
+#deletion-warning-text
+{
+    color: var(--deletion-modal-text);
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+#deletion-warning-buttons
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.delete-button
+{
+    margin-bottom: 10px;
+}
+
+.delete-button,
+.deletion-cancel-button
+{
+    width: 100%;
+    border-radius: 7px;
 }

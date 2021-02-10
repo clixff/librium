@@ -234,10 +234,29 @@ class App extends React.Component<unknown, IAppState>
     }
     handleCategoryDeleteClick(categoryId: number): void
     {
-        /**
-         * TODO: Open dialog with the confirmation
-         */
-        this.deleteCategory(categoryId);
+        const category = this.state.categories[categoryId];
+        if (!category)
+        {
+            return;
+        }
+
+        let categoryName = category.name.trim();
+        
+        const maxTitleLength = 40;
+
+        if (categoryName.length > maxTitleLength)
+        {
+            categoryName = `${categoryName.slice(0, maxTitleLength-3).trim()}...`;
+        }
+
+        const warningText = `Are you sure you want to delete the category "${categoryName}"?`;
+
+        const handleDeleteClick = () => 
+        {
+            this.deleteCategory(categoryId);
+        };
+
+        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} />);
     }
     deleteCategory(categoryId: number): void
     {
@@ -280,12 +299,23 @@ class App extends React.Component<unknown, IAppState>
     }
     openDeletionBookWarning(book: IBook): void
     {
-        this.openModal(<DeletionWarningModal />);
-        // /**
-        //  * TODO: Open a dialog with the book deletion warning
-        //  */
-        // this.deleteBook(book);
+        let bookTitle = book.title.trim();
+        
+        const maxTitleLength = 40;
 
+        if (bookTitle.length > maxTitleLength)
+        {
+            bookTitle = `${bookTitle.slice(0, maxTitleLength-3).trim()}...`;
+        }
+
+        const warningText = `Are you sure you want to delete the book "${bookTitle}"?`;
+
+        const handleDeleteClick = () => 
+        {
+            this.deleteBook(book);
+        };
+
+        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} />);
     }
     deleteBook(book: IBook): void
     {
