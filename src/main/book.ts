@@ -219,9 +219,7 @@ ipcMain.on('delete-book', async (event, bookId: string) =>
         {
             const booksDirPath: string = config.booksDir;
             const bookPath: string = path.join(booksDirPath, bookId);
-            fs.rm(bookPath, { force: true, recursive: true }, () => {
-                console.log(`Book ${bookId} deleted`);
-            });
+            await fsPromises.rmdir(bookPath, { recursive: true });
         }
     }
     catch(error)

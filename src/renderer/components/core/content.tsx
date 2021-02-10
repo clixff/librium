@@ -6,6 +6,7 @@ import { IBook } from '../../misc/book';
 import { NewTabContent } from '../pages/newTab';
 import { ICategory } from '../../misc/category';
 import { IBookCallbacks } from './book';
+import { IModalData, ModalWrapper } from '../misc/modal';
 
 
 class BookContent extends React.Component
@@ -109,6 +110,8 @@ interface ITabContentProps
     callbacks: ITabContentCallbacks;
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
+    modal: IModalData;
+    closeModal: () => void;
 }
 
 export function TabContent(props: ITabContentProps): JSX.Element
@@ -129,6 +132,15 @@ export function TabContent(props: ITabContentProps): JSX.Element
             : activeTab.type === ETabType.book ?
             <BookContent key={activeTab.key}/>
             : <PreferencesContent key={activeTab.key}/>
+        }
+        {
+            props.modal && props.modal.element ?
+                (<ModalWrapper closeModal={props.closeModal} key={props.modal.createdAt} >
+                    {
+                        props.modal.element
+                    }
+                </ModalWrapper>)
+            : null
         }
     </div>);
 } 

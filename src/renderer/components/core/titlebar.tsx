@@ -14,7 +14,7 @@ interface ITitlebarProps
     tabsCallbacks: ITabsCallbacks;
 }
 
-export function TitleBar(props: ITitlebarProps): JSX.Element
+export const TitleBar = React.memo((props: ITitlebarProps): JSX.Element => 
 {
     function handleControlButtonClick(type: TitlebarButtonType): void
     {
@@ -36,4 +36,7 @@ export function TitleBar(props: ITitlebarProps): JSX.Element
             </div>
         </div>
     </div>);
-}
+}, (prevProps, nextProps) =>
+{
+    return prevProps.tabsList === nextProps.tabsList && prevProps.activeTab === nextProps.activeTab;
+});

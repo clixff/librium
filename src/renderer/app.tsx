@@ -12,6 +12,7 @@ import { IRawCategory, ICategory, parseCategories } from './misc/category';
 import { EMenuElementType } from './components/pages/newTab';
 import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
+import { DeletionWarningModal, IModalData } from './components/misc/modal';
 
 interface IAppState
 {
@@ -33,7 +34,8 @@ interface IAppState
          * Y position on the screen
          */
         y: number;
-    }
+    },
+    modal: IModalData;
 }
 
 class App extends React.Component<unknown, IAppState>
@@ -57,13 +59,17 @@ class App extends React.Component<unknown, IAppState>
                 element: null,
                 x: 0,
                 y: 0
+            },
+            modal: {
+                element: null,
+                createdAt: 0
             }
         };
 
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
         'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
-        'deleteBook', 'openDeletionBookWarning']);
+        'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal']);
     }
     componentDidMount(): void
     {
@@ -89,7 +95,6 @@ class App extends React.Component<unknown, IAppState>
     }
     handleScroll(): void
     {
-        console.log(`handleScroll`);
         if (this.state.contextMenu && this.state.contextMenu.element)
         {
             this.removeContextMenu();
@@ -119,7 +124,7 @@ class App extends React.Component<unknown, IAppState>
     }
     openNewTab(tab: Tab): void
     {
-        const tabsCopy = this.state.tabs;
+        const tabsCopy = [...this.state.tabs];
         tabsCopy.push(tab);
         this.setState({ 
             tabs: tabsCopy,
@@ -131,7 +136,11 @@ class App extends React.Component<unknown, IAppState>
         if (tabId < this.state.tabs.length && tabId !== this.state.activeTab)
         {
             this.setState({
-                activeTab: tabId
+                activeTab: tabId,
+                modal: {
+                    element: null,
+                    createdAt: 0
+                }
             });
         }
     }
@@ -139,7 +148,7 @@ class App extends React.Component<unknown, IAppState>
     {
         if (tabId < this.state.tabs.length && tabId >= 0)
         {
-            const tabsList = this.state.tabs;
+            const tabsList = [...this.state.tabs];
             tabsList.splice(tabId, 1);
 
 
@@ -165,7 +174,7 @@ class App extends React.Component<unknown, IAppState>
      */
     handlePreferencesClick(): void
     {
-        const tabsList = this.state.tabs;
+        let tabsList = this.state.tabs;
         const activeTab = tabsList[this.state.activeTab];
         if (activeTab.type === ETabType.preferences)
         {
@@ -194,11 +203,16 @@ class App extends React.Component<unknown, IAppState>
             const preferencesTab = new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences'));
             preferencesTabId = this.state.activeTab + 1;
             tabsList.splice(preferencesTabId, 0, preferencesTab);
+            tabsList = [...tabsList];
         }
 
         this.setState({
             tabs: tabsList,
-            activeTab: preferencesTabId
+            activeTab: preferencesTabId,
+            modal: {
+                element: null,
+                createdAt: 0
+            }
         });
     }
     sortSavedBooks(savedBooks: Array<IBook>): Array<IBook>
@@ -266,10 +280,12 @@ class App extends React.Component<unknown, IAppState>
     }
     openDeletionBookWarning(book: IBook): void
     {
-        /**
-         * TODO: Open a dialog with the book deletion warning
-         */
-        this.deleteBook(book);
+        this.openModal(<DeletionWarningModal />);
+        // /**
+        //  * TODO: Open a dialog with the book deletion warning
+        //  */
+        // this.deleteBook(book);
+
     }
     deleteBook(book: IBook): void
     {
@@ -331,6 +347,19 @@ class App extends React.Component<unknown, IAppState>
         console.log(`Removing context menu`);
         this.setContextMenu(null, 0, 0, 0, 0);
     }
+    openModal(modal: JSX.Element | null): void
+    {
+        this.setState({
+            modal: {
+                element: modal,
+                createdAt: Date.now()
+            }
+        });
+    }
+    closeModal(): void
+    {
+        this.openModal(null);
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -351,10 +380,10 @@ class App extends React.Component<unknown, IAppState>
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} />
+            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} closeModal={this.closeModal} />
             {
                 this.state.contextMenu && this.state.contextMenu.element ?
-                <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu}>
+                <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >
                     {
                         this.state.contextMenu.element
                     }

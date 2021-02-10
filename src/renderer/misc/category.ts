@@ -109,6 +109,7 @@ export function deleteBookFromCategory(category: ICategory, book: IBook): void
         {
             category.books.splice(i, 1);
             ipcRenderer.send('delete-book-from-category', category.id, book.id);
+            category.books = [...category.books];
             break;
         }
     }
