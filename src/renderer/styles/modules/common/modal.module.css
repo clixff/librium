@@ -47,7 +47,7 @@
 #wrapper > div:not(#background)
 {
     z-index: 1001;
-    box-shadow: 0px 0px 55px 5px rgba(0, 0, 0, 0.25);
+    box-shadow: 0px 0px 18px 11px rgba(0, 0, 0, 0.25);
 }
 
 .wrapper-closing
@@ -87,7 +87,7 @@
 
 #deletion-warning-text
 {
-    color: var(--deletion-modal-text);
+    color: var(--text-color);
     text-align: center;
     font-size: 15px;
     font-weight: 600;
@@ -112,4 +112,12 @@
 {
     width: 100%;
     border-radius: 7px;
+}
+
+.deletion-cancel-button
+{
+    --button-background: var(--deletion-modal-cancel-bg);
+    --button-background-hover: var(--deletion-modal-cancel-bg-hover);
+    --button-color: var(--deletion-modal-cancel-text);
+    --button-color-hover: var(--deletion-modal-cancel-text);
 }

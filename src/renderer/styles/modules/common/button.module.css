@@ -5,15 +5,15 @@
     appearance: none;
     padding: 10px 20px;
     font-weight: 600;
-    --buton-color: white;
-    color: var(--buton-color);
+    --button-color: white;
+    color: var(--button-color);
     --button-background: rgb(50, 50, 50);
     background-color: var(--button-background);
     border-radius: 9999px;
     font-size: 12px;
     cursor: pointer;
     --button-background-hover: rgb(35, 35, 35);
-    --buton-color-hover: white;
+    --button-color-hover: white;
     transition: background-color 0.125s linear, color 0.125s linear;
     user-select: none;
 }
@@ -21,7 +21,7 @@
 .button:hover, .button:focus
 {
     background-color: var(--button-background-hover) !important;
-    color: var(--buton-color-hover) !important;
+    color: var(--button-color-hover) !important;
 }
 
 .button > div

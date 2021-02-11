@@ -7,10 +7,32 @@ interface IDeletionWarningModalProps
 {
     text: string;
     onDeleteClick: () => void;
+    closeModal: () => void;
 }
 
 export function DeletionWarningModal(props: IDeletionWarningModalProps): JSX.Element
 {
+    function handleDeleteClick(): void
+    {
+        if (typeof props.onDeleteClick === 'function')
+        {
+            props.onDeleteClick();
+        }
+
+        if (typeof props.closeModal === 'function')
+        {
+            props.closeModal();
+        }
+    }
+
+    function handleCancelClick(): void
+    {
+        if (typeof props.closeModal === 'function')
+        {
+            props.closeModal();
+        }
+    }
+
     return (<div id={modalStyles['deletion-warning']}>
         <div id={modalStyles['deletion-warning-container']}>
             <TrashcanSVG />
@@ -20,8 +42,8 @@ export function DeletionWarningModal(props: IDeletionWarningModalProps): JSX.Ele
                 }
             </div>
             <div id={modalStyles['deletion-warning-buttons']}>
-                <Button text={`Delete`} class={modalStyles['delete-button']} moduleClass="red" onClick={props.onDeleteClick} />
-                <Button text={`Cancel`} class={modalStyles['deletion-cancel-button']}/>
+                <Button text={`Delete`} class={modalStyles['delete-button']} moduleClass="red" onClick={handleDeleteClick} />
+                <Button text={`Cancel`} class={modalStyles['deletion-cancel-button']} onClick={handleCancelClick}/>
             </div>
         </div>
     </div>);
@@ -31,50 +53,44 @@ export function DeletionWarningModal(props: IDeletionWarningModalProps): JSX.Ele
 interface IModalWrapperProps
 {
     closeModal: () => void;
+    isClosing: boolean;
     children: JSX.Element;
 }
 
 export function ModalWrapper(props: IModalWrapperProps): JSX.Element
 {
-    const [bIsClosing, setIsClosing] = useState(false);
-
-    let closingTimeout: number | null = null;
-
-    useEffect(() =>
-    {
-        return () =>
-        {
-            console.log(`ModalWrapper removed`);
-            if (closingTimeout && window)
-            {
-                window.clearTimeout(closingTimeout);
-                closingTimeout = null;
-            }
-        };
-    }, []);
-
     function closeModal(): void
     {
-        /**
-         * Modal already closing
-         */
-        if (closingTimeout || !window)
+        if (props.isClosing)
         {
             return;
         }
 
-        setIsClosing(true);
-
-        closingTimeout = window.setTimeout(() => 
+        if (typeof props.closeModal === 'function')
         {
-            if (typeof props.closeModal === 'function')
-            {
-                props.closeModal();
-            }
-        }, 1250);
+            props.closeModal();
+        }
     }
 
-    return (<div id={modalStyles['wrapper']} className={`${bIsClosing ? modalStyles['wrapper-closing'] : ''}`}>
+    function handleKeyUp(event: KeyboardEvent): void
+    {
+        if (event.key === 'Escape')
+        {
+            closeModal();
+        }
+    }
+
+    useEffect(() =>
+    {
+        window.addEventListener('keyup', handleKeyUp);
+
+        return (() => 
+        {
+            window.removeEventListener('keyup', handleKeyUp);
+        });
+    }, []);
+
+    return (<div id={modalStyles['wrapper']} className={`${props.isClosing ? modalStyles['wrapper-closing'] : ''}`}>
         <div id={modalStyles['background']} onClick={closeModal} />
         {
             props.children
@@ -86,4 +102,5 @@ export interface IModalData
 {
     element: JSX.Element | null;
     createdAt: number;
+    isClosing: boolean;
 }

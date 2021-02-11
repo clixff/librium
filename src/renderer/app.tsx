@@ -41,6 +41,7 @@ interface IAppState
 class App extends React.Component<unknown, IAppState>
 {
     booksMap: Map<string, IBook> = new Map();
+    closingModalTimeout: number | null = null;
     constructor(props)
     {
         super(props);
@@ -60,16 +61,13 @@ class App extends React.Component<unknown, IAppState>
                 x: 0,
                 y: 0
             },
-            modal: {
-                element: null,
-                createdAt: 0
-            }
+            modal: this.getClosedModalObject()
         };
 
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
         'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
-        'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal']);
+        'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal']);
     }
     componentDidMount(): void
     {
@@ -137,10 +135,7 @@ class App extends React.Component<unknown, IAppState>
         {
             this.setState({
                 activeTab: tabId,
-                modal: {
-                    element: null,
-                    createdAt: 0
-                }
+                modal: this.getClosedModalObject()
             });
         }
     }
@@ -209,10 +204,7 @@ class App extends React.Component<unknown, IAppState>
         this.setState({
             tabs: tabsList,
             activeTab: preferencesTabId,
-            modal: {
-                element: null,
-                createdAt: 0
-            }
+            modal: this.getClosedModalObject()
         });
     }
     sortSavedBooks(savedBooks: Array<IBook>): Array<IBook>
@@ -256,7 +248,7 @@ class App extends React.Component<unknown, IAppState>
             this.deleteCategory(categoryId);
         };
 
-        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} />);
+        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} closeModal={this.closeModal} />);
     }
     deleteCategory(categoryId: number): void
     {
@@ -315,7 +307,7 @@ class App extends React.Component<unknown, IAppState>
             this.deleteBook(book);
         };
 
-        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} />);
+        this.openModal(<DeletionWarningModal text={warningText} onDeleteClick={handleDeleteClick} closeModal={this.closeModal} />);
     }
     deleteBook(book: IBook): void
     {
@@ -382,13 +374,62 @@ class App extends React.Component<unknown, IAppState>
         this.setState({
             modal: {
                 element: modal,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                isClosing: false
             }
         });
+
+        if (this.closingModalTimeout)
+        {
+            window.clearTimeout(this.closingModalTimeout);
+            this.closingModalTimeout = null;
+        }
     }
     closeModal(): void
     {
+        const modal = this.state.modal;
+
+        /**
+         * If modal is already closing
+         */
+        if (this.closingModalTimeout || !modal.element || modal.isClosing)
+        {
+            return;
+        }
+        
+        this.setState({
+            modal: {
+                ...modal,
+                isClosing: true
+            }
+        });
+
+        if (!window)
+        {
+            return;
+        }
+
+        this.closingModalTimeout = window.setTimeout(() =>
+        {
+            this.removeModal();
+            if (this.closingModalTimeout)
+            {
+                window.clearTimeout(this.closingModalTimeout);
+                this.closingModalTimeout = null;
+            }
+        }, 1250);
+    }
+    removeModal(): void
+    {
         this.openModal(null);
+    }
+    getClosedModalObject(): IModalData
+    {
+        return {
+            element: null,
+            createdAt: 0,
+            isClosing: false
+        };
     }
     render(): JSX.Element
     {

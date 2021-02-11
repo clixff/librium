@@ -135,7 +135,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
         }
         {
             props.modal && props.modal.element ?
-                (<ModalWrapper closeModal={props.closeModal} key={props.modal.createdAt} >
+                (<ModalWrapper closeModal={props.closeModal} key={props.modal.createdAt} isClosing={props.modal.isClosing} >
                     {
                         props.modal.element
                     }
