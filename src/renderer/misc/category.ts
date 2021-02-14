@@ -102,6 +102,15 @@ export function filterCategoriesBySeach(categoriesArray: Array<ICategory>, searc
 
 export function deleteBookFromCategory(category: ICategory, book: IBook): void
 {
+    for (let i = 0; i < book.categories.length; i++)
+    {
+        const tempCategory = book.categories[i];
+        if (tempCategory.id === category.id)
+        {
+            book.categories.splice(i, 1);
+            break;
+        }
+    }
     for (let i = 0; i < category.books.length; i++)
     {
         const tempBook = category.books[i];
@@ -113,4 +122,31 @@ export function deleteBookFromCategory(category: ICategory, book: IBook): void
             break;
         }
     }
+}
+
+export function addBookToCategory(category: ICategory, book: IBook): void
+{
+    book.categories.push(category);
+    category.books = [...category.books];
+    category.books.push(book);
+    ipcRenderer.send('add-book-to-category', category.id, book.id);
+}
+
+export function createCategory(): ICategory
+{
+    const name = `New category`;
+    const category: ICategory = {
+        name: name,
+        books: [],
+        id: generateCategoryId(name)
+    };
+
+    ipcRenderer.send('create-new-category', name, category.id);
+    
+    return category;
+}
+
+export function deleteCategory(category: ICategory): void
+{
+    ipcRenderer.send('delete-category', category.id);
 }

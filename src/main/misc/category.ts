@@ -136,3 +136,56 @@ function deleteBookFromCategory(categoryId: string, bookid: string): void
         }
     }
 }
+
+ipcMain.on('create-new-category', (event, name: string, id: string) =>
+{
+    createNewCategory(name, id);
+});
+
+function createNewCategory(name: string, id: string)
+{
+    categoriesList.push({
+        name: name,
+        id: id,
+        books: []
+    });
+
+    saveCategoriesWithTimer();
+}
+
+ipcMain.on('delete-category', (event, id: string) =>
+{
+    deleteCategory(id);
+});
+
+function deleteCategory(id: string): void
+{
+    for (let i = 0; i < categoriesList.length; i++)
+    {
+        const category = categoriesList[i];
+        if (category.id === id)
+        {
+            categoriesList.splice(i, 1);
+            saveCategoriesWithTimer();
+            break;
+        }
+    }
+}
+
+ipcMain.on('add-book-to-category', (event, categoryId: string, bookId: string) =>
+{
+    addBookToCategory(categoryId, bookId);
+});
+
+function addBookToCategory(categoryId: string, bookId: string): void
+{
+    const category = findCategoryById(categoryId);
+    if (category)
+    {
+        if (!category.books.includes(bookId))
+        {
+            category.books.push(bookId);
+            saveCategoriesWithTimer();
+        }
+    }
+}

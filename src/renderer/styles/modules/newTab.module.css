@@ -602,6 +602,11 @@
     margin-right: 15px;
 }
 
+#category-header-right > *
+{
+    color: white !important;
+}
+
 #category-wrapper .grid-view
 {
     margin-left: 0px !important;

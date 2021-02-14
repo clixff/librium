@@ -132,10 +132,10 @@ function Category(props: ICategoryProps): JSX.Element
             <div id={newTabStyles['category-header-right']}>
                 {
                     bIsRenaming ?
-                    (<Button text={'Save'} moduleClass="grey" onClick={handleSaveNameClick} />) :
+                    (<Button text={'Save'} moduleClass="grey-2" onClick={handleSaveNameClick} key="save" />) :
                     (
                         <React.Fragment>
-                            <Button moduleClass="grey" title={`Rename category`} onClick={handleRenameClick} >
+                            <Button moduleClass="grey-2" title={`Rename category`} onClick={handleRenameClick} key="rename" >
                                 <React.Fragment>
                                     <PencilSVG />
                                     <div>
@@ -143,7 +143,7 @@ function Category(props: ICategoryProps): JSX.Element
                                     </div>
                                 </React.Fragment>
                             </Button>
-                            <Button moduleClass="red" title={`Delete category`} onClick={handleDeleteButtonClick} >
+                            <Button moduleClass="red" title={`Delete category`} onClick={handleDeleteButtonClick} key="delete" >
                                 <React.Fragment>
                                     <CrossSVG />
                                     <div>
@@ -250,7 +250,23 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
         return (<NoResultWarning message="No categories found" searchQuery={props.searchQuery} />);
     }
 
+    function handleCreateCategoryClick(): void
+    {
+        if (typeof props.callbacks.createCategory === 'function')
+        {
+            props.callbacks.createCategory();
+        }
+
+        if (typeof props.callbacks.setActiveCategory === 'function')
+        {
+            props.callbacks.setActiveCategory(0);
+        }
+    }
+
     return (<div id={newTabStyles['categories-container']}>
+        {
+            props.searchQuery ? null : <Button moduleClass={'create-category'} text={`Create Category`} onClick={handleCreateCategoryClick} />
+        }
         {
             props.list.map((category, index) =>
             {

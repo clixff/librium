@@ -48,6 +48,9 @@
 {
     z-index: 1001;
     box-shadow: 0px 0px 18px 11px rgba(0, 0, 0, 0.25);
+    width: var(--modal-width);
+    min-width: var(--modal-width);
+    max-width: var(--modal-width);
 }
 
 .wrapper-closing
@@ -59,9 +62,6 @@
 #deletion-warning
 {
     --modal-width: 230px;
-    width: var(--modal-width);
-    min-width: var(--modal-width);
-    max-width: var(--modal-width);
     height: auto;
     background: var(--modal-background);
     display: flex;
@@ -110,14 +110,119 @@
 .delete-button,
 .deletion-cancel-button
 {
-    width: 100%;
-    border-radius: 7px;
+    width: 100% !important;
 }
 
-.deletion-cancel-button
+#manage-categories
 {
-    --button-background: var(--deletion-modal-cancel-bg);
-    --button-background-hover: var(--deletion-modal-cancel-bg-hover);
-    --button-color: var(--deletion-modal-cancel-text);
-    --button-color-hover: var(--deletion-modal-cancel-text);
+    --modal-width: 386px;
+    background: var(--modal-background);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: 314px;
+    border-radius: 5px;
+}
+
+#manage-categories-content
+{
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    user-select: none;
+}
+
+#manage-categories-title
+{
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-color);
+    margin-bottom: 15px;   
+}
+
+#manage-categories-container
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+    overflow-x: hidden;
+    max-height: 195px;
+}
+
+.manage-categories-container-full
+{
+    overflow-y: scroll;
+}
+
+.manage-categories-item
+{
+    --element-height: 35px;
+    height: var(--element-height);
+    min-height: var(--element-height);
+    max-height: var(--element-height);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+}
+
+.manage-categories-item-name
+{
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.manage-categories-item:not(:last-child)
+{
+    margin-bottom: 5px;
+}
+
+.manage-categories-item-checkbox
+{
+    background: var(--manage-categories-checkbox);
+    --checkbox-size: 21px;
+    width: var(--checkbox-size);
+    max-width: var(--checkbox-size);
+    min-width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    max-height: var(--checkbox-size);
+    min-height: var(--checkbox-size);
+    border-radius: 50%;
+    transition: background-color 0.125s linear;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.manage-categories-container-full .manage-categories-item-checkbox
+{
+    margin-right: 10px;
+}
+
+.manage-categories-item:hover > .manage-categories-item-checkbox
+{
+    background: var(--manage-categories-checkbox-hover);
+}
+
+.manage-categories-item-active > .manage-categories-item-checkbox
+{
+    background: #15893C !important;
+}
+
+.manage-categories-item-checkbox > svg
+{
+    fill: white;
+    --icon-size: 11px;
+}
+
+#manage-categories-bottom
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
 }

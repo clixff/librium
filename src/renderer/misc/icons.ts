@@ -14,6 +14,7 @@ import CrossSVG from '../assets/svg/misc/cross.svg';
 import PencilSVG from '../assets/svg/misc/pencil.svg';
 import BookSVG from '../assets/svg/misc/book.svg';
 import TrashcanSVG from '../assets/svg/misc/trashcan.svg';
+import MarkSVG from '../assets/svg/misc/mark.svg';
 
 export {
     MinimizeSVG,
@@ -31,5 +32,6 @@ export {
     CrossSVG,
     PencilSVG,
     BookSVG,
-    TrashcanSVG
+    TrashcanSVG,
+    MarkSVG
 };

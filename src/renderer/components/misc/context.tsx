@@ -34,17 +34,24 @@ export function BookContextMenu(props: IBookContextMenuProps): JSX.Element
 {
     function handleDeleteClick(): void
     {
-        console.log(`Delete book click`);
         if (props.callbacks && typeof props.callbacks.deleteBook === 'function')
         {
             props.callbacks.deleteBook(props.book);
         }
     }
 
+    function handleManageCategoriesClick(): void
+    {
+        if (props.callbacks && typeof props.callbacks.openManageCategoriesMenu === 'function')
+        {
+            props.callbacks.openManageCategoriesMenu(props.book);
+        }
+    }
+
     return (<div id={contextMenuStyles['book-context-menu']}>
         <div id={contextMenuStyles['context-container']}>
             <ContextMenuElement text={`Open`} icon={BookSVG} />
-            <ContextMenuElement text={`Manage categories`} icon={ListSVG} />
+            <ContextMenuElement text={`Manage categories`} icon={ListSVG} onClick={handleManageCategoriesClick} />
             <ContextMenuElement text={`Delete`} icon={TrashcanSVG} class={contextMenuStyles[`delete-element`]}  onClick={handleDeleteClick} />
         </div>
     </div>);

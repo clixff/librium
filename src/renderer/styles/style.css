@@ -88,9 +88,15 @@ body
 
     --modal-background: rgb(27, 27, 27);
     --deletion-modal-icon: rgb(209, 209, 209);
-    --deletion-modal-cancel-bg: rgb(52, 52, 52);
-    --deletion-modal-cancel-bg-hover: rgb(69, 69, 69);
-    --deletion-modal-cancel-text: rgb(196, 196, 196);
+    --grey-button-bg: rgb(52, 52, 52);
+    --grey-button-bg-hover: rgb(69, 69, 69);
+    --grey-button-text: rgb(196, 196, 196);
+
+    --grey-2-button-bg: rgb(51, 51, 51);
+    --grey-2-button-hover: rgb(70, 70, 70);
+
+    --manage-categories-checkbox: rgb(49, 49, 49);
+    --manage-categories-checkbox-hover: rgb(69, 69, 69);
 }
 
 body.light
@@ -132,9 +138,16 @@ body.light
 
     --modal-background: rgb(248, 248, 248);
     --deletion-modal-icon: rgb(40, 40, 40);
-    --deletion-modal-cancel-bg: rgb(212, 212, 212);
-    --deletion-modal-cancel-bg-hover: rgb(184, 184, 184);
-    --deletion-modal-cancel-text: rgb(80, 80, 80);
+    
+    --grey-button-bg: rgb(212, 212, 212);
+    --grey-button-bg-hover: rgb(184, 184, 184);
+    --grey-button-text: rgb(80, 80, 80);
+
+    --grey-2-button-bg: rgb(123, 123, 123);
+    --grey-2-button-hover: rgb(90, 90, 90);
+
+    --manage-categories-checkbox: rgb(211, 211, 211);
+    --manage-categories-checkbox-hover: rgb(170, 170, 170);
 }
 
 

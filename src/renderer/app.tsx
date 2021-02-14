@@ -8,11 +8,12 @@ import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
-import { IRawCategory, ICategory, parseCategories } from './misc/category';
+import { IRawCategory, ICategory, parseCategories, createCategory, deleteCategory, deleteBookFromCategory, addBookToCategory } from './misc/category';
 import { EMenuElementType } from './components/pages/newTab';
 import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
-import { DeletionWarningModal, IModalData } from './components/misc/modal';
+import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType } from './components/misc/modal';
+
 
 interface IAppState
 {
@@ -67,7 +68,8 @@ class App extends React.Component<unknown, IAppState>
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
         'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
-        'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal']);
+        'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
+        'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent']);
     }
     componentDidMount(): void
     {
@@ -253,11 +255,14 @@ class App extends React.Component<unknown, IAppState>
     deleteCategory(categoryId: number): void
     {
         const CategoriesList = this.state.categories;
-        if (CategoriesList[categoryId])
+        const categoryToDelete = CategoriesList[categoryId];
+        if (categoryToDelete)
         {
             CategoriesList.splice(categoryId, 1);
             
             const tabsList = this.state.tabs;
+            
+            deleteCategory(categoryToDelete);
 
             /**
              * Fix categories IDs in tab states
@@ -431,6 +436,74 @@ class App extends React.Component<unknown, IAppState>
             isClosing: false
         };
     }
+    createCategory(): void
+    {
+        const category = createCategory();
+
+        const categoriesList = this.state.categories;
+
+        categoriesList.unshift(category);
+
+        this.setState({
+            categories: categoriesList
+        });
+    }
+    openManageCategoriesMenu(book: IBook): void
+    {
+        if (book)
+        {
+            const categoriesList = this.state.categories;
+            const categoriesItems: Array<IManageCategoriesItem> = [];
+            const bookCategoriesIds: Array<string> = [];
+
+            for (let i = 0; i < book.categories.length; i++)
+            {
+                const category = book.categories[i];
+                bookCategoriesIds.push(category.id);
+            }
+
+            for (let i = 0; i < categoriesList.length; i++)
+            {
+                const category = categoriesList[i];
+                const categoryItem: IManageCategoriesItem = {
+                    category: category,
+                    isActive: bookCategoriesIds.includes(category.id)
+                };
+
+                categoriesItems.push(categoryItem);
+            }
+
+            const handleEvent = (category: ICategory, type: EManageCategoriesEventType): void =>
+            {
+                this.handleManageCategoriesEvent(book, category, type);
+            };
+
+            const menuElement = <ManageCategoriesMenu categories={categoriesItems} closeModal={this.closeModal} onManageCategoriesEvent={handleEvent} />;
+
+            this.openModal(menuElement);
+        }
+    }
+    /**
+     * When book is added to the category or deleted from the category
+     */
+    handleManageCategoriesEvent(book: IBook, category: ICategory, type: EManageCategoriesEventType): void
+    {
+        if (type === EManageCategoriesEventType.Add)
+        {
+            addBookToCategory(category, book);
+        }
+        else
+        {
+            deleteBookFromCategory(category, book);
+        }
+
+        /**
+         * If user is viewing a category, books in this category will update
+         */
+        this.setState({
+            categories: this.state.categories
+        });
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -442,9 +515,11 @@ class App extends React.Component<unknown, IAppState>
         const tabContentCallback: ITabContentCallbacks = {
             onPreferencesClick: this.handlePreferencesClick,
             onCategoryDelete: this.handleCategoryDeleteClick,
+            createCategory: this.createCategory,
             newTabBooksCallbacks: {
                 setContextMenu: this.setContextMenu,
-                deleteBook: this.openDeletionBookWarning
+                deleteBook: this.openDeletionBookWarning,
+                openManageCategoriesMenu: this.openManageCategoriesMenu
             }
         };
 

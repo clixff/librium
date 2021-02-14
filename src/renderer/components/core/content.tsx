@@ -100,6 +100,7 @@ export interface ITabContentCallbacks
 {
     onPreferencesClick: () => void;
     onCategoryDelete: (id: number) => void;
+    createCategory: () => void;
     newTabBooksCallbacks: IBookCallbacks;
 }
 

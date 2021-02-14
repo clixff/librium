@@ -16,6 +16,7 @@
     --button-color-hover: white;
     transition: background-color 0.125s linear, color 0.125s linear;
     user-select: none;
+    width: fit-content;
 }
 
 .button:hover, .button:focus
@@ -44,7 +45,8 @@
  * Custom button styles
  */
 
-.import-book
+.import-book,
+.create-category
 {
     --button-background: #0A54C2;
     --button-background-hover: #074199;
@@ -52,8 +54,30 @@
     font-size: 13px;
 }
 
+.create-category
+{
+    margin-bottom: 20px;
+    height: auto !important;
+}
+
 .red
 {
     --button-background: #C20A0A;
     --button-background-hover: #a00b0b;
+}
+
+.grey
+{
+    --button-background: var(--grey-button-bg);
+    --button-background-hover: var(--grey-button-bg-hover);
+    --button-color: var(--grey-button-text);
+    --button-color-hover: var(--grey-button-text);
+}
+
+.grey-2
+{
+    --button-background: var(--grey-2-button-bg);
+    --button-background-hover: var(--grey-2-button-hover);
+    --button-color: white;
+    --button-color-hover: white;
 }
