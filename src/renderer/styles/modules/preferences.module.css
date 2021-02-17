@@ -41,7 +41,7 @@
     --blue-color: #0A54C2;
     margin-bottom: 30px;
     --setting-width: 195px;
-    --setting-height: 24px;
+    --setting-height: 28px;
 }
 
 .setting-name
@@ -65,7 +65,8 @@
 }
 
 .dropdown-wrapper,
-.input-setting
+.input-setting,
+.path-input
 {
     width: var(--setting-width);
     min-width: var(--setting-width);
@@ -75,7 +76,7 @@
     max-height: var(--setting-height);
     background: var(--setting-background);
     border: 1px solid var(--setting-border);
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .dropdown-selected
@@ -110,7 +111,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    top: 26px;
+    top: 30px;
     background: inherit;
     box-shadow: 0 3px 8px 2px rgba(0, 0, 0, 0.25);
     border-radius: 0px 0px 2px 2px;
@@ -138,7 +139,8 @@
     background: var(--setting-dropdown-active) !important;
 }
 
-.input-setting
+.input-setting,
+.path-input
 {
     outline: none;
     padding: 0px 7px;
@@ -150,4 +152,39 @@
 .input-setting:focus
 {
     border-color: var(--blue-color);
+}
+
+.path-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.path-input
+{
+    --setting-width: calc(250px - 14px);
+    font-size: 12px;
+    color: var(--subtext-color);
+}
+
+.browse-button
+{
+    margin-left: 20px;
+    font-size: 11px;
+    border-radius: 4px;
+    --button-background: var(--setting-browse-button-bg);
+    --button-background-hover: var(--setting-browse-button-hover);
+    border: 1px solid var(--setting-browse-button-border);
+    --button-color: var(--text-color);
+    --button-color-hover: var(--button-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 15px;
+}
+
+.browse-button:hover
+{
+    border-color: var(--setting-browse-button-border-hover);
 }

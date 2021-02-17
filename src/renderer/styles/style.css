@@ -107,6 +107,9 @@ body
     --setting-slider-active: rgb(125, 125, 125);
     --setting-browse-button-bg: rgb(36, 36, 36);
     --setting-browse-button-border: var(--setting-browse-button-bg);
+    --setting-browse-button-hover: rgb(45, 45, 45);
+    --setting-browse-button-border-hover: var(--setting-browse-button-hover);
+
 }
 
 body.light
@@ -167,6 +170,8 @@ body.light
     --setting-slider-active: rgb(50, 50, 50);
     --setting-browse-button-bg: white;
     --setting-browse-button-border: rgb(113, 113, 113);
+    --setting-browse-button-hover: rgb(220, 220, 220);
+    --setting-browse-button-border-hover: var(--setting-browse-button-border);
 }
 
 

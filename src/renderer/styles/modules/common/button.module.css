@@ -14,7 +14,7 @@
     cursor: pointer;
     --button-background-hover: rgb(35, 35, 35);
     --button-color-hover: white;
-    transition: background-color 0.125s linear, color 0.125s linear;
+    transition: background-color 0.125s linear, color 0.125s linear, border-color 0.125s linear;
     user-select: none;
     width: fit-content;
 }

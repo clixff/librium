@@ -14,3 +14,18 @@ export interface IPreferences
     fontSize: number;
     fontFamily: string;
 }
+
+/**
+ * Select file or directory type
+ */
+export enum EBrowseType
+{
+    File,
+    Directory
+}
+
+export interface IBrowseFileFilter
+{
+    name: string;
+    extensions: Array<string>;
+}

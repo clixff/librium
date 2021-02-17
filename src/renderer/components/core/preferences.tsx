@@ -1,8 +1,51 @@
 import { ipcRenderer } from 'electron';
 import React, { useState } from 'react';
-import { EColorTheme, IPreferences } from '../../../shared/preferences';
+import { EBrowseType, EColorTheme, IBrowseFileFilter, IPreferences } from '../../../shared/preferences';
 import { ArrowSVG } from '../../misc/icons';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
+import { Button } from '../common/button';
+
+interface IPathSettingProps
+{
+    id: string;
+    name: string;
+    value: string;
+    type: EBrowseType;
+    bMultiselect: boolean;
+    filters: Array<IBrowseFileFilter>;
+    onChange: (id: string, value: string) => void;
+}
+
+function PathSetting(props: IPathSettingProps): JSX.Element
+{
+    const [value, setValue] = useState(props.value);
+
+    function handlePathSelected(paths: Array<string>): void
+    {
+        if (paths && paths.length)
+        {
+            setValue(paths[0]);
+
+            if (typeof props.onChange === 'function')
+            {
+                props.onChange(props.id, paths[0]);
+            }
+        }
+    }
+
+    function handleClick(): void
+    {
+        ipcRenderer.invoke('path-setting-browse-click', props.type, props.bMultiselect, props.filters).then(handlePathSelected);
+    }
+
+    return (<div className={preferencesStyles.setting}>
+        <SettingName name={props.name} />
+        <div className={preferencesStyles['path-wrapper']}>
+            <input type="text" value={value} readOnly={true} className={preferencesStyles['path-input']}/>
+            <Button text="Browse..." class={preferencesStyles['browse-button']} onClick={handleClick} />
+        </div>
+    </div>);
+}
 
 interface IInputSettingProps
 {
@@ -205,6 +248,7 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
 
     function onSettingChange(id: string, value: unknown): void
     {
+        console.log(`change setting ${id} to ${value}`);
         if (typeof props.callbacks.changeSetting === 'function')
         {
             props.callbacks.changeSetting(id, value);
@@ -219,6 +263,7 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
             <div id={preferencesStyles.container}>
                 <DropdownSetting id="colorTheme" name="Color Theme" options={['Dark', 'Light']} activeOption={props.preferences.colorTheme} onChange={handleColorThemeChange} />
                 <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={onSettingChange} />
+                <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={onSettingChange} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
             </div>
         </div>
     </div>);
@@ -246,5 +291,4 @@ export function changeSetting(preferences: IPreferences, id: string, value: unkn
     const preferencesRecord: Record<string, unknown> = preferences as unknown as Record<string, unknown>;
     preferencesRecord[id] = value;
     ipcRenderer.send('setting-changed', id, value);
-
 }

@@ -1,8 +1,8 @@
 import { getAppDataPath, getConfigPath } from "./paths";
 import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
-import { EColorTheme, IPreferences } from "../shared/preferences";
-import { ipcMain } from "electron";
+import { EBrowseType, EColorTheme, IPreferences, IBrowseFileFilter } from "../shared/preferences";
+import { BrowserWindow, dialog, ipcMain } from "electron";
 
 const defaultConfig: IPreferences = {
     /**
@@ -210,3 +210,37 @@ ipcMain.on('setting-changed', (event, id: string, value: unknown) =>
         saveConfig();
     }
 });
+
+type OpenDialogProperties = Array<'openFile' | 'openDirectory' | 'multiSelections'>;
+
+ipcMain.handle('path-setting-browse-click', async (event, type: EBrowseType, bMultiselect: boolean, filters: Array<IBrowseFileFilter>): Promise<Array<string>> =>
+{
+    try
+    {
+        const browserWindow: BrowserWindow | null = BrowserWindow.fromWebContents(event.sender);
+        if (browserWindow)
+        {
+            const openDialogProperties: OpenDialogProperties = [type === EBrowseType.Directory ? 'openDirectory' : 'openFile' ];
+
+            if (bMultiselect)
+            {
+                openDialogProperties.push('multiSelections');
+            }
+
+            const content: Electron.OpenDialogReturnValue = await dialog.showOpenDialog(browserWindow, {
+                filters: filters,
+                properties: openDialogProperties
+            });
+
+            if (!content.canceled && content.filePaths && content.filePaths.length)
+            {
+                return content.filePaths;
+            }
+        }
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+    return [];
+})
