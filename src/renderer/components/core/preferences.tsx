@@ -4,6 +4,60 @@ import { EColorTheme, IPreferences } from '../../../shared/preferences';
 import { ArrowSVG } from '../../misc/icons';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
 
+interface IInputSettingProps
+{
+    id: string;
+    name: string;
+    value: string;
+    placeholder?: string;
+    onChange: (id: string, value: string) => void;
+}
+
+function InputSetting(props: IInputSettingProps): JSX.Element
+{
+    const [value, setValue] = useState(props.value);
+
+    function handleInput(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        const newValue = event.target.value;
+        if (newValue !== undefined)
+        {
+            setValue(newValue);
+        }
+    }
+
+    function handleBlur(): void
+    {
+        saveValue();
+    }
+
+    function handleKeyUp(event: React.KeyboardEvent<HTMLInputElement>): void
+    {
+        if (event.code === 'Enter')
+        {
+            saveValue();
+        }
+    }
+
+    function saveValue(): void
+    {
+        const tempValue = value.trim().replace(/(\s){2,}/g, ' ');
+        if (tempValue !== value)
+        {
+            setValue(tempValue);
+        }
+
+        if (typeof props.onChange === 'function')
+        {
+            props.onChange(props.id, value);
+        }
+    }
+
+    return (<div className={`${preferencesStyles.setting}`}>
+        <SettingName name={props.name} />
+        <input className={preferencesStyles['input-setting']} type="text" value={value} placeholder={`${props.placeholder || props.name}`} onChange={handleInput} onKeyUp={handleKeyUp} onBlur={handleBlur} />
+    </div>);
+}
 
 interface IDropdownSettingOptionProps
 {
@@ -164,6 +218,7 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
             </h1>
             <div id={preferencesStyles.container}>
                 <DropdownSetting id="colorTheme" name="Color Theme" options={['Dark', 'Light']} activeOption={props.preferences.colorTheme} onChange={handleColorThemeChange} />
+                <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={onSettingChange} />
             </div>
         </div>
     </div>);
