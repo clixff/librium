@@ -1,23 +1,20 @@
 import { getAppDataPath, getConfigPath } from "./paths";
 import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
+import { EColorTheme, IPreferences } from "../shared/preferences";
+import { ipcMain } from "electron";
 
-interface IConfig
-{
-    /**
-     * Path to the directory with saved books
-     */
-    booksDir: string
-}
-
-const defaultConfig: IConfig = {
+const defaultConfig: IPreferences = {
     /**
      * Use default books directory `../Documents/epub-reader/Books`
      */
-    booksDir: path.resolve(getAppDataPath(), 'Books')
+    booksDir: path.resolve(getAppDataPath(), 'Books'),
+    colorTheme: EColorTheme.Dark,
+    fontSize: 16,
+    fontFamily: 'Segoe UI'
 };
 
-let config: IConfig | null = null;
+let config: IPreferences | null = null;
 
 export async function initConfig(): Promise<void>
 {
@@ -33,7 +30,7 @@ export async function initConfig(): Promise<void>
             try
             {
                 const configLoaded: Record<string, unknown> = JSON.parse(configString);
-                config = (configLoaded as unknown) as IConfig;
+                config = (configLoaded as unknown) as IPreferences;
                 console.log(`Loaded config from disk: `, config);
                 fixConfig();
                 console.log(`Fixed config: `, config);
@@ -54,10 +51,10 @@ function fixConfig(): void
         return;
     }
 
-    const defaultConfigCopy: IConfig = copyConfig();
+    const defaultConfigCopy: IPreferences = copyConfig();
 
     const fixedConfig: [Record<string, unknown>, boolean] = fixParams((config as unknown) as Record<string, unknown>, (defaultConfigCopy as unknown) as Record<string, unknown>);
-    config = (fixedConfig[0] as unknown) as IConfig;
+    config = (fixedConfig[0] as unknown) as IPreferences;
 
     /**
      * If at least one param was fixed, save new config to disk 
@@ -133,11 +130,11 @@ export async function saveConfig(): Promise<void>
     }
 }
 
-export function copyConfig(): IConfig
+export function copyConfig(): IPreferences
 {
     const configCopy = copyObject((defaultConfig as unknown) as Record<string, unknown>);
 
-    return (configCopy as unknown) as IConfig;
+    return (configCopy as unknown) as IPreferences;
 }
 
 type varType = 'null' | 'undefined' | 'number' | 'string' | 'boolean' | 'object' | 'array';
@@ -185,7 +182,31 @@ function copyObject(objectRef: Record<string, unknown>): Record<string, unknown>
 }
 
 
-export function getConfig(): IConfig
+export function getConfig(): IPreferences
 {
-    return config as IConfig;
+    return config as IPreferences;
 }
+
+ipcMain.handle('load-preferences', async (): Promise<IPreferences | null> =>
+{
+    try
+    {
+        return getConfig();
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+
+    return null;
+});
+
+ipcMain.on('setting-changed', (event, id: string, value: unknown) =>
+{
+    if (config)
+    {
+        const tempConfig: Record<string, unknown> = config as unknown as Record<string, unknown>;
+        tempConfig[id] = value;
+        saveConfig();
+    }
+});

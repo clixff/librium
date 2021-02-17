@@ -7,6 +7,8 @@ import { NewTabContent } from '../pages/newTab';
 import { ICategory } from '../../misc/category';
 import { IBookCallbacks } from './book';
 import { IModalData, ModalWrapper } from '../misc/modal';
+import { IPreferencesCallbacks, PreferencesPage } from './preferences';
+import { IPreferences } from '../../../shared/preferences';
 
 
 class BookContent extends React.Component
@@ -26,26 +28,6 @@ class BookContent extends React.Component
         return (<div><h1>  BookContent </h1></div>);
     }
 }
-
-
-class PreferencesContent extends React.Component
-{
-    constructor(props)
-    {
-        super(props);
-        console.log(`Preferences constructor`);
-    }
-    componentDidMount(): void
-    {
-        console.log(`Preferences did mount`);
-    }
-    render(): JSX.Element
-    {
-        console.log(`Preferences rendered`);
-        return (<div><h1>  Preferences </h1></div>);
-    }
-}
-
 
 interface IToolbarButtonProps
 {
@@ -102,6 +84,7 @@ export interface ITabContentCallbacks
     onCategoryDelete: (id: number) => void;
     createCategory: () => void;
     newTabBooksCallbacks: IBookCallbacks;
+    preferencesCallbacks: IPreferencesCallbacks;
 }
 
 interface ITabContentProps
@@ -112,6 +95,7 @@ interface ITabContentProps
     savedBooks: Array<IBook>;
     categories: Array<ICategory>;
     modal: IModalData;
+    preferences: IPreferences;
     closeModal: () => void;
 }
 
@@ -132,7 +116,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
             <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 
             : activeTab.type === ETabType.book ?
             <BookContent key={activeTab.key}/>
-            : <PreferencesContent key={activeTab.key}/>
+            : <PreferencesPage key={activeTab.key} preferences={props.preferences} callbacks={props.callbacks.preferencesCallbacks} />
         }
         {
             props.modal && props.modal.element ?

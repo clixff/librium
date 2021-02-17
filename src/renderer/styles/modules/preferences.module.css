@@ -1,0 +1,130 @@
+#wrapper
+{
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#page-content
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 30px;
+    margin-top: 25px;
+    width: auto;
+}
+
+#page-title
+{
+    font-weight: 600;
+    font-size: 26px;
+    padding: 0;
+    margin: 0;
+    color: var(--text-color);
+}
+
+#container
+{
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+}
+
+.setting
+{
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+.setting-name
+{
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.dropdown-wrapper
+{
+    --dropdown-width: 195px;
+    --dropdown-height: 24px;
+    width: var(--dropdown-width);
+    min-width: var(--dropdown-width);
+    max-width: var(--dropdown-width);
+    height: var(--dropdown-height);
+    min-height: var(--dropdown-height);
+    max-height: var(--dropdown-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--setting-background);
+    border: 1px solid var(--setting-border);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+
+.dropdown-selected
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 14px);
+    overflow: hidden;
+}
+
+.dropdown-selected-name
+{
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.dropdown-selected > svg
+{
+    fill: var(--setting-dropdown-icon);
+    --icon-size: 8px;
+    transform: rotate(90deg);
+}
+
+.dropdown-container
+{
+    position: absolute;
+    width: inherit;
+    max-width: inherit;
+    min-width: inherit;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    top: 26px;
+    background: inherit;
+    box-shadow: 0 3px 8px 2px rgba(0, 0, 0, 0.25);
+    border-radius: 0px 0px 2px 2px;
+}
+
+.dropdown-option
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: var(--text-color);
+    font-size: 12px;
+    padding: 10px 0px 10px 7px;
+    transition: background-color 0.08s linear;
+}
+
+.dropdown-option:hover
+{
+    background: var(--setting-dropdown-hover);
+}
+
+.dropdown-active-option
+{
+    cursor: default;
+    background: var(--setting-dropdown-active) !important;
+}

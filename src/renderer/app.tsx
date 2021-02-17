@@ -13,6 +13,9 @@ import { EMenuElementType } from './components/pages/newTab';
 import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
 import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType } from './components/misc/modal';
+import { EColorTheme, IPreferences } from '../shared/preferences';
+import { fixPreferences } from './misc/preferences';
+import { changeColorTheme, changeSetting } from './components/core/preferences';
 
 
 interface IAppState
@@ -37,6 +40,7 @@ interface IAppState
         y: number;
     },
     modal: IModalData;
+    preferences: IPreferences;
 }
 
 class App extends React.Component<unknown, IAppState>
@@ -62,14 +66,22 @@ class App extends React.Component<unknown, IAppState>
                 x: 0,
                 y: 0
             },
-            modal: this.getClosedModalObject()
+            modal: this.getClosedModalObject(),
+            preferences: 
+            {
+                booksDir: '',
+                colorTheme: EColorTheme.Dark,
+                fontFamily: '',
+                fontSize: 16
+            }
         };
 
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
         'handleCloseTabClicked', 'handlePreferencesClick', 'handleCategoryDeleteClick',
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
-        'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent']);
+        'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
+        'changeSetting']);
     }
     componentDidMount(): void
     {
@@ -83,6 +95,23 @@ class App extends React.Component<unknown, IAppState>
             this.setState({
                 savedBooks: loadedBooks,
                 categories: categories
+            });
+        });
+
+
+        ipcRenderer.invoke('load-preferences').then((preferences: IPreferences | null): void =>
+        {
+            if (!preferences)
+            {
+                return;
+            }
+
+            preferences = fixPreferences(preferences);
+
+            changeColorTheme(preferences.colorTheme);
+
+            this.setState({
+                preferences: preferences
             });
         });
 
@@ -504,6 +533,18 @@ class App extends React.Component<unknown, IAppState>
             categories: this.state.categories
         });
     }
+    /**
+     * 
+     * @param id Setting ID 
+     */
+    changeSetting(id: string, value: unknown): void
+    {
+        const preferences = this.state.preferences;
+        changeSetting(preferences, id, value);
+        this.setState({
+            preferences: preferences
+        });
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -520,13 +561,16 @@ class App extends React.Component<unknown, IAppState>
                 setContextMenu: this.setContextMenu,
                 deleteBook: this.openDeletionBookWarning,
                 openManageCategoriesMenu: this.openManageCategoriesMenu
+            },
+            preferencesCallbacks: {
+                changeSetting: this.changeSetting
             }
         };
 
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} closeModal={this.closeModal} />
+            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} preferences={this.state.preferences} closeModal={this.closeModal} />
             {
                 this.state.contextMenu && this.state.contextMenu.element ?
                 <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >

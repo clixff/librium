@@ -97,6 +97,16 @@ body
 
     --manage-categories-checkbox: rgb(49, 49, 49);
     --manage-categories-checkbox-hover: rgb(69, 69, 69);
+
+    --setting-background: rgb(18, 18, 18);
+    --setting-border: rgb(36, 36, 36);
+    --setting-dropdown-icon: rgb(186, 186, 186);
+    --setting-dropdown-hover: rgb(36, 36, 36);
+    --setting-dropdown-active: rgb(29, 29, 29);
+    --setting-slider-bg: rgb(36, 36, 36);
+    --setting-slider-active: rgb(125, 125, 125);
+    --setting-browse-button-bg: rgb(36, 36, 36);
+    --setting-browse-button-border: var(--setting-browse-button-bg);
 }
 
 body.light
@@ -148,6 +158,15 @@ body.light
 
     --manage-categories-checkbox: rgb(211, 211, 211);
     --manage-categories-checkbox-hover: rgb(170, 170, 170);
+
+    --setting-background: white;
+    --setting-border: rgb(36, 36, 36);
+    --setting-dropdown-hover: rgb(230, 230, 230);
+    --setting-dropdown-active: rgb(245, 245, 245);
+    --setting-slider-bg: rgb(171, 171, 171);
+    --setting-slider-active: rgb(50, 50, 50);
+    --setting-browse-button-bg: white;
+    --setting-browse-button-border: rgb(113, 113, 113);
 }
 
 
