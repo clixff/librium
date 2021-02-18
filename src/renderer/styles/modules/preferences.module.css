@@ -66,7 +66,8 @@
 
 .dropdown-wrapper,
 .input-setting,
-.path-input
+.path-input,
+.slider-text
 {
     width: var(--setting-width);
     min-width: var(--setting-width);
@@ -140,7 +141,8 @@
 }
 
 .input-setting,
-.path-input
+.path-input,
+.slider-text
 {
     outline: none;
     padding: 0px 7px;
@@ -149,7 +151,8 @@
     --setting-width: calc(195px - 14px);
 }
 
-.input-setting:focus
+.input-setting:focus,
+.slider-text:focus
 {
     border-color: var(--blue-color);
 }
@@ -187,4 +190,37 @@
 .browse-button:hover
 {
     border-color: var(--setting-browse-button-border-hover);
+}
+
+.slider-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.slider
+{
+    outline: none;
+    appearance: none;
+    height: 4px;
+    width: 132px;
+    border-radius: 8px;
+}
+
+.slider::-webkit-slider-thumb
+{
+    width: 14px;
+    height: 14px;
+    appearance: none;
+    background: var(--app-background);
+    border-radius: 50%;
+    border: 2px solid var(--setting-slider-active);
+}
+
+.slider-text
+{
+    margin-left: 15px;
+    --setting-width: calc(35px - 14px);
+    text-align: center;
 }

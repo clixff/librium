@@ -1,9 +1,140 @@
 import { ipcRenderer } from 'electron';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EBrowseType, EColorTheme, IBrowseFileFilter, IPreferences } from '../../../shared/preferences';
 import { ArrowSVG } from '../../misc/icons';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
 import { Button } from '../common/button';
+
+const sliderSaveTimeouts: Map<string, number> = new Map();
+
+interface ISliderSettingProps
+{
+    id: string;
+    name: string;
+    value: number;
+    min: number;
+    max: number;
+    onChange: (id: string, value: number) => void;
+}
+
+function SilderSetting(props: ISliderSettingProps): JSX.Element
+{
+    const maxSliderValue = 1000;
+
+    const [value, setValue] = useState(props.value);
+    const [renderValue, setRenderValue] = useState(`${props.value}`);
+    const [sliderValue, setSliderValue] = useState(getSliderValue(props.value));
+
+    function getSliderValue(value: number): number
+    {
+        let sliderValue = Math.floor(((value - props.min) / (props.max - props.min)) * maxSliderValue);
+        if (sliderValue > maxSliderValue)
+        {
+            sliderValue = maxSliderValue;
+        }
+        else if (sliderValue < 0)
+        {
+            sliderValue = 0;
+        }
+    
+        return sliderValue;
+    }
+
+    function handleChangeSlider(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        const newSliderValue = Number(event.target.value);
+        if (isFinite(newSliderValue))
+        {
+            const sliderPercent = newSliderValue / maxSliderValue;
+
+            const newValue = Math.round(props.min + ((props.max - props.min) * sliderPercent));
+
+            setValue(newValue);
+            setRenderValue(`${newValue}`);
+            setSliderValue(newSliderValue);
+            saveValueWithTimer(newValue);
+        }
+    }
+
+    function handleTextChange(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        const value = event.target.value;
+        const parsedValue = Number(value);
+
+        if (value !== '' && !isFinite(parsedValue))
+        {
+            return;
+        }
+
+        setValue(parsedValue);
+        setRenderValue(value);
+        setSliderValue(getSliderValue(parsedValue));
+    }
+    
+    function handleBlur(): void
+    {
+        let newValue = Math.floor(value);
+        if (newValue < props.min)
+        {
+            newValue = props.min;
+        }
+        else if (newValue > props.max)
+        {
+            newValue = props.max;
+        }
+        else if (!isFinite(newValue))
+        {
+            newValue = props.min;
+        }
+
+        setValue(newValue);
+        setRenderValue(`${newValue}`);
+        setSliderValue(getSliderValue(newValue));
+        saveValue(newValue);
+    }
+
+    function saveValueWithTimer(value: number): void
+    {
+        const oldTimeout = sliderSaveTimeouts.get(props.id);
+        if (oldTimeout)
+        {
+            window.clearTimeout(oldTimeout);
+        }
+
+        const saveTimeout: number = window.setTimeout(() =>
+        {
+            saveValue(value);
+            sliderSaveTimeouts.delete(props.id);
+        }, 2500);
+
+        sliderSaveTimeouts.set(props.id, saveTimeout);
+    }
+
+    function saveValue(valueToSave: number): void
+    {
+        if (typeof props.onChange === 'function')
+        {
+            props.onChange(props.id, valueToSave);
+        }
+    }
+
+    const sliderActiveColor = `var(--setting-slider-active)`;
+    const sliderBackgroundColor = `var(--setting-slider-bg)`;
+    const sliderPercent = (sliderValue / maxSliderValue) * 100;
+
+    return (<div className={preferencesStyles.setting}>
+        <SettingName name={props.name} />
+        <div className={preferencesStyles['slider-wrapper']}>
+            <input type="range" className={preferencesStyles['slider']} value={sliderValue} min={0} max={maxSliderValue} onChange={handleChangeSlider} style={
+                {
+                    background: `linear-gradient(to right, ${sliderActiveColor} 0%, ${sliderActiveColor} ${sliderPercent}%, ${sliderBackgroundColor} ${sliderPercent}%, ${sliderBackgroundColor} 100%)`
+                }
+            } />
+            <input type="text" className={preferencesStyles['slider-text']} value={renderValue} onChange={handleTextChange} onBlur={handleBlur} />
+
+        </div>
+    </div>);
+}
 
 interface IPathSettingProps
 {
@@ -262,6 +393,7 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
             </h1>
             <div id={preferencesStyles.container}>
                 <DropdownSetting id="colorTheme" name="Color Theme" options={['Dark', 'Light']} activeOption={props.preferences.colorTheme} onChange={handleColorThemeChange} />
+                <SilderSetting id="fontSize" name="Font Size" value={props.preferences.fontSize} min={1} max={32} onChange={onSettingChange} />
                 <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={onSettingChange} />
                 <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={onSettingChange} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
             </div>
