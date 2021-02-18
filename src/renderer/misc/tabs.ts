@@ -14,7 +14,12 @@ export interface INewTabState
     activeCategory: number;
 }
 
-export type TabState = INewTabState | null;
+export interface IBookTabState
+{
+    bookId: string;
+}
+
+export type TabState = Partial<INewTabState & IBookTabState> | null;
 
 export class Tab
 {
@@ -38,6 +43,11 @@ export class Tab
                     menu: EMenuElementType.Books,
                     activeCategory: -1,
                     viewType: EViewType.Grid
+                };
+                break;
+            case ETabType.book:
+                this.state = {
+                    bookId: ''
                 };
                 break;
         }

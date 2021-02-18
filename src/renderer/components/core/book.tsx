@@ -84,7 +84,7 @@ function getBookDataForRender(book: IBook): IBookDataForRender
 }
 
 function handleBookClick(event: React.MouseEvent<HTMLDivElement>, book: IBook, callbacks: IBookCallbacks): void
-{;
+{
     /**
      * Right mouse button click
      */
@@ -212,6 +212,7 @@ export interface IBookCallbacks
     setContextMenu: (context: JSX.Element | null, x: number, y: number, width: number, height: number) => void;
     deleteBook: (book: IBook) => void;
     openManageCategoriesMenu: (book: IBook) => void;
+    openBook: (bookId: string) => void;
 }
 
 export function getBooksViewComponent(viewType: EViewType, books: Array<IBook>, keys: string, callbacks: IBookCallbacks): JSX.Element

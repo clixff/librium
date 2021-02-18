@@ -48,9 +48,17 @@ export function BookContextMenu(props: IBookContextMenuProps): JSX.Element
         }
     }
 
+    function handleOpenBookClick(): void
+    {
+        if (props.callbacks && typeof props.callbacks.openBook === 'function')
+        {
+            props.callbacks.openBook(props.book.id);
+        }
+    }
+
     return (<div id={contextMenuStyles['book-context-menu']}>
         <div id={contextMenuStyles['context-container']}>
-            <ContextMenuElement text={`Open`} icon={BookSVG} />
+            <ContextMenuElement text={`Open`} icon={BookSVG} onClick={handleOpenBookClick} />
             <ContextMenuElement text={`Manage categories`} icon={ListSVG} onClick={handleManageCategoriesClick} />
             <ContextMenuElement text={`Delete`} icon={TrashcanSVG} class={contextMenuStyles[`delete-element`]}  onClick={handleDeleteClick} />
         </div>

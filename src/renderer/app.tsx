@@ -55,8 +55,7 @@ class App extends React.Component<unknown, IAppState>
             tabs: [
                 new Tab('New Tab', ETabType.newTab, null, Tab.generateKey('New Tab')),
                 new Tab('Lorem ipsum', ETabType.book, 'http://127.0.0.1:45506/file/20a1a56a4f9676486b9cf88f2ef8595fee43c8df/OEBPS%5CA978-1-4842-3366-5_CoverFigure.jpg'),
-                new Tab('Dolor sit amet', ETabType.book, 'http://127.0.0.1:45506/file/36e6a91ad0b3f28e016ea685fa7b36a1493bcd02/OPS%5Cimages%5Ccover.jpg'),
-                new Tab('Preferences', ETabType.preferences, 'http://127.0.0.1:45506/file/preferences.svg', Tab.generateKey('Preferences')),
+                new Tab('Dolor sit amet', ETabType.book, 'http://127.0.0.1:45506/file/36e6a91ad0b3f28e016ea685fa7b36a1493bcd02/OPS%5Cimages%5Ccover.jpg')
             ],
             activeTab: 0,
             savedBooks: [],
@@ -81,7 +80,7 @@ class App extends React.Component<unknown, IAppState>
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
-        'changeSetting']);
+        'changeSetting', 'openBook']);
     }
     componentDidMount(): void
     {
@@ -301,7 +300,7 @@ class App extends React.Component<unknown, IAppState>
                 const tab = tabsList[i];
                 if (tab.type === ETabType.newTab)
                 {
-                    if (tab.state && tab.state.menu === EMenuElementType.Categories)
+                    if (tab.state && tab.state.menu === EMenuElementType.Categories && tab.state.activeCategory !== undefined)
                     {
                         /**
                          * If there's a tab with category that needs to be removed, return to the list of categories in this tab
@@ -545,6 +544,49 @@ class App extends React.Component<unknown, IAppState>
             preferences: preferences
         });
     }
+    openBook(bookId: string): void
+    {
+        const savedBook: IBook | undefined = this.booksMap.get(bookId);
+        if (!savedBook)
+        {
+            return;
+        }
+
+        const tabsList = this.state.tabs;
+        let bookTabId = -1;
+
+        for (let i = 0; i < tabsList.length; i++)
+        {
+            const tab = tabsList[i];
+            if (tab && tab.type === ETabType.book)
+            {
+                if (tab.state && tab.state.bookId === bookId)
+                {
+                    bookTabId = i;
+                    break;
+                }
+            }
+        }
+
+        if (bookTabId === -1)
+        {
+            bookTabId = this.state.activeTab + 1;
+        }
+
+        tabsList.splice(bookTabId, 0, new Tab(savedBook.title, ETabType.book, `http://127.0.0.1:45506/file/${savedBook.id}/${savedBook.cover}`));
+
+        const bookTab = tabsList[bookTabId];
+
+        bookTab.state = {
+            bookId: bookId
+        };
+
+        this.setState({
+            tabs: tabsList,
+            activeTab: bookTabId
+        });
+
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -560,7 +602,8 @@ class App extends React.Component<unknown, IAppState>
             newTabBooksCallbacks: {
                 setContextMenu: this.setContextMenu,
                 deleteBook: this.openDeletionBookWarning,
-                openManageCategoriesMenu: this.openManageCategoriesMenu
+                openManageCategoriesMenu: this.openManageCategoriesMenu,
+                openBook: this.openBook
             },
             preferencesCallbacks: {
                 changeSetting: this.changeSetting
