@@ -84,7 +84,7 @@ function getBookDataForRender(book: IBook): IBookDataForRender
 }
 
 function handleBookClick(event: React.MouseEvent<HTMLDivElement>, book: IBook, callbacks: IBookCallbacks): void
-{
+{;
     /**
      * Right mouse button click
      */
