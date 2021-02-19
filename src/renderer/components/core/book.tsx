@@ -93,6 +93,10 @@ function handleBookClick(event: React.MouseEvent<HTMLDivElement>, book: IBook, c
         const contextMenu = <BookContextMenu book={book} callbacks={callbacks} />;
         callbacks.setContextMenu(contextMenu, event.pageX, event.pageY, 216, 104);
     }
+    else
+    {
+        callbacks.openBook(book.id);
+    }
 
 }
 

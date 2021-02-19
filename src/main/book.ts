@@ -18,7 +18,7 @@ interface IBookDataBase
 }
 
 /**
- * This is used when sending book data to a enderer process
+ * This is used when sending book data to a renderer process
  */
 interface IBookToExport extends IBookDataBase
 {
@@ -71,6 +71,7 @@ export class Book
     {
         this.saveDirectory = saveDirectory;
         this.id = bookId;
+        savedBooks.set(bookId, this);
     }
     /**
      * Saves book info to disk
@@ -129,6 +130,62 @@ export class Book
     {
         this.lastTimeOpened = Math.floor(Date.now() / 1000);
     }
+    async loadChunks(): Promise<void>
+    {
+        try
+        {
+            /**
+             * Chunks already loaded
+             */
+            if (this.chunks.length)
+            {
+                return;
+            }
+            const chunksPath = path.join(this.saveDirectory, 'chunks');
+            await fsPromises.access(chunksPath, fs.constants.F_OK);
+            const fileNames: Array<string> = await fsPromises.readdir(chunksPath);
+            for (let i = 0; i < fileNames.length; i++)
+            {
+                const fileName = fileNames[i];
+
+                if (!fileName.endsWith('.json'))
+                {
+                    continue;
+                }
+
+                /**
+                 * Number of chunk
+                 */
+                const chunkId = Number(fileName.slice(0, -5));
+
+                if (!isFinite(chunkId))
+                {
+                    continue;
+                }
+
+                const filePath = path.join(chunksPath, fileName);
+                const bIsFile = (await fsPromises.stat(filePath)).isFile;
+
+                if (!bIsFile)
+                {
+                    continue;
+                }
+
+                const fileContent = await fsPromises.readFile(filePath, { encoding: 'utf-8' });
+
+                if (fileContent)
+                {
+                    const chunkParsed: IBookChunk = JSON.parse(fileContent);
+                    this.chunks[chunkId] = chunkParsed;
+                }
+                
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
 }
 
 const savedBooks: Map<string, Book> = new Map();
@@ -150,7 +207,6 @@ async function getBookDataFromDisk(bookPath: string, bookId: string): Promise<IB
         {
             const book = new Book(bookPath, bookId);
             book.loadMetadataFromDisk(bookDataParsed);
-            savedBooks.set(bookId, book);
             return book.getExportData();
         }
     }
@@ -219,11 +275,40 @@ ipcMain.on('delete-book', async (event, bookId: string) =>
         {
             const booksDirPath: string = config.booksDir;
             const bookPath: string = path.join(booksDirPath, bookId);
+            savedBooks.delete(bookId);
             await fsPromises.rmdir(bookPath, { recursive: true });
         }
     }
     catch(error)
     {
         console.error(error);
+    }
+});
+
+ipcMain.handle('load-book-chunks', async (event, bookId: string): Promise<Array<IBookChunk>> =>
+{
+    try
+    {
+        const book = savedBooks.get(bookId);
+        if (book)
+        {
+            await book.loadChunks();
+            return book.chunks;
+        }
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+    return [];
+});
+
+ipcMain.on('update-book-last-time-opened-time', (event, bookId: string, newTime: number) =>
+{
+    const book = savedBooks.get(bookId);
+    if (book)
+    {
+        book.lastTimeOpened = newTime;
+        book.saveMeta();
     }
 });

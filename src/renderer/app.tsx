@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
 import { deleteBook, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
-import { Book } from './components/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, Tab } from './misc/tabs';
@@ -16,6 +15,7 @@ import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategori
 import { EColorTheme, IPreferences } from '../shared/preferences';
 import { fixPreferences } from './misc/preferences';
 import { changeColorTheme, changeSetting } from './components/core/preferences';
+import { IBookChunk } from '../shared/schema';
 
 
 interface IAppState
@@ -53,9 +53,7 @@ class App extends React.Component<unknown, IAppState>
         this.state = {
             book: null,
             tabs: [
-                new Tab('New Tab', ETabType.newTab, null, Tab.generateKey('New Tab')),
-                new Tab('Lorem ipsum', ETabType.book, 'http://127.0.0.1:45506/file/20a1a56a4f9676486b9cf88f2ef8595fee43c8df/OEBPS%5CA978-1-4842-3366-5_CoverFigure.jpg'),
-                new Tab('Dolor sit amet', ETabType.book, 'http://127.0.0.1:45506/file/36e6a91ad0b3f28e016ea685fa7b36a1493bcd02/OPS%5Cimages%5Ccover.jpg')
+                new Tab('New Tab', ETabType.newTab, null, Tab.generateKey('New Tab'))
             ],
             activeTab: 0,
             savedBooks: [],
@@ -80,7 +78,7 @@ class App extends React.Component<unknown, IAppState>
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
-        'changeSetting', 'openBook']);
+        'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime']);
     }
     componentDidMount(): void
     {
@@ -88,8 +86,6 @@ class App extends React.Component<unknown, IAppState>
         ipcRenderer.invoke('load-saved-books').then((result: [Array<IBookBase>, Array<IRawCategory>]) => 
         {
             const loadedBooks: Array<IBook> = this.sortSavedBooks(rawBooksToBooks(result[0], this.booksMap));
-            console.log(`Loaded books: `, loadedBooks);
-            console.log(this.booksMap);
             const categories = parseCategories(result[1], this.booksMap);
             this.setState({
                 savedBooks: loadedBooks,
@@ -145,6 +141,8 @@ class App extends React.Component<unknown, IAppState>
         this.setState({
             savedBooks: savedBooks
         });
+
+        this.openBook(book.id, false);
     }
     handleOpenNewTabButtonClicked(): void
     {
@@ -361,10 +359,36 @@ class App extends React.Component<unknown, IAppState>
 
             this.booksMap.delete(book.id);
 
+            let tabsList = this.state.tabs;
+            let activeTabIndex = this.state.activeTab;
+
+            for (let i = 0; i < tabsList.length; i++)
+            {
+                const tab = tabsList[i];
+
+                /**
+                 * Find a tab with this book
+                 */
+                if (tab && tab.type === ETabType.book && tab.state && tab.state.bookId === book.id)
+                {
+                    tabsList = [...tabsList];
+                    tabsList.splice(i, 1);
+
+                    if (activeTabIndex > i)
+                    {
+                        activeTabIndex--;
+                    }
+                    
+                    break;
+                }
+            }
+
             deleteBook(book);
 
             this.setState({
-                savedBooks: booksList
+                savedBooks: booksList,
+                tabs: tabsList,
+                activeTab: activeTabIndex
             });
         }
     }
@@ -544,7 +568,7 @@ class App extends React.Component<unknown, IAppState>
             preferences: preferences
         });
     }
-    openBook(bookId: string): void
+    openBook(bookId: string, bUpdateTime = true): void
     {
         const savedBook: IBook | undefined = this.booksMap.get(bookId);
         if (!savedBook)
@@ -571,14 +595,14 @@ class App extends React.Component<unknown, IAppState>
         if (bookTabId === -1)
         {
             bookTabId = this.state.activeTab + 1;
+            tabsList.splice(bookTabId, 0, new Tab(savedBook.title, ETabType.book, savedBook.cover ? `http://127.0.0.1:45506/file/${savedBook.id}/${savedBook.cover}` : null));
         }
-
-        tabsList.splice(bookTabId, 0, new Tab(savedBook.title, ETabType.book, `http://127.0.0.1:45506/file/${savedBook.id}/${savedBook.cover}`));
 
         const bookTab = tabsList[bookTabId];
 
         bookTab.state = {
-            bookId: bookId
+            bookId: bookId,
+            book: savedBook
         };
 
         this.setState({
@@ -586,6 +610,52 @@ class App extends React.Component<unknown, IAppState>
             activeTab: bookTabId
         });
 
+        if (bUpdateTime)
+        {
+            this.updateBookLastTImeOpenedTime(bookId);
+        }
+    }
+    updateBookLastTImeOpenedTime(bookId: string): void
+    {
+        const book = this.booksMap.get(bookId);
+        if (book)
+        {
+            book.lastTimeOpened = Math.floor(Date.now() / 1000);
+            const savedBooks = [...this.state.savedBooks];
+            this.sortSavedBooks(savedBooks);
+            this.setState({ 
+                savedBooks: savedBooks
+            });
+
+            ipcRenderer.send('update-book-last-time-opened-time', bookId, book.lastTimeOpened);
+        }
+    }
+    loadBookChunks(book: IBook): void
+    {
+        const onSuccess = (): void =>
+        {
+            /**
+             * Force re-render book page with new chunks
+             */
+            this.setState({
+                savedBooks: this.state.savedBooks
+            });
+        };
+
+        /**
+         * Book chunks already loaded
+         */
+        if (book.chunks.length)
+        {
+            onSuccess();
+            return;
+        }
+        
+        ipcRenderer.invoke('load-book-chunks', book.id).then((chunks: Array<IBookChunk>) =>
+        {
+            book.chunks = chunks;
+            onSuccess();
+        });
     }
     render(): JSX.Element
     {
@@ -607,13 +677,24 @@ class App extends React.Component<unknown, IAppState>
             },
             preferencesCallbacks: {
                 changeSetting: this.changeSetting
+            },
+            bookPageCallbacks: {
+                loadBookChunks: this.loadBookChunks
             }
         };
+
+        let activeBook: IBook | null = null;
+
+        const activeTab = this.state.tabs[this.state.activeTab];
+        if (activeTab && activeTab.type === ETabType.book && activeTab.state && activeTab.state.book)
+        {
+            activeBook = activeTab.state.book;
+        }
 
         return (
         <React.Fragment>
             <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} preferences={this.state.preferences} closeModal={this.closeModal} />
+            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} preferences={this.state.preferences} closeModal={this.closeModal} book={activeBook} />
             {
                 this.state.contextMenu && this.state.contextMenu.element ?
                 <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >
@@ -622,13 +703,6 @@ class App extends React.Component<unknown, IAppState>
                     }
                 </ContextMenuWrapper> : null
             }
-            {/*
-            {
-                this.state.book ?
-                (
-                    <Book book={this.state.book} />
-                ) : null
-            } */}
         </React.Fragment>
         );
     }

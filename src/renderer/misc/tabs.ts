@@ -1,4 +1,5 @@
 import { EMenuElementType, EViewType } from '../components/pages/newTab'
+import { IBook } from './book';
 
 export enum ETabType
 {
@@ -17,6 +18,7 @@ export interface INewTabState
 export interface IBookTabState
 {
     bookId: string;
+    book: IBook | null;
 }
 
 export type TabState = Partial<INewTabState & IBookTabState> | null;
@@ -47,7 +49,8 @@ export class Tab
                 break;
             case ETabType.book:
                 this.state = {
-                    bookId: ''
+                    bookId: '',
+                    book: null
                 };
                 break;
         }

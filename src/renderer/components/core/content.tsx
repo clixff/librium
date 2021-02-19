@@ -9,23 +9,51 @@ import { IBookCallbacks } from './book';
 import { IModalData, ModalWrapper } from '../misc/modal';
 import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
+import { BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
 
+interface IBookContentState
+{
+    bLoaded: boolean;
+}
 
-class BookContent extends React.Component
+class BookContent extends React.Component<IBookPageProps, IBookContentState>
 {
     constructor(props)
     {
         super(props);
+        this.state = {
+            bLoaded: !!(this.props.book && this.props.book.chunks.length)
+        };
         console.log(`BookContent constructor`);
     }
     componentDidMount(): void
     {
         console.log(`BookContent did mount`);
+        if (!this.state.bLoaded && this.props.book)
+        {
+            this.props.callbacks.loadBookChunks(this.props.book);
+        }
+    }
+    componentDidUpdate()
+    {
+        if (!this.state.bLoaded && this.props.book && this.props.book.chunks.length)
+        {
+            this.setState({
+                bLoaded: true
+            });
+        }
     }
     render(): JSX.Element
     {
         console.log(`BookContent rendered`);
-        return (<div><h1>  BookContent </h1></div>);
+        if (!this.state.bLoaded)
+        {
+            return (<div>
+
+            </div>);
+        }
+
+        return (<BookPage {...this.props} />);
     }
 }
 
@@ -85,6 +113,7 @@ export interface ITabContentCallbacks
     createCategory: () => void;
     newTabBooksCallbacks: IBookCallbacks;
     preferencesCallbacks: IPreferencesCallbacks;
+    bookPageCallbacks: IBookPageCallbacks;
 }
 
 interface ITabContentProps
@@ -96,6 +125,10 @@ interface ITabContentProps
     categories: Array<ICategory>;
     modal: IModalData;
     preferences: IPreferences;
+    /**
+     * Active book if current tab type is Book
+     */
+    book: IBook | null;
     closeModal: () => void;
 }
 
@@ -115,7 +148,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
             activeTab.type === ETabType.newTab ?
             <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 
             : activeTab.type === ETabType.book ?
-            <BookContent key={activeTab.key}/>
+            <BookContent key={activeTab.key} book={props.book} callbacks={props.callbacks.bookPageCallbacks}/>
             : <PreferencesPage key={activeTab.key} preferences={props.preferences} callbacks={props.callbacks.preferencesCallbacks} />
         }
         {

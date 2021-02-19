@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { IBookChunk, IBookChunkNode } from '../../shared/schema';
-import { IBook } from '../misc/book';
+import { IBookChunk, IBookChunkNode } from '../../../shared/schema';
+import { IBook } from '../../misc/book';
+import bookStyles from '../../styles/modules/book.module.css';
 
 interface IBookChunkProps
 {
@@ -66,21 +67,36 @@ class BookChunk extends Component<IBookChunkProps>
     }
 }
 
-interface IBookProps
+export interface IBookPageCallbacks
 {
-    book: IBook;
+    loadBookChunks: (book: IBook) => void;
 }
 
-export function Book(props: IBookProps): JSX.Element
+export interface IBookPageProps
 {
+    book: IBook | null;
+    callbacks: IBookPageCallbacks;
+}
+
+export function BookPage(props: IBookPageProps): JSX.Element
+{
+    const book: IBook | null = props.book;
+
+    if (!book)
+    {
+        return (<div></div>);
+    }
+
     return (
-        <div id="book">
-            {
-                props.book.chunks.map((chunk, index) =>
+        <div id={bookStyles.wrapper}>
+            <div id={bookStyles.container}>
                 {
-                    return (<BookChunk key={index} id={index} chunk={chunk} />);
-                })
-            }
+                    book.chunks.map((chunk, index) =>
+                    {
+                        return (<BookChunk key={index} id={index} chunk={chunk} />);
+                    })
+                }
+            </div>
         </div>
     );
 }
