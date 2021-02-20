@@ -172,6 +172,19 @@ class App extends React.Component<unknown, IAppState>
         if (tabId < this.state.tabs.length && tabId >= 0)
         {
             const tabsList = [...this.state.tabs];
+            
+            const tabToClose = tabsList[tabId];
+            if (tabToClose && tabToClose.type === ETabType.book)
+            {
+                if (tabToClose.state && tabToClose.state.book)
+                {
+                    /**
+                     * Remove chunks from the closed book
+                     */
+                    tabToClose.state.book.chunks = [];
+                }
+            }
+
             tabsList.splice(tabId, 1);
 
 

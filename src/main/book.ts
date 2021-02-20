@@ -293,7 +293,12 @@ ipcMain.handle('load-book-chunks', async (event, bookId: string): Promise<Array<
         if (book)
         {
             await book.loadChunks();
-            return book.chunks;
+            const chunks = book.chunks;
+            /**
+             * Remove book chunks from the memory
+             */
+            book.chunks = [];
+            return chunks;
         }
     }
     catch (error)

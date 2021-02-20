@@ -83,7 +83,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .active .tab-title

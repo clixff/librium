@@ -41,7 +41,7 @@ ipcMain.on('open-file-click', async (event) =>
 
 
 /**
- * Opens .epub file, checks file signature, then converts it to the right format and open in GUI
+ * Opens .epub file, checks file signature, then converts it to the right format and open in renderer process
  */
 async function openFile(filePath: string, browserWindow: BrowserWindow): Promise<void>
 {
@@ -103,6 +103,10 @@ async function openFile(filePath: string, browserWindow: BrowserWindow): Promise
                         if (browserWindow && browserWindow.webContents)
                         {
                             browserWindow.webContents.send('book-loaded', rawBook.bookRef.getExportData());
+                            /**
+                             * Remove book chunks from the memory
+                             */
+                            rawBook.bookRef.chunks = [];
                         }
                     }
                 }

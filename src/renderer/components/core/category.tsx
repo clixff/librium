@@ -245,11 +245,6 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
 {
     const bIsCategoriesArrayEmpty = props.list.length === 0;
 
-    if (bIsCategoriesArrayEmpty)
-    {
-        return (<NoResultWarning message="No categories found" searchQuery={props.searchQuery} />);
-    }
-
     function handleCreateCategoryClick(): void
     {
         if (typeof props.callbacks.createCategory === 'function')
@@ -268,6 +263,8 @@ const CategoriesList = React.memo((props: ICategoriesListProps): JSX.Element =>
             props.searchQuery ? null : <Button moduleClass={'create-category'} text={`Create Category`} onClick={handleCreateCategoryClick} />
         }
         {
+            bIsCategoriesArrayEmpty ?
+            (<NoResultWarning message="No categories found" searchQuery={props.searchQuery} />) :
             props.list.map((category, index) =>
             {
                 return (<CategoriesListElement category={category} key={category.id} index={index} callbacks={props.callbacks} />);

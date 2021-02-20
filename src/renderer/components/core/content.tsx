@@ -10,6 +10,7 @@ import { IModalData, ModalWrapper } from '../misc/modal';
 import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
+import { bindFunctionsContext } from '../../misc/misc';
 
 interface IBookContentState
 {

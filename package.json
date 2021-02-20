@@ -12,7 +12,8 @@
     "run:renderer:dev": "webpack serve --mode production --config ./webpack/webpack.renderer.dev.js",
     "dev": "npm run build:main:dev && concurrently \"npm run run:renderer:dev\" \"npm run run:main:dev\"",
     "build": "npm run build:main:prod && npm run build:renderer:prod",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "dist32": "electron-builder --ia32"
   },
   "author": "",
   "license": "ISC",
