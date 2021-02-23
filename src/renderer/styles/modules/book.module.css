@@ -14,3 +14,22 @@
     width: 700px;
     color: var(--text-color);
 }
+
+#loading-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 35px;
+}
+
+#loading-wrapper > svg
+{
+    --icon-size: 65px;
+}
+
+#loading-wrapper > svg > circle
+{
+    stroke: var(--loading-color);
+}

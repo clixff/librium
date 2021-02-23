@@ -74,3 +74,62 @@
 {
     margin-right: 12px !important;
 }
+
+#toolbar-left
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 12px;
+    user-select: none;
+    overflow: hidden;
+}
+
+#toolbar-left > *
+{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#toolbar-left > :first-child
+{
+    margin-left: 15px;
+}
+
+#toolbar-left > *:not(:last-child)
+{
+    margin-right: 35px;
+}
+
+#toolbar-book-chapter
+{
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+}
+
+#toolbar-book-page
+{
+    color: rgb(169, 169, 169);
+    min-width: 58px;
+    max-width: 113px;
+}
+
+#toolbar-book-page > b
+{
+    color: white;
+    font-weight: 600;
+}
+
+#toolbar-book-percent
+{
+    color: rgb(169, 169, 169);
+}
+
+#toolbar-book-back-to-page
+{
+    color: rgb(166, 166, 166);
+    cursor: pointer;
+    font-weight: 600;
+}

@@ -110,6 +110,8 @@ body
     --setting-browse-button-hover: rgb(45, 45, 45);
     --setting-browse-button-border-hover: var(--setting-browse-button-hover);
 
+    --loading-color: white;
+
 }
 
 body.light
@@ -172,6 +174,8 @@ body.light
     --setting-browse-button-border: rgb(113, 113, 113);
     --setting-browse-button-hover: rgb(220, 220, 220);
     --setting-browse-button-border-hover: var(--setting-browse-button-border);
+
+    --loading-color: rgb(128, 128, 128);
 }
 
 

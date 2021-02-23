@@ -15,10 +15,30 @@ export interface INewTabState
     activeCategory: number;
 }
 
+export interface IBookPageData
+{
+    /**
+     * Full height of the book page
+     */
+    bookHeight: number;
+    /**
+     * Visible height of the book page
+     */
+    bookPageHeight: number;
+    bookContainerMarginBottom: number;
+    currentPage: number;
+    percentReadToSave: number;
+    totalNumberOfPages: number;
+    backToPageNumber: number;
+    bookWrapper: HTMLElement | null;
+
+}
+
 export interface IBookTabState
 {
     bookId: string;
     book: IBook | null;
+    data: IBookPageData;
 }
 
 export type TabState = Partial<INewTabState & IBookTabState> | null;
@@ -29,7 +49,6 @@ export class Tab
     type: ETabType = ETabType.newTab;
     icon: string | null = null;
     key = '';
-    content: JSX.Element | null = null;
     state: TabState = null;
     constructor(name: string, type: ETabType, icon?: string | null, key?: string)
     {
@@ -50,7 +69,17 @@ export class Tab
             case ETabType.book:
                 this.state = {
                     bookId: '',
-                    book: null
+                    book: null,
+                    data: {
+                        bookHeight: 0,
+                        bookPageHeight: 0,
+                        bookContainerMarginBottom: 0,
+                        currentPage: 0,
+                        totalNumberOfPages: 0,
+                        bookWrapper: null,
+                        backToPageNumber: 0,
+                        percentReadToSave: 0
+                    }
                 };
                 break;
         }

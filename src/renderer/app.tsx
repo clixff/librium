@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron';
 import { deleteBook, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
-import { ETabType, Tab } from './misc/tabs';
+import { ETabType, IBookPageData, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
 import { IRawCategory, ICategory, parseCategories, createCategory, deleteCategory, deleteBookFromCategory, addBookToCategory } from './misc/category';
 import { EMenuElementType } from './components/pages/newTab';
@@ -78,7 +78,8 @@ class App extends React.Component<unknown, IAppState>
         'deleteCategory', 'setContextMenu', 'removeContextMenu', 'handleScroll',
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
-        'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime']);
+        'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
+        'updateBookTabState']);
     }
     componentDidMount(): void
     {
@@ -613,10 +614,11 @@ class App extends React.Component<unknown, IAppState>
 
         const bookTab = tabsList[bookTabId];
 
-        bookTab.state = {
-            bookId: bookId,
-            book: savedBook
-        };
+        if (bookTab.state)
+        {
+            bookTab.state.book = savedBook;
+            bookTab.state.bookId = bookId;
+        }
 
         this.setState({
             tabs: tabsList,
@@ -670,6 +672,27 @@ class App extends React.Component<unknown, IAppState>
             onSuccess();
         });
     }
+    updateBookTabState(data: Partial<IBookPageData>): void
+    {
+        const activeTab = this.state.tabs[this.state.activeTab];
+        if (activeTab && activeTab.type === ETabType.book)
+        {
+            if (activeTab.state && activeTab.state.data)
+            {
+                activeTab.state.data = {
+                    ...activeTab.state.data,
+                    ...data
+                };
+
+                this.setState((prevState) =>
+                {
+                    return {
+                        tabs: prevState.tabs
+                    };
+                });
+            }
+        }
+    }
     render(): JSX.Element
     {
         const tabsCallbacks: ITabsCallbacks = {
@@ -692,7 +715,8 @@ class App extends React.Component<unknown, IAppState>
                 changeSetting: this.changeSetting
             },
             bookPageCallbacks: {
-                loadBookChunks: this.loadBookChunks
+                loadBookChunks: this.loadBookChunks,
+                updateBookTabState: this.updateBookTabState
             }
         };
 
