@@ -12,6 +12,8 @@ export interface IBookBase
     lastTimeOpened: number;
     cover: string;
     id: string;
+    percentRead: number;
+    percentPages: number;
 }
 
 export interface IBook extends IBookBase

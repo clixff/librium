@@ -107,6 +107,7 @@ export interface IBookPageCallbacks
 {
     loadBookChunks: (book: IBook) => void;
     updateBookTabState: (data: Partial<IBookPageData>) => void;
+    updateBookReadPercent: (book: IBook, percent: number, percentPages: number) => void;
 }
 
 export interface IBookPageProps
@@ -116,18 +117,23 @@ export interface IBookPageProps
     callbacks: IBookPageCallbacks;
 }
 
-// let bookHeight = 0;
-// let bookPageHeight = 0;
-// let totalNumberOfPages = 0;
-// let lastPageOffset = 0;
-// let bookContainerMarginBottom = 0;
-// let bookWrapper: HTMLElement | null = null;
+let isTicking = false;
 
 export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 {
     const [bTabLoaded, setTabLoaded] = useState(false);
-    
-    const bookPageData = props.tabState.data;
+
+    function getBookPageData(): IBookPageData
+    {
+        return props.tabState.data;
+    }
+
+    const bookPageData = getBookPageData();
+
+    function getContainerMarginBottom(): number
+    {
+        return Math.max(((bookPageData.totalNumberOfPages * bookPageData.bookPageHeight) - bookPageData.bookHeight), 0);
+    }
 
     function getBookWrapperElement(): void
     {
@@ -156,21 +162,21 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
             console.log(`Book height is ${newBookHeight}, book page height is ${newBookPageHeight}`);
             bookPageData.totalNumberOfPages = Math.ceil(newBookHeight / newBookPageHeight);
-            // lastPageOffset = (totalNumberOfPages - 1) * bookPageHeight;
-            // console.log(`lastPageOffset is ${lastPageOffset}`);
             console.log(`Total number of pages is ${bookPageData.totalNumberOfPages}`);
             props.callbacks.updateBookTabState({
                 bookHeight: newBookHeight,
-                bookPageHeight: newBookPageHeight
+                bookPageHeight: newBookPageHeight,
+                totalNumberOfPages: bookPageData.totalNumberOfPages
             });
-            // setBookPagesData({
-            //     totalNumberOfPages: totalNumberOfPages,
-            //     bookHeight: bookHeight,
-            //     bookPageHeight: bookPageHeight
-            // });
         }
     }
-    
+
+    function handleWindowResize(): void
+    {
+        console.log(`Window resized`);
+        recalculatePages();
+    }
+
     useEffect(() => 
     {
         console.log(`book effect. bTabLoaded: ${bTabLoaded}`);
@@ -186,14 +192,30 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         else
         {
             recalculatePages();
+
+            if (bookPageData.bookWrapper && bookPageData.percentReadToSave)
+            {                
+                const scrollTo = Math.floor(bookPageData.bookHeight * bookPageData.percentReadToSave);
+                bookPageData.bookWrapper.scrollTo({ left: 0, top: scrollTo, behavior: 'auto' });
+            }
         }
-        
+    }, [bTabLoaded]);
+
+    useEffect(() => 
+    {        
+    
+        window.addEventListener('resize', handleWindowResize);
+
         return (() =>
         {
-            bookPageData.bookWrapper = null;
-        });
+            console.log(`remove resize event`);
+            window.removeEventListener('resize', handleWindowResize);
 
-    }, [bTabLoaded]);
+            const bookPageData = getBookPageData();
+            bookPageData.bookWrapper = null;
+            console.log(`bookWrapper on unmount is `, bookPageData.bookWrapper);
+        });
+    }, []);
 
     console.log(`Render book`);
     const book: IBook | null = props.book;
@@ -205,29 +227,61 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     function handleScroll(event: React.UIEvent<HTMLDivElement>): void
     {
+        console.log(event);
+        console.log(`event.isTrusted: ${event.isTrusted}`);
         if (!event.isTrusted)
         {
             return;
         }
-        const bookWrapper: HTMLDivElement = event.target as HTMLDivElement;
-        if (bookWrapper)
+
+
+        if (!isTicking)
         {
-            recalculatePages();
-            const scrollPercent = bookWrapper.scrollTop / bookPageData.bookHeight;
-            bookPageData.currentPage = Math.floor(bookWrapper.scrollTop / bookPageData.bookPageHeight) + 1;
-            if (!isFinite(bookPageData.currentPage))
+            window.requestAnimationFrame(() =>
             {
-                bookPageData.currentPage = 1;
-            }
-            console.log(`Page ${bookPageData.currentPage} of ${bookPageData.totalNumberOfPages} (${bookWrapper.scrollTop})`);
-            props.callbacks.updateBookTabState({
-                currentPage: bookPageData.currentPage,
-                percentReadToSave: scrollPercent
+                const bookWrapper: HTMLDivElement = event.target as HTMLDivElement;
+                if (bookWrapper)
+                {
+                    recalculatePages();
+                    bookPageData.percentReadToSave = bookWrapper.scrollTop / (bookPageData.bookHeight);
+                    const oldPage = bookPageData.currentPage;
+                    bookPageData.currentPage = Math.floor(bookWrapper.scrollTop / bookPageData.bookPageHeight) + 1;
+
+                    if (!isFinite(bookPageData.currentPage))
+                    {
+                        bookPageData.currentPage = 1;
+                    }
+
+                    console.log(`Page ${bookPageData.currentPage} of ${bookPageData.totalNumberOfPages} (${bookWrapper.scrollTop} / ${bookPageData.bookHeight})`);
+
+                    /**
+                     * Update book page number in the toolbar
+                     */
+                    if (oldPage !== bookPageData.currentPage)
+                    {
+                        props.callbacks.updateBookTabState({
+                            currentPage: bookPageData.currentPage
+                        });
+                    }
+                    
+                    /**
+                     * Save book read percent to disk
+                     */
+                    if (props.book)
+                    {
+                        props.callbacks.updateBookReadPercent(props.book, bookPageData.percentReadToSave, Math.floor((bookPageData.currentPage / bookPageData.totalNumberOfPages) * 100) );
+                    }
+
+
+                }
+                isTicking = false;
             });
+            
+            isTicking = true;
         }
     }
 
-    bookPageData.bookContainerMarginBottom = Math.max(((bookPageData.totalNumberOfPages * bookPageData.bookPageHeight) - bookPageData.bookHeight), 0);
+    bookPageData.bookContainerMarginBottom = getContainerMarginBottom();
 
     return (
         <div id={bookStyles.wrapper} onScroll={handleScroll}>
@@ -235,7 +289,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
             marginBottom: `${bookPageData.bookContainerMarginBottom}px`
             } }>
                 {
-                    !bTabLoaded ? null :
+                    !bTabLoaded ? <BookLoading /> :
                     book.chunks.map((chunk, index) =>
                     {
                         return (<BookChunk key={index} id={index} chunk={chunk} />);

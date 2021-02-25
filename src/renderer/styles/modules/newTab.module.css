@@ -365,7 +365,7 @@
     user-select: none;
     height: 200px;
     margin-bottom: 25px;
-    border-bottom: 1px solid rgb(64, 64, 64);
+    border-bottom: 1px solid var(--book-list-element-border);
 }
 
 .book-list-element:last-child

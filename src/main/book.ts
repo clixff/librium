@@ -1,12 +1,12 @@
 import path from 'path';
 import fs, { promises as fsPromises } from 'fs';
 import { IBookChunk } from '../shared/schema';
-import { ipcMain } from "electron";
+import { ipcMain, app } from "electron";
 import { getConfig } from './config';
 import { ICategory, loadCategories } from './misc/category';
 
 
-interface IBookDataBase
+interface IBookBaseData
 {
     title: string;
     authors: Array<string>;
@@ -15,12 +15,14 @@ interface IBookDataBase
     symbols: number;
     lastTimeOpened: number;
     cover: string;
+    percentRead: number;
+    percentPages: number;
 }
 
 /**
  * This is used when sending book data to a renderer process
  */
-interface IBookToExport extends IBookDataBase
+interface IBookToExport extends IBookBaseData
 {
     chunks: Array<IBookChunk>;
     id: string;
@@ -29,7 +31,7 @@ interface IBookToExport extends IBookDataBase
 /**
  * This is used when saving book data to disk
  */
-interface IBookDataToSave extends IBookDataBase
+interface IBookDataToSave extends IBookBaseData
 {
     /**
      * Version of the converter
@@ -67,6 +69,16 @@ export class Book
      * Unique book id
      */
     id = '';
+    /**
+     * Percentage of read in the book.
+     * Used to auto scroll after reopening the book.
+     */
+    percentRead = 0;
+    /**
+     * Percentage of pages read in the book
+     */
+    percentPages = 0;
+    saveTimeout: NodeJS.Timeout | null = null;
     constructor(saveDirectory: string, bookId: string)
     {
         this.saveDirectory = saveDirectory;
@@ -80,6 +92,7 @@ export class Book
     {
         try
         {
+            this.clearSaveTimeout();
             const bookMetadata: IBookDataToSave = {
                 title: this.title,
                 authors: this.authors,
@@ -88,6 +101,8 @@ export class Book
                 cover: this.cover,
                 lastTimeOpened: this.lastTimeOpened,
                 symbols: this.symbols,
+                percentRead: this.percentRead,
+                percentPages: this.percentPages,
                 version: '0.1' 
             };
             const filePath = path.join(this.saveDirectory, 'book.json');
@@ -112,19 +127,23 @@ export class Book
             symbols: this.symbols,
             lastTimeOpened: this.lastTimeOpened,
             cover: this.cover,
-            id: this.id
+            id: this.id,
+            percentRead: this.percentRead,
+            percentPages: this.percentPages
         };
 
         return bookExportData;
     }
-    loadMetadataFromDisk(metadata: IBookDataBase): void
+    loadMetadataFromDisk(metadata: IBookBaseData): void
     {
-        this.title = metadata.title;
-        this.authors = metadata.authors;
-        this.cover = metadata.cover;
-        this.language = metadata.language;
-        this.publisher = metadata.publisher;
-        this.lastTimeOpened = metadata.lastTimeOpened;
+        this.title = metadata.title || '';
+        this.authors = metadata.authors || [];
+        this.cover = metadata.cover || '';
+        this.language = metadata.language || '';
+        this.publisher = metadata.publisher || '';
+        this.lastTimeOpened = metadata.lastTimeOpened || 0;
+        this.percentRead = metadata.percentRead || 0;
+        this.percentPages = metadata.percentPages || 0;
     }
     updateLastTimeOpened(): void
     {
@@ -186,6 +205,26 @@ export class Book
             console.error(error);
         }
     }
+    saveMetaWithTimeout(milliseconds: number): void
+    {
+        if (this.saveTimeout)
+        {
+            return;
+        }
+
+        this.saveTimeout = setTimeout(() => 
+        {
+            this.saveMeta();
+        }, milliseconds);
+    }
+    clearSaveTimeout(): void
+    {
+        if (this.saveTimeout)
+        {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = null;
+        }
+    }
 }
 
 const savedBooks: Map<string, Book> = new Map();
@@ -202,7 +241,7 @@ async function getBookDataFromDisk(bookPath: string, bookId: string): Promise<IB
 
         const bookDataPath: string = path.join(bookPath, 'book.json');
         const bookDataRaw: string = await fsPromises.readFile(bookDataPath, { encoding: 'utf-8' });
-        const bookDataParsed: IBookDataBase = JSON.parse(bookDataRaw);
+        const bookDataParsed: IBookBaseData = JSON.parse(bookDataRaw);
         if (bookDataParsed)
         {
             const book = new Book(bookPath, bookId);
@@ -316,4 +355,72 @@ ipcMain.on('update-book-last-time-opened-time', (event, bookId: string, newTime:
         book.lastTimeOpened = newTime;
         book.saveMeta();
     }
+});
+
+
+ipcMain.on('update-book-read-percent', (event, bookId: string, percent: number, percentPages: number, bForce: boolean) =>
+{
+    const book = savedBooks.get(bookId);
+    if (book)
+    {
+        if (book.percentRead === percent)
+        {
+            return;
+        }
+
+        book.percentRead = percent;
+        book.percentPages = percentPages;
+
+        console.log(`bForce: ${bForce}`);
+
+        if (bForce)
+        {
+            book.saveMeta();
+        }
+        else
+        {
+            book.saveMetaWithTimeout(10000);
+        }
+    }
+});
+
+/**
+ * If some books have an active timeout for saving metadata to disk
+ * and app exits, save all metadata now.
+ */
+async function saveAllBooksMeta(): Promise<void>
+{
+    try
+    {
+        savedBooks.forEach(async (book) =>
+        {
+            try
+            {
+                /**
+                 * If the book has an active save timeout 
+                 */
+                if (book.saveTimeout)
+                {
+                    /**
+                     * Stop timeout and save now
+                     */
+                    book.clearSaveTimeout();
+                    await book.saveMeta();
+                }
+            }
+            catch (error)
+            {
+                console.error(error);
+            }
+        });
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+}
+
+app.on('before-quit', async () => 
+{
+    await saveAllBooksMeta();
 });

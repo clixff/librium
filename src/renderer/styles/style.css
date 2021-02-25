@@ -77,6 +77,7 @@ body
     --subtext-color: rgb(182, 182, 182);
 
     --book-list-element-metadata-color: rgb(115, 115, 115);
+    --book-list-element-border: rgb(30, 30, 30);
 
     --category-name: rgb(192, 191, 191);
     --category-button: rgb(115, 115, 115);
@@ -137,6 +138,8 @@ body.light
     --search-placeholder-color: rgb(126, 126, 126);
     --search-placeholder-hover: rgb(54, 54, 54);
     --search-active-color: black;
+
+    --book-list-element-border: rgb(200, 200, 200);
 
     --global-scrollbar-thumb-color: rgb(150, 150, 150);
     --global-scrollbar-thumb-hover: rgb(75, 75, 75);

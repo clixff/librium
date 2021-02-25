@@ -79,7 +79,7 @@ class App extends React.Component<unknown, IAppState>
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
-        'updateBookTabState']);
+        'updateBookTabState', 'updateBookReadPercent']);
     }
     componentDidMount(): void
     {
@@ -183,6 +183,7 @@ class App extends React.Component<unknown, IAppState>
                      * Remove chunks from the closed book
                      */
                     tabToClose.state.book.chunks = [];
+                    ipcRenderer.send('update-book-read-percent', tabToClose.state.book.id, tabToClose.state.book.percentRead, tabToClose.state.book.percentPages, true);
                 }
             }
 
@@ -679,6 +680,7 @@ class App extends React.Component<unknown, IAppState>
         {
             if (activeTab.state && activeTab.state.data)
             {
+                console.log(`Update book data`, data);
                 activeTab.state.data = {
                     ...activeTab.state.data,
                     ...data
@@ -692,6 +694,30 @@ class App extends React.Component<unknown, IAppState>
                 });
             }
         }
+    }
+    updateBookReadPercent(book: IBook, percent: number, percentPages: number): void
+    {
+        if (percent < 0 || !isFinite(percent))
+        {
+            percent = 0;
+        }
+        else if (percent > 1)
+        {
+            percent = 1;
+        }
+
+        if (percentPages < 0 || !isFinite(percentPages))
+        {
+            percentPages = 0;
+        }
+        else if (percentPages > 100)
+        {
+            percentPages = 100;
+        }
+
+        book.percentRead = percent;
+        ipcRenderer.send('update-book-read-percent', book.id, percent, percentPages, false);
+
     }
     render(): JSX.Element
     {
@@ -716,7 +742,8 @@ class App extends React.Component<unknown, IAppState>
             },
             bookPageCallbacks: {
                 loadBookChunks: this.loadBookChunks,
-                updateBookTabState: this.updateBookTabState
+                updateBookTabState: this.updateBookTabState,
+                updateBookReadPercent: this.updateBookReadPercent
             }
         };
 

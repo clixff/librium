@@ -12,6 +12,7 @@
     display: flex;
     flex-direction: column;
     width: 700px;
+    --image-max-width: 665px;
     color: var(--text-color);
 }
 
@@ -22,14 +23,32 @@
     align-items: center;
     justify-content: center;
     margin-top: 35px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
 }
 
 #loading-wrapper > svg
 {
-    --icon-size: 65px;
+    --icon-size: 65px !important;
 }
 
 #loading-wrapper > svg > circle
 {
     stroke: var(--loading-color);
+}
+
+#container svg
+{
+    --icon-size: auto;
+}
+
+#container img,
+#container image
+{
+    max-width: var(--image-max-width);
+    height: auto;
+    cursor: pointer;
 }
