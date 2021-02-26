@@ -363,15 +363,10 @@ ipcMain.on('update-book-read-percent', (event, bookId: string, percent: number, 
     const book = savedBooks.get(bookId);
     if (book)
     {
-        if (book.percentRead === percent)
-        {
-            return;
-        }
-
         book.percentRead = percent;
         book.percentPages = percentPages;
 
-        console.log(`bForce: ${bForce}`);
+        console.log(`percent: ${percent}. percentPages: ${percentPages}. bForce: ${bForce}`);
 
         if (bForce)
         {

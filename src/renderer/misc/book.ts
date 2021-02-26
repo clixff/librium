@@ -23,10 +23,30 @@ export interface IBook extends IBookBase
 
 export function rawBookToBook(rawBook: IBookBase): IBook
 {
-    return {
+    const convertedBook: IBook = {
         ...rawBook,
         categories: [],
     };
+
+    if (convertedBook.percentRead < 0 || !isFinite(convertedBook.percentRead))
+    {
+        convertedBook.percentRead = 0;
+    }
+    else if (convertedBook.percentRead > 1)
+    {
+        convertedBook.percentRead = 1;
+    }
+
+    if (convertedBook.percentPages < 0 || !isFinite(convertedBook.percentPages))
+    {
+        convertedBook.percentPages = 0;
+    }
+    else if (convertedBook.percentPages > 100)
+    {
+        convertedBook.percentPages = 100;
+    }
+
+    return convertedBook;
 }
 
 export function rawBooksToBooks(rawBooksArray: Array<IBookBase>, booksMap: Map<string, IBook>): Array<IBook>

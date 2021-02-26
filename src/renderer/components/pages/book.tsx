@@ -269,7 +269,8 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
                      */
                     if (props.book)
                     {
-                        props.callbacks.updateBookReadPercent(props.book, bookPageData.percentReadToSave, Math.floor((bookPageData.currentPage / bookPageData.totalNumberOfPages) * 100) );
+                        const bookPagesPercent = Math.floor((bookPageData.currentPage / bookPageData.totalNumberOfPages) * 100);
+                        props.callbacks.updateBookReadPercent(props.book, bookPageData.percentReadToSave, bookPagesPercent);
                     }
 
 

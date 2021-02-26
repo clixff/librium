@@ -165,7 +165,7 @@ function BookListElement(props: IBookElementProps): JSX.Element
                 }
                 <div className={newTabStyles['book-element-percent']}>
                     {
-                        `${0}%`
+                        `${props.book.percentPages}%`
                     }
                 </div>
             </div>

@@ -183,6 +183,9 @@ class App extends React.Component<unknown, IAppState>
                      * Remove chunks from the closed book
                      */
                     tabToClose.state.book.chunks = [];
+
+                    console.log(`update book ${tabToClose.state.book.id} percent to ${tabToClose.state.book.percentRead} and ${tabToClose.state.book.percentPages}`);
+
                     ipcRenderer.send('update-book-read-percent', tabToClose.state.book.id, tabToClose.state.book.percentRead, tabToClose.state.book.percentPages, true);
                 }
             }
@@ -619,6 +622,10 @@ class App extends React.Component<unknown, IAppState>
         {
             bookTab.state.book = savedBook;
             bookTab.state.bookId = bookId;
+            if (bookTab.state.data)
+            {
+                bookTab.state.data.percentReadToSave = savedBook.percentRead;
+            }
         }
 
         this.setState({
@@ -716,6 +723,7 @@ class App extends React.Component<unknown, IAppState>
         }
 
         book.percentRead = percent;
+        book.percentPages = percentPages;
         ipcRenderer.send('update-book-read-percent', book.id, percent, percentPages, false);
 
     }
