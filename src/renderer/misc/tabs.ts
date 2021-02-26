@@ -1,5 +1,6 @@
 import { EMenuElementType, EViewType } from '../components/pages/newTab'
 import { IBook } from './book';
+import { getDefaultBooksViewType } from './misc';
 
 export enum ETabType
 {
@@ -63,7 +64,7 @@ export class Tab
                 this.state = {
                     menu: EMenuElementType.Books,
                     activeCategory: -1,
-                    viewType: EViewType.Grid
+                    viewType: getDefaultBooksViewType()
                 };
                 break;
             case ETabType.book:

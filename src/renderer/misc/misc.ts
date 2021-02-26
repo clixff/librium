@@ -1,3 +1,5 @@
+import { EViewType } from "../components/pages/newTab";
+
 export function bindFunctionsContext(context: unknown, methodsList: Array<string>): void
 {
     if (!context || typeof context !== 'object' || context === null || Array.isArray(context) || !Array.isArray(methodsList))
@@ -19,4 +21,33 @@ export function bindFunctionsContext(context: unknown, methodsList: Array<string
         }
     }
 
+}
+
+
+export function getDefaultBooksViewType(): EViewType
+{
+    let defaultViewType = EViewType.Grid;
+
+    if (window && window.localStorage)
+    {
+        const viewTypeNumber: string | null = window.localStorage.getItem('default-books-view-type');
+
+        if (viewTypeNumber === '1')
+        {
+            defaultViewType = EViewType.List;
+        }
+    }
+
+    return defaultViewType;
+}
+
+export function saveDefaultBooksViewType(viewType: EViewType): void
+{
+    const viewTypeNumber: '0' | '1' = viewType === EViewType.Grid ? '0' : '1';
+    
+    if (window && window.localStorage)
+    {
+        window.localStorage.setItem('default-books-view-type', viewTypeNumber);
+    }
+    
 }

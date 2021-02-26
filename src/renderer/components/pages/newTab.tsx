@@ -9,6 +9,7 @@ import { ICategory } from '../../misc/category';
 import { CategoriesPage, ICategoriesPageCallbacks } from '../core/category';
 import { ITabContentCallbacks } from '../core/content';
 import { TabState } from '../../misc/tabs';
+import { saveDefaultBooksViewType } from '../../misc/misc';
 
 export enum EMenuElementType
 {
@@ -220,6 +221,8 @@ function NewTabPage(props: INewTabContentProps): JSX.Element
         {
             props.state.viewType = type;
         }
+
+        saveDefaultBooksViewType(type);
     }
 
     /**
