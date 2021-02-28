@@ -292,7 +292,7 @@ ipcMain.handle('load-saved-books', async () =>
     try
     {
         const booksToExport: Array<IBookToExport> = await getBooksList();
-        console.log(`BookToExport: `, booksToExport);
+        // console.log(`BookToExport: `, booksToExport);
         const categoriesList: Array<ICategory> = await loadCategories();
     
         return [booksToExport, categoriesList];
@@ -366,7 +366,7 @@ ipcMain.on('update-book-read-percent', (event, bookId: string, percent: number, 
         book.percentRead = percent;
         book.percentPages = percentPages;
 
-        console.log(`percent: ${percent}. percentPages: ${percentPages}. bForce: ${bForce}`);
+        // console.log(`percent: ${percent}. percentPages: ${percentPages}. bForce: ${bForce}`);
 
         if (bForce)
         {

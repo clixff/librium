@@ -1,4 +1,4 @@
-import { EMenuElementType, EViewType } from '../components/pages/newTab'
+import { EMenuElementType, EViewType } from '../components/pages/newTab';
 import { IBook } from './book';
 import { getDefaultBooksViewType } from './misc';
 
@@ -91,4 +91,33 @@ export class Tab
         const randomString = Math.floor(Math.random() * 0xFFFF).toString(16);
         return `${tabName}-${dateNow}-${randomString}`;
     }
+}
+
+/**
+ * Tab data loaded from disk
+ */
+export interface IRawTab
+{
+    name: string;
+    type: number;
+    icon: string | null;
+    key: '';
+    state: Record<string, unknown> | null;
+}
+
+/**
+ * Loads raw tab from disk and converts to Tab object
+ */
+export function loadTab(rawTab: IRawTab): Tab
+{
+    const tabType = (rawTab.type === 0 ? ETabType.newTab : (rawTab.type === 1 ? ETabType.book : ETabType.preferences));
+
+    const tab: Tab = new Tab(rawTab.name, tabType, rawTab.icon, rawTab.key);
+
+    if (rawTab.state)
+    {
+        tab.state = rawTab.state;
+    }
+
+    return tab;
 }

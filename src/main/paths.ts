@@ -12,6 +12,11 @@ export function getConfigPath(): string
     return path.resolve(getAppDataPath(), 'config.json');
 }
 
+export function getTabsPath(): string
+{
+    return path.resolve(getAppDataPath(), 'tabs.json');
+}
+
 /**
  * Creates a new directory if it doesn't already exist
  */

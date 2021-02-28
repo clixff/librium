@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron';
 import { deleteBook, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
-import { ETabType, IBookPageData, Tab } from './misc/tabs';
+import { ETabType, IBookPageData, IRawTab, loadTab, Tab } from './misc/tabs';
 import { ITabsCallbacks } from './components/core/tabs';
 import { IRawCategory, ICategory, parseCategories, createCategory, deleteCategory, deleteBookFromCategory, addBookToCategory } from './misc/category';
 import { EMenuElementType } from './components/pages/newTab';
@@ -43,10 +43,13 @@ interface IAppState
     preferences: IPreferences;
 }
 
+export let AppSingleton: App | null = null;
+
 class App extends React.Component<unknown, IAppState>
 {
     booksMap: Map<string, IBook> = new Map();
     closingModalTimeout: number | null = null;
+    saveTabsTimeout: number | null = null;
     constructor(props)
     {
         super(props);
@@ -79,11 +82,16 @@ class App extends React.Component<unknown, IAppState>
         'deleteBook', 'openDeletionBookWarning', 'openModal', 'closeModal', 'removeModal',
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
-        'updateBookTabState', 'updateBookReadPercent']);
+        'updateBookTabState', 'updateBookReadPercent', 'handleTabsLoaded',
+        'saveTabs']);
+
+        AppSingleton = this;
     }
     componentDidMount(): void
     {
         ipcRenderer.on('book-loaded', this.handleBookLoaded);
+
+
         ipcRenderer.invoke('load-saved-books').then((result: [Array<IBookBase>, Array<IRawCategory>]) => 
         {
             const loadedBooks: Array<IBook> = this.sortSavedBooks(rawBooksToBooks(result[0], this.booksMap));
@@ -91,9 +99,11 @@ class App extends React.Component<unknown, IAppState>
             this.setState({
                 savedBooks: loadedBooks,
                 categories: categories
+            }, () =>
+            {
+                ipcRenderer.invoke('load-tabs').then(this.handleTabsLoaded);
             });
         });
-
 
         ipcRenderer.invoke('load-preferences').then((preferences: IPreferences | null): void =>
         {
@@ -114,9 +124,137 @@ class App extends React.Component<unknown, IAppState>
         window.addEventListener('wheel', this.handleScroll);
     }
     componentWillUnmount(): void
-    {
+    {       
         ipcRenderer.removeListener('book-loaded', this.handleBookLoaded);
         window.removeEventListener('wheel', this.handleScroll);
+
+        if (this.saveTabsTimeout && window)
+        {
+            window.clearTimeout(this.saveTabsTimeout);
+            this.saveTabsTimeout = null;
+        }
+    }
+    /**
+     * Exports tabs list to the main process, then saves it to disk before app quit
+     */
+    saveTabs(bForce = false): void
+    {
+        if ((!this.saveTabsTimeout || bForce) && window)
+        {
+            if (bForce && this.saveTabsTimeout)
+            {
+                window.clearTimeout(this.saveTabsTimeout);
+                this.saveTabsTimeout = null;
+            }
+            this.saveTabsTimeout = window.setTimeout(() =>
+            {
+                if (this.saveTabsTimeout)
+                {
+                    window.clearTimeout(this.saveTabsTimeout);
+                    this.saveTabsTimeout = null;
+                }
+
+                console.log(`Save tabs`);
+                const oldTabs = [...this.state.tabs];
+                const tabsToSave: Array<Record<string, unknown | Record<string, unknown>>> = [];
+        
+                for (let i = 0; i < oldTabs.length; i++)
+                {
+                    const oldTab = {...oldTabs[i]};
+                    const tabToSave: Record<string, unknown | Record<string, unknown>> = {
+                        name: oldTab.name,
+                        type: oldTab.type,
+                        icon: oldTab.icon,
+                        key: oldTab.key,
+                        state: oldTab.state ? {...oldTab.state}: oldTab.state 
+                    };
+        
+                    if (oldTab.state && tabToSave.state)
+                    {
+                        const tabState = tabToSave.state as Record<string, unknown>;
+        
+                        if (tabState.book)
+                        {
+                            delete tabState.book;
+                        }
+        
+                        if (oldTab.state.data && tabState.data)
+                        {
+                            tabState.data = {...oldTab.state.data};
+                            const tabStateBookData = tabState.data as Record<string, unknown>;
+                            tabStateBookData.bookWrapper = null;
+                            tabStateBookData.totalNumberOfPages = 0;
+                            tabStateBookData.currentPage = 0;
+                            tabStateBookData.bookHeight = 0;
+                            tabStateBookData.bookPageHeight = 0;
+                            tabStateBookData.bookContainerMarginBottom = 0;
+                        }
+                    }
+        
+                    tabsToSave.push(tabToSave);
+                }
+                ipcRenderer.send('save-tabs', tabsToSave, this.state.activeTab);
+            }, bForce ? 0 : 5000);
+        }
+    }
+    handleTabsLoaded(tabsData: { tabs: Array<IRawTab>, active: number }): void
+    {
+        if (tabsData.tabs.length)
+        {
+            const newTabsList: Array<Tab> = [];
+            let newActiveTabIndex = tabsData.active;
+            for (let i = 0; i < tabsData.tabs.length; i++)
+            {
+                const rawTab = tabsData.tabs[i];
+                if (rawTab)
+                {
+                    const tab = loadTab(rawTab);
+                    let bAddTab = true;
+
+                    if (tab.type === ETabType.book)
+                    {
+                        if (tab.state && tab.state.bookId)
+                        {
+                            const bookInTab = this.booksMap.get(tab.state.bookId);
+                            if (bookInTab)
+                            {
+                                tab.state.book = bookInTab;
+                                if (tab.state.data)
+                                {
+                                    tab.state.data.percentReadToSave = bookInTab.percentRead;
+                                }
+                            }
+                            else
+                            {
+                                /**
+                                 * Do not add this tab if book not found
+                                 */
+                                bAddTab = false;
+                            }
+                        }
+                        else
+                        {
+                            bAddTab = false;
+                        }
+                    }
+
+                    if (bAddTab)
+                    {
+                        newTabsList.push(tab);
+                    }
+                }
+            }
+
+            if (newActiveTabIndex < 0 || newActiveTabIndex >= newTabsList.length)
+            {
+                newActiveTabIndex = 0;
+            }
+
+            this.setState({
+                tabs: newTabsList,
+                activeTab: newActiveTabIndex
+            });
+        }
     }
     handleScroll(): void
     {
@@ -156,7 +294,7 @@ class App extends React.Component<unknown, IAppState>
         this.setState({ 
             tabs: tabsCopy,
             activeTab: tabsCopy.length - 1
-        });
+        }, this.saveTabs);
     }
     handleTabClick(tabId: number): void
     {
@@ -165,7 +303,7 @@ class App extends React.Component<unknown, IAppState>
             this.setState({
                 activeTab: tabId,
                 modal: this.getClosedModalObject()
-            });
+            }, this.saveTabs);
         }
     }
     handleCloseTabClicked(tabId: number): void
@@ -207,6 +345,9 @@ class App extends React.Component<unknown, IAppState>
             this.setState({
                 tabs: tabsList,
                 activeTab: newActiveTabIndex
+            }, () => 
+            {
+                this.saveTabs(!this.state.tabs.length);
             });
         }
     }
@@ -251,7 +392,7 @@ class App extends React.Component<unknown, IAppState>
             tabs: tabsList,
             activeTab: preferencesTabId,
             modal: this.getClosedModalObject()
-        });
+        }, this.saveTabs);
     }
     sortSavedBooks(savedBooks: Array<IBook>): Array<IBook>
     {
@@ -407,7 +548,7 @@ class App extends React.Component<unknown, IAppState>
                 savedBooks: booksList,
                 tabs: tabsList,
                 activeTab: activeTabIndex
-            });
+            }, this.saveTabs);
         }
     }
     setContextMenu(contextMenu: JSX.Element | null, posX: number, posY: number, width: number, height: number): void
@@ -586,6 +727,9 @@ class App extends React.Component<unknown, IAppState>
             preferences: preferences
         });
     }
+    /**
+     * @param bUpdateTime Should the last time book opened param be updated?
+     */
     openBook(bookId: string, bUpdateTime = true): void
     {
         const savedBook: IBook | undefined = this.booksMap.get(bookId);
@@ -631,7 +775,7 @@ class App extends React.Component<unknown, IAppState>
         this.setState({
             tabs: tabsList,
             activeTab: bookTabId
-        });
+        }, this.saveTabs);
 
         if (bUpdateTime)
         {
@@ -698,7 +842,7 @@ class App extends React.Component<unknown, IAppState>
                     return {
                         tabs: prevState.tabs
                     };
-                });
+                }, this.saveTabs);
             }
         }
     }
@@ -725,7 +869,7 @@ class App extends React.Component<unknown, IAppState>
         book.percentRead = percent;
         book.percentPages = percentPages;
         ipcRenderer.send('update-book-read-percent', book.id, percent, percentPages, false);
-
+        this.saveTabs();
     }
     render(): JSX.Element
     {

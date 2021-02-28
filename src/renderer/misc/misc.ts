@@ -1,3 +1,4 @@
+import { AppSingleton } from "../app";
 import { EViewType } from "../components/pages/newTab";
 
 export function bindFunctionsContext(context: unknown, methodsList: Array<string>): void
@@ -49,5 +50,15 @@ export function saveDefaultBooksViewType(viewType: EViewType): void
     {
         window.localStorage.setItem('default-books-view-type', viewTypeNumber);
     }
-    
+}
+
+/**
+ * Exports tabs list to the main process, then saves it to disk before app quit
+ */
+export function SaveTabs(): void
+{
+    if (AppSingleton)
+    {
+        AppSingleton.saveTabs();
+    }
 }

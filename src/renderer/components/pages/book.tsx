@@ -155,7 +155,6 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
             {
                 return;
             }
-            
 
             bookPageData.bookHeight = newBookHeight;
             bookPageData.bookPageHeight = newBookPageHeight;
@@ -163,10 +162,12 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
             console.log(`Book height is ${newBookHeight}, book page height is ${newBookPageHeight}`);
             bookPageData.totalNumberOfPages = Math.ceil(newBookHeight / newBookPageHeight);
             console.log(`Total number of pages is ${bookPageData.totalNumberOfPages}`);
+
             props.callbacks.updateBookTabState({
                 bookHeight: newBookHeight,
                 bookPageHeight: newBookPageHeight,
-                totalNumberOfPages: bookPageData.totalNumberOfPages
+                totalNumberOfPages: bookPageData.totalNumberOfPages,
+                currentPage: Math.floor(bookPageData.bookWrapper.scrollTop / newBookPageHeight) + 1
             });
         }
     }

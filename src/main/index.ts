@@ -6,9 +6,11 @@ import { initPaths } from './paths';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import './reader';
 import './misc/windows';
-
+import './tabs';
 
 const NODE_ENV: 'production' | 'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
+
+export const windowList: Array<BrowserWindow> = [];
 
 function createWindow(): void
 {
@@ -23,6 +25,8 @@ function createWindow(): void
             nodeIntegration: true
         }
     });
+    
+    windowList.push(window);
 
     window.on('ready-to-show', () =>  
     {
