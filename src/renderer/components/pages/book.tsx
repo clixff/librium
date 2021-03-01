@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron';
 import React, { Component, useEffect, useState } from 'react';
 import { IBookChunk, IBookChunkNode } from '../../../shared/schema';
 import { IBook } from '../../misc/book';
@@ -18,62 +19,127 @@ interface IBookChunkProps
     chunk: IBookChunk;
 }
 
-function getBookChunkNodeJSX(BookChunkNode: IBookChunkNode, childIndex: number): JSX.Element
+function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JSX.Element | null
 {
-    let props = BookChunkNode.attr as Record<string, unknown>;
-    if (!props)
+    try
     {
-        props = {};
-    }
-
-    function renamePropKey(oldKey, newKey)
-    {
-        if (props[oldKey])
+        let props = BookChunkNode.attr as Record<string, unknown>;
+        if (!props)
         {
-            props[newKey] = props[oldKey];
-            delete props[oldKey];
+            props = {};
         }
-    }
     
-    renamePropKey('class', 'className');
-    renamePropKey('xmlns:xlink', 'xmlnsXlink');
-    renamePropKey('xlink:href', 'xlinkHref');
-    renamePropKey('colspan', 'colSpan');
-    renamePropKey('xml:lang', 'xmlLang');
-
-    /**
-     * TODO: Fix the style prop
-     */
-    delete props['style'];
-    if (BookChunkNode.children || BookChunkNode.text)
-    {
-        props.children = [];
-        const nodeChildren = props.children as Array<JSX.Element | string>;
-        if (BookChunkNode.children)
+        function renamePropKey(oldKey, newKey)
         {
-            for (let i = 0; i < BookChunkNode.children.length; i++)
+            if (props[oldKey])
             {
-                const child = BookChunkNode.children[i];
-                const childNodeJSX = getBookChunkNodeJSX(child, i);
-                nodeChildren.push(childNodeJSX);
+                props[newKey] = props[oldKey];
+                delete props[oldKey];
             }
         }
-        if (BookChunkNode.text)
+        
+        renamePropKey('class', 'className');
+        renamePropKey('xmlns:xlink', 'xmlnsXlink');
+        renamePropKey('xlink:href', 'xlinkHref');
+        renamePropKey('colspan', 'colSpan');
+        renamePropKey('xml:lang', 'xmlLang');
+
+        if (BookChunkNode.name === 'a')
         {
-            nodeChildren.push(BookChunkNode.text);
+            if (props['title'] === undefined)
+            {
+                props['title'] = props['href'];
+            }
         }
+    
+        if (BookChunkNode.name === 'img' || BookChunkNode.name === 'image' || BookChunkNode.name === 'source')
+        {
+            const imageSource: string | undefined = (props.src || props['xlinkHref'] || props.srcset) as string;
+            if (imageSource)
+            {
+                const sourceType: string | undefined = props.type as string;
+    
+                function isImageLink(): boolean
+                {
+                    const imageFormats = ['png', 'jpg', 'jpeg', 'bmp', 'webp', 'svg', 'gif'];
+    
+                    if (!imageSource)
+                    {
+                        return false;
+                    }
+    
+                    for (let i = 0; i < imageFormats.length; i++)
+                    {
+                        const imageSourceLowerCased = imageSource.toLowerCase();
+                        if (imageSourceLowerCased.endsWith(`.${imageFormats[i]}`))
+                        {
+                            return true;
+                        }
+                    }
+    
+                    return false;
+                }
+    
+                if (BookChunkNode.name !== 'source' || (sourceType && sourceType.startsWith('image/')) || isImageLink())
+                {
+                    console.log(`Add image click function`);
+                    props.onClick = () => 
+                    {
+                        console.log('clicked on image');
+                        ipcRenderer.send('open-link', imageSource);
+                    };
+                }
+            }
+        }
+    
+        /**
+         * TODO: Fix the style prop
+         */
+        delete props['style'];
+        if (BookChunkNode.children || BookChunkNode.text)
+        {
+            props.children = [];
+            const nodeChildren = props.children as Array<JSX.Element | string>;
+            if (BookChunkNode.children)
+            {
+                for (let i = 0; i < BookChunkNode.children.length; i++)
+                {
+                    const child = BookChunkNode.children[i];
+                    const childNodeJSX = getBookChunkNode(child, i);
+                    if (childNodeJSX)
+                    {
+                        nodeChildren.push(childNodeJSX);
+                    }
+                }
+            }
+            if (BookChunkNode.text)
+            {
+                nodeChildren.push(BookChunkNode.text);
+            }
+        }
+    
+        props.key = childIndex;
+    
+        return React.createElement(BookChunkNode.name, props);
     }
-    return (<BookChunkNode.name key={childIndex} {...props} />);
+    catch (error)
+    {
+        console.error(error);
+    }
+
+    return null;   
 }
 
 
 
 class BookChunk extends Component<IBookChunkProps>
 {
+    wrapperRef: React.RefObject<HTMLDivElement> = React.createRef();
     constructor(props: IBookChunkProps)
     {
         super(props);
         console.log(`Book chunk ${props.id} created`);
+        
     }
     /**
      * Do not re-render book chunk
@@ -88,14 +154,31 @@ class BookChunk extends Component<IBookChunkProps>
     }
     render(): JSX.Element
     {
-        return (<div>
+        const chunkBody: Array<JSX.Element> = [];
+
+        if (this.props.chunk && this.props.chunk.body && this.props.chunk.body.children)
+        {
+            const bodyChildrenList = this.props.chunk.body.children;
+            for (let i = 0; i < bodyChildrenList.length; i++)
             {
-                this.props.chunk && this.props.chunk.body && this.props.chunk.body.children ?
-                ( this.props.chunk.body.children.map((node, index) => 
+                const bodyChild = bodyChildrenList[i];
+                const bodyChildNode = getBookChunkNode(bodyChild, i);
+                if (bodyChildNode)
                 {
-                    return (getBookChunkNodeJSX(node, index));
-                }) )
-                : null
+                    chunkBody.push(bodyChildNode);
+                }
+            }
+        }
+
+        return (<div ref={this.wrapperRef}>
+            {
+                chunkBody
+                // this.props.chunk && this.props.chunk.body && this.props.chunk.body.children ?
+                // ( this.props.chunk.body.children.map((node, index) => 
+                // {
+                //     return (getBookChunkNode(node, index));
+                // }) )
+                // : null
             }
         </div>);
     }

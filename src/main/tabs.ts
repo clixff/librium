@@ -1,6 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import fs, { promises as fsPromises } from 'fs';
-import { windowList } from '.';
 import { getTabsPath } from './paths';
 
 interface ITab

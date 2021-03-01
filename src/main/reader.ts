@@ -1,4 +1,4 @@
-import { ipcMain, dialog, BrowserWindow, app } from "electron";
+import { ipcMain, dialog, BrowserWindow } from "electron";
 import fs, { promises as fsPromises } from 'fs';
 import crypto from 'crypto';
 import path from 'path';

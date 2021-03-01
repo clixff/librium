@@ -7,6 +7,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import './reader';
 import './misc/windows';
 import './tabs';
+import { openLinkInBrowser } from './misc/links';
 
 const NODE_ENV: 'production' | 'development' = process.env.NODE_ENV === 'development' ? process.env.NODE_ENV : 'production';
 
@@ -27,6 +28,9 @@ function createWindow(): void
     });
     
     windowList.push(window);
+
+    window.webContents.on('new-window', openLinkInBrowser);
+    window.webContents.on('will-navigate', openLinkInBrowser);
 
     window.on('ready-to-show', () =>  
     {

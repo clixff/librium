@@ -46,7 +46,8 @@
 }
 
 #container img,
-#container image
+#container image,
+#container picture > source
 {
     max-width: var(--image-max-width);
     height: auto;
