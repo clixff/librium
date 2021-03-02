@@ -62,3 +62,4 @@ export function SaveTabs(): void
         AppSingleton.saveTabs();
     }
 }
+

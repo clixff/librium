@@ -173,7 +173,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
             activeTab.type === ETabType.newTab ?
             <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 
             : activeTab.type === ETabType.book ?
-            <BookContent key={activeTab.key} book={props.book} callbacks={props.callbacks.bookPageCallbacks} tabState={ activeTab.state as IBookTabState } />
+            <BookContent key={activeTab.key} book={props.book} callbacks={props.callbacks.bookPageCallbacks} tabState={ activeTab.state as IBookTabState } preferences={props.preferences} />
             : <PreferencesPage key={activeTab.key} preferences={props.preferences} callbacks={props.callbacks.preferencesCallbacks} />
         }
         {

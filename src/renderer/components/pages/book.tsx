@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
 import React, { Component, useEffect, useState } from 'react';
+import { IPreferences } from '../../../shared/preferences';
 import { IBookChunk, IBookChunkNode } from '../../../shared/schema';
 import { IBook } from '../../misc/book';
 import { LoadingSVG } from '../../misc/icons';
@@ -132,6 +133,9 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
         renamePropKey('xlink:href', 'xlinkHref');
         renamePropKey('colspan', 'colSpan');
         renamePropKey('xml:lang', 'xmlLang');
+        renamePropKey('cellspacing', 'cellSpacing');
+        renamePropKey('cellpadding', 'cellPadding');
+
 
         const tagName = BookChunkNode.name;
 
@@ -248,6 +252,7 @@ export interface IBookPageProps
 {
     book: IBook | null;
     tabState: IBookTabState;
+    preferences: IPreferences;
     callbacks: IBookPageCallbacks;
 }
 

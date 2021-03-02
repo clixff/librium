@@ -2,10 +2,12 @@ import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { EBrowseType, EColorTheme, IBrowseFileFilter, IPreferences } from '../../../shared/preferences';
 import { ArrowSVG } from '../../misc/icons';
+import { maxBookFontSize, minBookFontSize, updateBookFontFamily, updateBookFontSize } from '../../misc/preferences';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
 import { Button } from '../common/button';
 
 const sliderSaveTimeouts: Map<string, number> = new Map();
+const cachedSliderValues: Map<string, number> = new Map();
 
 interface ISliderSettingProps
 {
@@ -21,9 +23,44 @@ function SilderSetting(props: ISliderSettingProps): JSX.Element
 {
     const maxSliderValue = 1000;
 
-    const [value, setValue] = useState(props.value);
+    const [value, _setValue] = useState(props.value);
     const [renderValue, setRenderValue] = useState(`${props.value}`);
     const [sliderValue, setSliderValue] = useState(getSliderValue(props.value));
+
+    function getValue(): number | undefined
+    {
+        return cachedSliderValues.get(props.id);
+    }
+
+    function setValue(newValue: number): void
+    {
+        _setValue(newValue);
+
+        cachedSliderValues.set(props.id, newValue);
+    }
+
+    useEffect(() => 
+    {
+        return (() => 
+        {
+            const sliderValue = getValue();
+
+            if (sliderValue === undefined)
+            {
+                return;
+            }
+
+            const oldSaveTimeout = sliderSaveTimeouts.get(props.id);
+            if (oldSaveTimeout)
+            {
+                window.clearTimeout(oldSaveTimeout);
+                sliderSaveTimeouts.delete(props.id);
+                saveValue(sliderValue);
+            }
+
+            cachedSliderValues.delete(props.id);
+        });
+    }, []);
 
     function getSliderValue(value: number): number
     {
@@ -377,6 +414,20 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
         onSettingChange(id, option);
     }
 
+    function handleFontFamilyChange(id: string, fontFamily: string): void
+    {
+        updateBookFontFamily(fontFamily);
+
+        onSettingChange(id, fontFamily);
+    }
+
+    function handleFontSizeChange(id: string, fontSize: number): void
+    {
+        updateBookFontSize(fontSize);
+
+        onSettingChange(id, fontSize);
+    }
+
     function onSettingChange(id: string, value: unknown): void
     {
         console.log(`change setting ${id} to ${value}`);
@@ -393,8 +444,8 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
             </h1>
             <div id={preferencesStyles.container}>
                 <DropdownSetting id="colorTheme" name="Color Theme" options={['Dark', 'Light']} activeOption={props.preferences.colorTheme} onChange={handleColorThemeChange} />
-                <SilderSetting id="fontSize" name="Font Size" value={props.preferences.fontSize} min={1} max={32} onChange={onSettingChange} />
-                <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={onSettingChange} />
+                <SilderSetting id="fontSize" name="Font Size" value={props.preferences.fontSize} min={minBookFontSize} max={maxBookFontSize} onChange={handleFontSizeChange} />
+                <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={handleFontFamilyChange} />
                 <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={onSettingChange} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
             </div>
         </div>

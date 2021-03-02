@@ -13,7 +13,7 @@ import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
 import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType } from './components/misc/modal';
 import { EColorTheme, IPreferences } from '../shared/preferences';
-import { fixPreferences } from './misc/preferences';
+import { fixPreferences, updateBookFontFamily, updateBookFontSize } from './misc/preferences';
 import { changeColorTheme, changeSetting } from './components/core/preferences';
 import { IBookChunk } from '../shared/schema';
 
@@ -115,6 +115,10 @@ class App extends React.Component<unknown, IAppState>
             preferences = fixPreferences(preferences);
 
             changeColorTheme(preferences.colorTheme);
+
+            updateBookFontFamily(preferences.fontFamily || '');
+
+            updateBookFontSize(preferences.fontSize || 16);
 
             this.setState({
                 preferences: preferences
