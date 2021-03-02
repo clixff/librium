@@ -13,6 +13,95 @@ export function BookLoading(): JSX.Element
     </div>);
 }
 
+/**
+ * Converts a CSS string to the object with React styles.
+ * 
+ * @param styles CSS string
+ */
+function getParsedStyles(styles: string): Record<string, string>
+{
+    const parsedStyles: Record<string, string> = {};
+    const fileStyles = (styles).split(';');
+
+    for (let i = 0; i < fileStyles.length; i++)
+    {
+        const style = fileStyles[i].trim();
+        if (style)
+        {
+            const parsedStyle = style.split(':');
+            if (parsedStyle.length === 2)
+            {
+                let styleName = (parsedStyle[0] || '').trim();
+                const styleValue = (parsedStyle[1] || '').trim();
+                if (styleName && styleValue)
+                {
+                    const parsedStyleName = styleName.split('-');
+
+                    /**
+                     * Fix case of style name
+                     */
+                    for (let j = 0; j < parsedStyleName.length; j++)
+                    {
+                        const styleNamePart = parsedStyleName[j];
+                        if (j > 0 && styleNamePart)
+                        {
+                            parsedStyleName[j] = `${styleNamePart[0].toUpperCase()}${styleNamePart.slice(1)}`;
+                        }
+                    }
+
+                    styleName = parsedStyleName.join('');
+
+
+                    parsedStyles[styleName] = styleValue;
+                }
+            }
+        }
+    }
+
+    return parsedStyles;
+}
+
+function setImageClickCallback(tagName: string, props: Record<string, unknown>): void
+{
+    const imageSource: string | undefined = (props.src || props['xlinkHref'] || props.srcset) as string;
+    if (imageSource)
+    {
+        const sourceType: string | undefined = props.type as string;
+
+        function isImageLink(): boolean
+        {
+            const imageFormats = ['png', 'jpg', 'jpeg', 'bmp', 'webp', 'svg', 'gif'];
+
+            if (!imageSource)
+            {
+                return false;
+            }
+
+            for (let i = 0; i < imageFormats.length; i++)
+            {
+                const imageSourceLowerCased = imageSource.toLowerCase();
+                if (imageSourceLowerCased.endsWith(`.${imageFormats[i]}`))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (tagName !== 'source' || (sourceType && sourceType.startsWith('image/')) || isImageLink())
+        {
+            props.onClick = () => 
+            {
+                /**
+                 * Open image in the browser
+                 */
+                ipcRenderer.send('open-link', imageSource);
+            };
+        }
+    }
+}
+
 interface IBookChunkProps
 {
     id: number;
@@ -44,7 +133,9 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
         renamePropKey('colspan', 'colSpan');
         renamePropKey('xml:lang', 'xmlLang');
 
-        if (BookChunkNode.name === 'a')
+        const tagName = BookChunkNode.name;
+
+        if (tagName === 'a')
         {
             if (props['title'] === undefined)
             {
@@ -52,50 +143,17 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
             }
         }
     
-        if (BookChunkNode.name === 'img' || BookChunkNode.name === 'image' || BookChunkNode.name === 'source')
+        if (tagName === 'img' || tagName === 'image' || tagName === 'source')
         {
-            const imageSource: string | undefined = (props.src || props['xlinkHref'] || props.srcset) as string;
-            if (imageSource)
-            {
-                const sourceType: string | undefined = props.type as string;
-    
-                function isImageLink(): boolean
-                {
-                    const imageFormats = ['png', 'jpg', 'jpeg', 'bmp', 'webp', 'svg', 'gif'];
-    
-                    if (!imageSource)
-                    {
-                        return false;
-                    }
-    
-                    for (let i = 0; i < imageFormats.length; i++)
-                    {
-                        const imageSourceLowerCased = imageSource.toLowerCase();
-                        if (imageSourceLowerCased.endsWith(`.${imageFormats[i]}`))
-                        {
-                            return true;
-                        }
-                    }
-    
-                    return false;
-                }
-    
-                if (BookChunkNode.name !== 'source' || (sourceType && sourceType.startsWith('image/')) || isImageLink())
-                {
-                    console.log(`Add image click function`);
-                    props.onClick = () => 
-                    {
-                        console.log('clicked on image');
-                        ipcRenderer.send('open-link', imageSource);
-                    };
-                }
-            }
+            setImageClickCallback(tagName, props);
         }
     
-        /**
-         * TODO: Fix the style prop
-         */
-        delete props['style'];
+        if (props['style'] && typeof props['style'] === 'string')
+        {
+            props['style'] = getParsedStyles(props['style']);
+        }
+
+
         if (BookChunkNode.children || BookChunkNode.text)
         {
             props.children = [];
@@ -120,7 +178,7 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
     
         props.key = childIndex;
     
-        return React.createElement(BookChunkNode.name, props);
+        return React.createElement(tagName, props);
     }
     catch (error)
     {
@@ -134,7 +192,6 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
 
 class BookChunk extends Component<IBookChunkProps>
 {
-    wrapperRef: React.RefObject<HTMLDivElement> = React.createRef();
     constructor(props: IBookChunkProps)
     {
         super(props);
@@ -170,15 +227,9 @@ class BookChunk extends Component<IBookChunkProps>
             }
         }
 
-        return (<div ref={this.wrapperRef}>
+        return (<div>
             {
                 chunkBody
-                // this.props.chunk && this.props.chunk.body && this.props.chunk.body.children ?
-                // ( this.props.chunk.body.children.map((node, index) => 
-                // {
-                //     return (getBookChunkNode(node, index));
-                // }) )
-                // : null
             }
         </div>);
     }
