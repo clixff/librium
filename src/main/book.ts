@@ -17,6 +17,7 @@ interface IBookBaseData
     cover: string;
     percentRead: number;
     percentPages: number;
+    styles: Array<string>;
 }
 
 /**
@@ -79,6 +80,10 @@ export class Book
      */
     percentPages = 0;
     saveTimeout: NodeJS.Timeout | null = null;
+    /**
+     * List of paths to CSS files
+     */
+    styles: Array<string> = [];
     constructor(saveDirectory: string, bookId: string)
     {
         this.saveDirectory = saveDirectory;
@@ -103,7 +108,8 @@ export class Book
                 symbols: this.symbols,
                 percentRead: this.percentRead,
                 percentPages: this.percentPages,
-                version: '0.1' 
+                version: '0.1',
+                styles: this.styles
             };
             const filePath = path.join(this.saveDirectory, 'book.json');
             await fsPromises.writeFile(filePath, JSON.stringify(bookMetadata, null, '\t'), { encoding: 'utf-8' });
@@ -129,7 +135,8 @@ export class Book
             cover: this.cover,
             id: this.id,
             percentRead: this.percentRead,
-            percentPages: this.percentPages
+            percentPages: this.percentPages,
+            styles: this.styles
         };
 
         return bookExportData;
@@ -144,6 +151,7 @@ export class Book
         this.lastTimeOpened = metadata.lastTimeOpened || 0;
         this.percentRead = metadata.percentRead || 0;
         this.percentPages = metadata.percentPages || 0;
+        this.styles = metadata.styles || [];
     }
     updateLastTimeOpened(): void
     {

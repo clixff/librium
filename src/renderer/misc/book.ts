@@ -14,6 +14,7 @@ export interface IBookBase
     id: string;
     percentRead: number;
     percentPages: number;
+    styles: Array<string>;
 }
 
 export interface IBook extends IBookBase

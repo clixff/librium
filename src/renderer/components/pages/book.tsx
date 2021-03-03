@@ -426,7 +426,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     return (
         <div id={bookStyles.wrapper} onScroll={handleScroll}>
-            <div id={bookStyles.container} style={ {
+            <div id={bookStyles.container} className={`book_container____`} style={ {
             marginBottom: `${bookPageData.bookContainerMarginBottom}px`
             } }>
                 {

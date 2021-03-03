@@ -18,12 +18,15 @@ interface IBookContentState
 
 class BookContent extends React.Component<IBookPageProps, IBookContentState>
 {
+    stylesClassName = 'custom-style';
+    stylesElements: Array<HTMLLinkElement> = [];
     constructor(props)
     {
         super(props);
         this.state = {
             bLoaded: !!(this.props.book && this.props.book.chunks.length)
         };
+        
         console.log(`BookContent constructor`);
     }
     componentDidMount(): void
@@ -33,6 +36,40 @@ class BookContent extends React.Component<IBookPageProps, IBookContentState>
         {
             this.props.callbacks.loadBookChunks(this.props.book);
         }
+
+        if (this.props.book && this.props.book.styles.length)
+        {
+            const stylesList = this.props.book.styles;
+            for (let i = 0; i < stylesList.length; i++)
+            {
+                const styleFilePath = stylesList[i];
+                const fullStylePath = `http://127.0.0.1:45506/file/${this.props.book.id}/${styleFilePath}`;
+                const linkElement = document.createElement('link');
+                linkElement.setAttribute('rel', 'stylesheet');
+                linkElement.setAttribute('type', 'text/css');
+                linkElement.setAttribute('href', fullStylePath);
+                linkElement.classList.add(this.stylesClassName);
+                document.head.appendChild(linkElement);
+                this.stylesElements.push(linkElement);
+            }
+        }
+    }
+    componentWillUnmount(): void
+    {
+        if (this.stylesElements.length)
+        {
+            for (let i = 0; i < this.stylesElements.length; i++)
+            {
+                const styleElement = this.stylesElements[i];
+                if (styleElement)
+                {
+                    styleElement.remove();
+                }
+            }
+
+            this.stylesElements = [];
+        }
+        
     }
     componentDidUpdate()
     {

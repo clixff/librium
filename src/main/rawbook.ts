@@ -55,6 +55,10 @@ export class RawBook
      * Number of parsed symbols
      */
     parsedSymbols = 0;
+    /**
+     * Custom CSS 
+     */
+    customStyles = ``;
     constructor(epubContent: Buffer, pathToSave: string, bookID: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -474,6 +478,8 @@ export class RawBook
                         this.bookRef.symbols = this.parsedSymbols;
                     }
 
+                    await this.createCustomStylesFile();
+
                     resolve();
                 }
                 catch (error)
@@ -496,6 +502,7 @@ export class RawBook
             }
 
             let bodyNode: IXMLNode | undefined = undefined;
+            let headNode: IXMLNode | undefined = undefined;
 
             for (const htmlChild of htmlNode["@_children"])
             {
@@ -503,6 +510,15 @@ export class RawBook
                 {
                     bodyNode = htmlChild;
                 }
+                else if (htmlChild['#name'] === 'head')
+                {
+                    headNode = htmlChild;
+                }
+            }
+
+            if (headNode)
+            {
+               this.parseHeadNode(headNode);
             }
         
             if (!bodyNode)
@@ -661,4 +677,60 @@ export class RawBook
          */
         this.bookRef.cover = this.bookRef.cover.slice(41);
     }
+    parseHeadNode(headNode: IXMLNode): void
+    {
+        if (headNode && headNode["@_children"] && headNode["@_children"].length)
+        {
+            for (let i = 0; i < headNode["@_children"].length; i++)
+            {
+                const headChild = headNode['@_children'][i];
+                if (headChild)
+                {
+                    if (headChild["#name"] === 'style' && headChild["@_text"])
+                    {
+                        if (this.customStyles.length)
+                        {
+                            this.customStyles += `\n`;
+                        }
+        
+                        const fixedStyles = fixCustomStyle(headChild["@_text"]);
+                        if (fixedStyles)
+                        {
+                            const bCopyFound = this.customStyles.includes(fixedStyles);
+                            if (!bCopyFound)
+                            {
+                                this.customStyles += fixedStyles;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    async createCustomStylesFile(): Promise<void>
+    {
+        try
+        {
+            if (this.customStyles && this.customStyles.length)
+            {
+                const generatedCSSFileName = `__generated__style__${Math.floor(Date.now() / 1000)}.css`;
+                const generatedCSSFilePath = path.join(this.pathToSave, 'content', generatedCSSFileName);
+                await fsPromises.writeFile(generatedCSSFilePath, this.customStyles, { encoding: 'utf-8' });
+                if (this.bookRef)
+                {
+                    this.bookRef.styles.push(generatedCSSFileName);
+                }
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
+}
+
+function fixCustomStyle(style: string): string
+{
+    style = style.replace(/(body|html)/g, '.book_container____');
+    return style;
 }

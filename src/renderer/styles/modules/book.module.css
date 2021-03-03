@@ -1,21 +1,27 @@
 #wrapper
 {
-    overflow-y: scroll;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
 }
 
 #container
 {
-    display: flex;
-    flex-direction: column;
-    width: 700px;
-    --image-max-width: 665px;
-    color: var(--text-color);
-    font-family: var(--book-font);
-    font-size: var(--book-font-size);
+    display: flex !important;
+    flex-direction: column !important;
+    width: 700px !important;
+    --image-max-width: 665px !important;
+    color: var(--text-color) !important;
+    font-family: var(--book-font) !important;
+    font-size: var(--book-font-size) !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    position: relative !important;
 }
 
 #loading-wrapper
