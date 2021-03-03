@@ -44,12 +44,9 @@ export function updateBookFontFamily(fontFamily: string): void
 
         }
 
-        if (newFontsParsed.length)
-        {
-            const newFontFamily = `${newFontsParsed.join(', ')}, ${defaultFontFamily}`;
-            console.log(`New book fonts is "${newFontFamily}"`);
-            rootElement.style.setProperty('--book-font', newFontFamily);
-        }
+
+        const newFontFamily = finalFonts.length ? `${finalFonts.join(', ')}, ${defaultFontFamily}` : defaultFontFamily;
+        rootElement.style.setProperty('--book-font', newFontFamily);
     }
 }
 

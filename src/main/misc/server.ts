@@ -67,6 +67,21 @@ app.get('/file/preferences.svg', async (req, res) =>
     }
 });
 
+
+app.get('/file/book-cover-icon.svg', async (req, res) =>
+{
+    try
+    {
+        res.set('content-type', 'image/svg+xml');
+        const paramColor = req.query['color'] || '000';
+        res.send(`<svg width="118" height="175" xmlns="http://www.w3.org/2000/svg"><path xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="10" fill="#${paramColor}" d="M.5.5h117v174H.5z" stroke-location="inside"/></svg>`);
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+});
+
 /**
  * Starts HTTP server that will send the book content from disk
  */

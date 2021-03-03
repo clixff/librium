@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
-import { deleteBook, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
+import { deleteBook, getBookCustomCoverIconURL, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, IBookPageData, IRawTab, loadTab, Tab } from './misc/tabs';
@@ -761,7 +761,8 @@ class App extends React.Component<unknown, IAppState>
         if (bookTabId === -1)
         {
             bookTabId = this.state.activeTab + 1;
-            tabsList.splice(bookTabId, 0, new Tab(savedBook.title, ETabType.book, savedBook.cover ? `http://127.0.0.1:45506/file/${savedBook.id}/${savedBook.cover}` : null));
+            const bookCover = savedBook.cover ? `http://127.0.0.1:45506/file/${savedBook.id}/${savedBook.cover}` : getBookCustomCoverIconURL(bookId);
+            tabsList.splice(bookTabId, 0, new Tab(savedBook.title, ETabType.book, bookCover));
         }
 
         const bookTab = tabsList[bookTabId];

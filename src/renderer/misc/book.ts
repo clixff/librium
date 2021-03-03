@@ -113,3 +113,27 @@ export function deleteBook(book: IBook): void
         }
     }
 }
+
+export function getBookCoverColor(bookId: string): string
+{
+    const customCoverColors = [
+        '494036',
+        '3A1919',
+        '2F402E',
+        '274C83',
+        '323232',
+        '364649',
+        '331E31'
+    ];
+
+    const firstIdSymbol: number = parseInt(bookId[0] || '', 16);
+    const coverColorID = firstIdSymbol % customCoverColors.length;
+    const coverColor = customCoverColors[coverColorID];
+    return coverColor;
+}
+
+export function getBookCustomCoverIconURL(bookId: string): string
+{
+    const color = getBookCoverColor(bookId);
+    return `http://127.0.0.1:45506/file/book-cover-icon.svg?color=${color}`;
+}

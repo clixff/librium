@@ -1,5 +1,5 @@
 import React from 'react';
-import { IBook } from '../../misc/book';
+import { getBookCoverColor, IBook } from '../../misc/book';
 import newTabStyles from '../../styles/modules/newTab.module.css';
 import { BookContextMenu } from '../misc/context';
 import { EViewType } from '../pages/newTab';
@@ -18,22 +18,10 @@ export function BookCover(props: IBookCoverProps): JSX.Element
     
     const coverStyleProperties: React.CSSProperties = {};
 
-    const customCoverColors = [
-        '494036',
-        '3A1919',
-        '2F402E',
-        '274C83',
-        '323232',
-        '364649',
-        '331E31'
-    ];
     
     if (bUseCustomCover)
     {
-        const firstIdSymbol: number = parseInt(props.id[0] || '', 16);
-        const coverColorID = firstIdSymbol % customCoverColors.length;
-        const coverColor = customCoverColors[coverColorID];
-        coverStyleProperties.backgroundColor = `#${coverColor}`;
+        coverStyleProperties.backgroundColor = `#${getBookCoverColor(props.id)}`;
     }
 
     return (<div className={`${newTabStyles['book-cover']} ${bUseCustomCover ? newTabStyles['book-custom-cover'] : ''}`} style={ coverStyleProperties }>

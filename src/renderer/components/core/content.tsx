@@ -58,6 +58,7 @@ class BookContent extends React.Component<IBookPageProps, IBookContentState>
 interface IToolbarButtonProps
 {
     icon: typeof React.Component;
+    title?: string;
     onClick?: () => void;
 }
 
@@ -70,7 +71,7 @@ function ToolbarButton(props: IToolbarButtonProps): JSX.Element
             props.onClick();
         }
     }
-    return (<div className={ContentStyles['toolbar-button']} onClick={handleClick}>
+    return (<div className={ContentStyles['toolbar-button']} onClick={handleClick} title={props.title || ''}>
         <props.icon />
     </div>);
 }
@@ -118,15 +119,15 @@ function Toolbar(props: ToolbarProps): JSX.Element
             {
                 props.bIsBookContent ? (
                     <React.Fragment>
-                        <ToolbarButton icon={TextSVG} />
-                        <ToolbarButton icon={BookmarkSVG} />
-                        <ToolbarButton icon={ListSVG} />
-                        <ToolbarButton icon={SearchSVG} />
-                        <ToolbarButton icon={FullscreenSVG} />
+                        <ToolbarButton icon={TextSVG} title={`Book settings`} />
+                        <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} />
+                        <ToolbarButton icon={ListSVG} title={`Table of Contents`} />
+                        <ToolbarButton icon={SearchSVG} title={`Search`} />
+                        <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} />
                     </React.Fragment>
                 ) : null
             }
-            <ToolbarButton icon={PreferencesSVG} onClick={props.callbacks.onPreferencesClick}/>
+            <ToolbarButton icon={PreferencesSVG} onClick={props.callbacks.onPreferencesClick} title={`Preferences`}/>
         </div>
     </div>);
 }
