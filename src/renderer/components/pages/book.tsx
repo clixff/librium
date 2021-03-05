@@ -167,11 +167,19 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
                 for (let i = 0; i < BookChunkNode.children.length; i++)
                 {
                     const child = BookChunkNode.children[i];
-                    const childNodeJSX = getBookChunkNode(child, i);
-                    if (childNodeJSX)
+                    if (typeof child === 'string' && child)
                     {
-                        nodeChildren.push(childNodeJSX);
+                        nodeChildren.push(child);
                     }
+                    else
+                    {
+                        const childNodeJSX = getBookChunkNode(child as IBookChunkNode, i);
+                        if (childNodeJSX)
+                        {
+                            nodeChildren.push(childNodeJSX);
+                        }
+                    }
+
                 }
             }
             if (BookChunkNode.text)
@@ -215,7 +223,7 @@ class BookChunk extends Component<IBookChunkProps>
     }
     render(): JSX.Element
     {
-        const chunkBody: Array<JSX.Element> = [];
+        const chunkBody: Array<JSX.Element | string> = [];
 
         if (this.props.chunk && this.props.chunk.body && this.props.chunk.body.children)
         {
@@ -223,10 +231,17 @@ class BookChunk extends Component<IBookChunkProps>
             for (let i = 0; i < bodyChildrenList.length; i++)
             {
                 const bodyChild = bodyChildrenList[i];
-                const bodyChildNode = getBookChunkNode(bodyChild, i);
-                if (bodyChildNode)
+                if (bodyChild && typeof bodyChild === 'string')
                 {
-                    chunkBody.push(bodyChildNode);
+                    chunkBody.push(bodyChild);
+                }
+                else
+                {
+                    const bodyChildNode = getBookChunkNode(bodyChild as IBookChunkNode, i);
+                    if (bodyChildNode)
+                    {
+                        chunkBody.push(bodyChildNode);
+                    }
                 }
             }
         }
@@ -443,7 +458,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     return (
         <div id={bookStyles.wrapper} onScroll={handleScroll}>
-            <div id={bookStyles.container} className={`book_container____`}>
+            <div id={bookStyles.container} className={`book_container____ ${props.preferences.allowCustomColors ? '' : bookStyles['disable-custom-colors']}`}>
                 {
                     !bTabLoaded ? <BookLoading /> :
                     book.chunks.map((chunk, index) =>

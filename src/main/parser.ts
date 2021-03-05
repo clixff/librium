@@ -1,5 +1,8 @@
 import {IMetadataSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import xml2js from 'xml2js';
+import { HTMLElement, TextNode, NodeType } from 'node-html-parser';
+import { IBookChunkNode } from "../shared/schema";
+import { RawBook } from "./rawbook";
 
 export const bookStyles = {
     container: `.book_container____`
@@ -146,3 +149,89 @@ export function getAllMetadataItemStrings(metadataObject: IMetadataSchema, key: 
     return outArray;
 }
 
+export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBookChunkNode | null
+{
+    try
+    {
+        const bookChunkNode: IBookChunkNode = {
+            name: htmlNode.rawTagName
+        };
+
+        if (htmlNode.attributes)
+        {
+            bookChunkNode.attr = htmlNode.attributes;
+
+            /**
+             * Convert media relative paths to the local server URL 
+             */
+             const attributesList = bookChunkNode.attr;
+             if (attributesList)
+             {
+                 switch (bookChunkNode.name)
+                 {
+                     case 'img':
+                     case 'video':
+                     case 'track':
+                     case 'audio':
+                         rawBook.fixNodeAttributeRelativePath(attributesList, 'src');
+                         break;
+                     case 'image':
+                        rawBook.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
+                         break;
+                     case 'source':
+                        rawBook.fixNodeAttributeRelativePath(attributesList, 'srcset');
+                        rawBook.fixNodeAttributeRelativePath(attributesList, 'src');
+                         break;
+                     default:
+                         break;
+                 }
+             }
+        }
+
+        if (htmlNode.childNodes)
+        {
+            for (let i = 0; i < htmlNode.childNodes.length; i++)
+            {
+                const childNode = htmlNode.childNodes[i];
+                if (childNode)
+                {
+                    if (childNode.nodeType === NodeType.TEXT_NODE)
+                    {
+                        const textNode = childNode as TextNode;
+                        if (!textNode.isWhitespace)
+                        {
+                            if (!bookChunkNode.children)
+                            {
+                                bookChunkNode.children = [];
+                            }
+
+                            bookChunkNode.children.push(textNode.textContent);
+                        }
+                    }
+                    else if (childNode.nodeType ===  NodeType.ELEMENT_NODE)
+                    {
+                        const nodeElement = childNode as HTMLElement;
+                        const childBookNode = htmlNodeToBookNode(nodeElement, rawBook);
+                        if (childBookNode)
+                        {
+                            if (!bookChunkNode.children)
+                            {
+                                bookChunkNode.children = [];
+                            }
+
+                            bookChunkNode.children.push(childBookNode);
+                        }
+                    }
+                }
+            }
+        }
+    
+        return bookChunkNode;  
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+
+    return null;
+}

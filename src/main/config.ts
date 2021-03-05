@@ -11,7 +11,10 @@ const defaultConfig: IPreferences = {
     booksDir: path.resolve(getAppDataPath(), 'Books'),
     colorTheme: EColorTheme.Dark,
     fontSize: 16,
-    fontFamily: 'Segoe UI'
+    fontFamily: 'Segoe UI',
+    allowCustomColors: false,
+    inverseImageColors: false,
+    widePages: false
 };
 
 let config: IPreferences | null = null;
@@ -243,4 +246,4 @@ ipcMain.handle('path-setting-browse-click', async (event, type: EBrowseType, bMu
         console.error(error);
     }
     return [];
-})
+});

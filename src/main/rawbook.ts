@@ -3,9 +3,10 @@ import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
-import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, IXMLNode, MetadataItem } from "./misc/schema";
+import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseXML } from "./parser";
 import css from 'css';
+import { HTMLElement, NodeType, parse as parseHTML } from 'node-html-parser';
 
 
 /**
@@ -481,9 +482,9 @@ export class RawBook
                         }
                         else
                         {
-                            const xmlParsed: IXMLObject = await parseXML(fileContent, true);
+                            // const xmlParsed: IXMLObject = await parseXML(fileContent, true);
                             // console.log('Parsed XML: ', xmlParsed);
-                            const convertedChunk: IBookChunk | null = await this.convertXMLToBookChunk(xmlParsed);
+                            const convertedChunk: IBookChunk | null = await this.convertHtmlToBookChunk(fileContent);
                             if (convertedChunk)
                             {
                                 if (this.bookRef)
@@ -515,28 +516,51 @@ export class RawBook
             });
         });
     }
-    async convertXMLToBookChunk(xmlObject: IXMLObject): Promise<IBookChunk | null>
+    async convertHtmlToBookChunk(html: string): Promise<IBookChunk | null>
     {
         try
         {
-            const htmlNode: IXMLNode | undefined = xmlObject['html'];
-            if (!htmlNode || !htmlNode["@_children"] || !htmlNode["@_children"].length)
+            const rootNode: HTMLElement = parseHTML(html, { blockTextElements: {} });
+            if (!rootNode)
             {
                 return null;
             }
 
-            let bodyNode: IXMLNode | undefined = undefined;
-            let headNode: IXMLNode | undefined = undefined;
+            let htmlNode: HTMLElement | undefined = undefined;
 
-            for (const htmlChild of htmlNode["@_children"])
+            for (const rootChildNode of rootNode.childNodes)
             {
-                if (htmlChild["#name"] === 'body')
+                if (rootChildNode.nodeType === NodeType.ELEMENT_NODE)
                 {
-                    bodyNode = htmlChild;
+                    const rootChildElement = rootChildNode as HTMLElement;
+                    if (rootChildElement.rawTagName === 'html')
+                    {
+                        htmlNode = rootChildElement;
+                    }
                 }
-                else if (htmlChild['#name'] === 'head')
+            }
+            
+            if (!htmlNode)
+            {
+                return null;
+            }
+
+            let bodyNode: HTMLElement | undefined = undefined;
+            let headNode: HTMLElement | undefined = undefined;
+
+            for (const htmlChildNode of htmlNode.childNodes)
+            {
+                if (htmlChildNode.nodeType === NodeType.ELEMENT_NODE)
                 {
-                    headNode = htmlChild;
+                    const nodeElement = htmlChildNode as HTMLElement;
+                    if (nodeElement.rawTagName === 'head')
+                    {
+                        headNode = nodeElement;
+                    }
+                    else if (nodeElement.rawTagName === 'body')
+                    {
+                        bodyNode = nodeElement;
+                    }
                 }
             }
 
@@ -550,7 +574,7 @@ export class RawBook
                 return null;
             }
 
-            const convertedBodyNode: IBookChunkNode | null = await this.convertXMLNodeToBookChunkNode(bodyNode);
+            const convertedBodyNode: IBookChunkNode | null = htmlNodeToBookNode(bodyNode, this);
 
             if (!convertedBodyNode)
             {
@@ -570,94 +594,7 @@ export class RawBook
     
         return null;
     }
-    async convertXMLNodeToBookChunkNode(xmlNode: IXMLNode): Promise<IBookChunkNode | null>
-    {
-        try
-        {
-            const bookChunkNode: IBookChunkNode = {
-                name: xmlNode["#name"]
-            };
 
-            if (xmlNode["@_text"])
-            {
-                bookChunkNode.text = xmlNode["@_text"];
-                this.parsedSymbols = (bookChunkNode.text || '').length;
-            }
-
-            if (xmlNode["@_attr"])
-            {
-                /**
-                 * TODO: Rewrite this to `for (let ...)`
-                 */
-                bookChunkNode.attr = {};
-                for (const attrName in xmlNode['@_attr'])
-                {
-                    const xmlAttr = xmlNode['@_attr'][attrName];
-                    if (typeof xmlAttr === 'string')
-                    {
-                        bookChunkNode.attr[attrName] = xmlAttr;
-                    }
-                }
-            }
-        
-            /**
-             * Convert media relative paths to the local server URL 
-             */
-
-            const attributesList = bookChunkNode.attr;
-            if (attributesList)
-            {
-                switch (bookChunkNode.name)
-                {
-                    case 'img':
-                    case 'video':
-                    case 'track':
-                    case 'audio':
-                        this.fixNodeAttributeRelativePath(attributesList, 'src');
-                        break;
-                    case 'image':
-                        this.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
-                        break;
-                    case 'source':
-                        this.fixNodeAttributeRelativePath(attributesList, 'srcset');
-                        this.fixNodeAttributeRelativePath(attributesList, 'src');
-                        break;
-                    case 'video':
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-
-            if (xmlNode["@_children"])
-            {
-                for (let i = 0; i < xmlNode["@_children"].length; i++)
-                {
-                    const xmlNodeChild: IXMLNode = xmlNode["@_children"][i];
-                    const bookChunkNodeChild: IBookChunkNode | null = await this.convertXMLNodeToBookChunkNode(xmlNodeChild);
-
-                    if (bookChunkNodeChild)
-                    {
-                        if (!bookChunkNode.children)
-                        {
-                            bookChunkNode.children = [];
-                        }
-
-                        bookChunkNode.children.push(bookChunkNodeChild);
-                    }
-                }
-            }
-
-            return bookChunkNode;
-        }
-        catch (error)
-        {
-            console.error(error);
-        }
-
-        return null;
-    }
     /**
      * Converts file path in format `./media/image.src` to the 'http://127.0.0.1:45506/file/8906ffe8.../media%5Cimage.src'
      */
@@ -701,18 +638,26 @@ export class RawBook
          */
         this.bookRef.cover = this.bookRef.cover.slice(41);
     }
-    parseHeadNode(headNode: IXMLNode): void
+    parseHeadNode(headNode: HTMLElement): void
     {
-        if (headNode && headNode["@_children"] && headNode["@_children"].length)
+        if (headNode && headNode.childNodes.length)
         {
-            for (let i = 0; i < headNode["@_children"].length; i++)
+            for (let i = 0; i < headNode.childNodes.length; i++)
             {
-                const headChild = headNode['@_children'][i];
-                if (headChild)
+                const headChild = headNode.childNodes[i];
+                if (headChild && headChild.nodeType === NodeType.ELEMENT_NODE)
                 {
-                    if (headChild["#name"] === 'style' && headChild["@_text"])
+                    const childElement = headChild as HTMLElement;
+                    if (childElement.rawTagName === 'style')
                     {
-                        const fixedStyles = fixCustomStyle(headChild["@_text"]);
+                        const styleText = childElement.textContent;
+
+                        if (!styleText || !styleText.length)
+                        {
+                            continue;
+                        }
+
+                        const fixedStyles = fixCustomStyle(styleText);
                         if (fixedStyles)
                         {
                             const bCopyFound = this.customStyles.includes(fixedStyles);
@@ -722,9 +667,9 @@ export class RawBook
                             }
                         }
                     }
-                    else if (headChild['#name'] === 'link' && headChild["@_attr"])
+                    else if (childElement.rawTagName === 'link')
                     {
-                        const nodeAttributes = headChild['@_attr'] as Record<string, string>;
+                        const nodeAttributes = childElement.attributes;
                         const linkHref = nodeAttributes['href'];
                         if (linkHref && linkHref.endsWith('.css'))
                         {

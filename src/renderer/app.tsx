@@ -72,7 +72,10 @@ class App extends React.Component<unknown, IAppState>
                 booksDir: '',
                 colorTheme: EColorTheme.Dark,
                 fontFamily: '',
-                fontSize: 16
+                fontSize: 16,
+                allowCustomColors: false,
+                inverseImageColors: false,
+                widePages: false
             }
         };
 

@@ -13,7 +13,7 @@ export interface IBookChunkNode
      */
     text?: string;
 
-    children?: Array<IBookChunkNode> 
+    children?: Array<IBookChunkNode | string> 
 }
 
 export interface IBookChunk

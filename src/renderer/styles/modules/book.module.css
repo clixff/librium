@@ -14,8 +14,6 @@
     width: 700px !important;
     --image-max-width: 665px !important;
     color: var(--text-color) !important;
-    font-family: var(--book-font) !important;
-    font-size: var(--book-font-size) !important;
     margin-top: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -25,10 +23,12 @@
     position: relative !important;
 }
 
-.container-fixed-color *
+#container *
 {
-    color: var(--text-color) !important;
+    font-family: var(--book-font) !important;
+    font-size: var(--book-font-size) !important;
 }
+
 
 #loading-wrapper
 {
@@ -66,4 +66,24 @@
     max-width: var(--image-max-width);
     height: auto;
     cursor: pointer;
+}
+
+.disable-custom-colors *:not(a)
+{
+    color: var(--text-color) !important;
+}
+
+.disable-custom-colors a:-webkit-any-link
+{
+    --link-color: #1d81f3;
+    color: var(--link-color) !important;
+    text-decoration-color: var(--link-color) !important;
+}
+
+.disable-custom-colors div,
+.disable-custom-colors pre,
+.disable-custom-colors section,
+.disable-custom-colors table
+{
+    background-color: transparent !important;
 }
