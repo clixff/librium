@@ -1,6 +1,11 @@
 import {IMetadataSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import xml2js from 'xml2js';
 
+export const bookStyles = {
+    container: `.book_container____`
+};
+
+
 /**
  * 
  * @param xmlContent 
@@ -140,3 +145,4 @@ export function getAllMetadataItemStrings(metadataObject: IMetadataSchema, key: 
 
     return outArray;
 }
+

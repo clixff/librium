@@ -4,7 +4,9 @@ import path from 'path';
 import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
 import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
-import { getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
+import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, parseXML } from "./parser";
+import css from 'css';
+
 
 /**
  * `.epub` file
@@ -188,7 +190,7 @@ export class RawBook
             
             await this.parseSpine();
 
-            console.log(`Reading order: \n`, this.readingOrder);
+            // console.log(`Reading order: \n`, this.readingOrder);
 
             await this.parsePages();
 
@@ -317,6 +319,12 @@ export class RawBook
                      * Directory path for the file, for example `../Documents/epub-reader/Books/8906f../content/EPUB/images/`
                      */
                     const directoryToSaveFile = path.parse(itemPathToSave).dir;
+
+                    /**
+                     * If it's a CSS file
+                     */
+                    const bIsStyle = manifestItem.href.endsWith('.css');
+
                     fs.access(directoryToSaveFile, fs.constants.F_OK, async (err) =>
                     {
                         try
@@ -325,8 +333,24 @@ export class RawBook
                             {
                                 await fsPromises.mkdir(directoryToSaveFile, { recursive: true });
                             }
+
+                            if (bIsStyle)
+                            {
+                                let styleFileContent = await this.readFile(itemPathInArchive);
+                                styleFileContent = fixCustomStyle(styleFileContent);
+                                console.log(`Length of fixed style is ${styleFileContent.length}`);
+                                if (styleFileContent)
+                                {
+                                    console.log(`Saving style ${itemPathToSave}`);
+                                    await fsPromises.writeFile(itemPathToSave, styleFileContent, { encoding: 'utf-8' });
+                                }
+
+                            }
+                            else
+                            {
+                                this.zipArchive.extractEntryTo(itemPathInArchive, directoryToSaveFile, false, true);
+                            }
     
-                            this.zipArchive.extractEntryTo(itemPathInArchive, directoryToSaveFile, false, true);
                         }
                         catch (error)
                         {
@@ -448,7 +472,7 @@ export class RawBook
                     for (const filePath of this.readingOrder)
                     {
                         const relativeFilePath = path.join(this.epubContentPath, filePath);
-                        console.log(`File path is "${relativeFilePath}"`);
+                        // console.log(`File path is "${relativeFilePath}"`);
                         this.currentHTMLFile = relativeFilePath;
                         const fileContent: string = await this.readFile(relativeFilePath);
                         if (!fileContent)
@@ -458,7 +482,7 @@ export class RawBook
                         else
                         {
                             const xmlParsed: IXMLObject = await parseXML(fileContent, true);
-                            console.log('Parsed XML: ', xmlParsed);
+                            // console.log('Parsed XML: ', xmlParsed);
                             const convertedChunk: IBookChunk | null = await this.convertXMLToBookChunk(xmlParsed);
                             if (convertedChunk)
                             {
@@ -688,11 +712,6 @@ export class RawBook
                 {
                     if (headChild["#name"] === 'style' && headChild["@_text"])
                     {
-                        if (this.customStyles.length)
-                        {
-                            this.customStyles += `\n`;
-                        }
-        
                         const fixedStyles = fixCustomStyle(headChild["@_text"]);
                         if (fixedStyles)
                         {
@@ -700,6 +719,24 @@ export class RawBook
                             if (!bCopyFound)
                             {
                                 this.customStyles += fixedStyles;
+                            }
+                        }
+                    }
+                    else if (headChild['#name'] === 'link' && headChild["@_attr"])
+                    {
+                        const nodeAttributes = headChild['@_attr'] as Record<string, string>;
+                        const linkHref = nodeAttributes['href'];
+                        if (linkHref && linkHref.endsWith('.css'))
+                        {
+                            const htmlParsedPath: path.ParsedPath = path.parse(this.currentHTMLFile);
+                            const htmlDirPath: string = htmlParsedPath.dir;
+                            const finalRelativePath = encodeURIComponent(path.join(htmlDirPath, linkHref));
+                            if (this.bookRef)
+                            {
+                                if (!this.bookRef.styles.includes(finalRelativePath))
+                                {
+                                    this.bookRef.styles.push(finalRelativePath);
+                                }
                             }
                         }
                     }
@@ -731,6 +768,98 @@ export class RawBook
 
 function fixCustomStyle(style: string): string
 {
-    style = style.replace(/(body|html)/g, '.book_container____');
-    return style;
+    try
+    {
+        style = style.replace(/\$/g, '');
+        const parsedStyle = css.parse(style, { silent: true });
+        let finalStyle = '';
+        
+
+        function fixAllRules(rules: Array<css.Rule>, bIsMedia = false): void
+        {
+            for (let i = 0; i < rules.length; i++)
+            {
+                const rule = rules[i];
+                if (rule)
+                {
+                    if (rule.type === 'rule')
+                    {
+                        const ruleObject = rule as css.Rule;
+                        if (!ruleObject.selectors)
+                        {
+                            ruleObject.selectors = [];
+                        }
+                        if (!ruleObject.declarations)
+                        {
+                            ruleObject.declarations = [];
+                        }
+                        const ruleSelectors = ruleObject.selectors;
+                        if (ruleSelectors && ruleSelectors.length)
+                        {
+                            for (let j = 0; j < ruleSelectors.length; j++)
+                            {
+                                ruleSelectors[j] = fixStyleSelectorName(ruleSelectors[j]);
+                            }
+                        }
+                    }
+                    else if (rule.type === 'media' && !bIsMedia)
+                    {
+                        const ruleObject = rule as css.Media;
+                        if (!ruleObject.rules)
+                        {
+                            ruleObject.rules = [];
+                        }
+                        if (!ruleObject.media)
+                        {
+                            ruleObject.media = '';
+                        }
+                        const mediaRules = ruleObject.rules;
+                        if (mediaRules)
+                        {
+                            fixAllRules(mediaRules, true);
+                        }
+                    }
+                }
+            }
+        }
+    
+        if (parsedStyle && parsedStyle.stylesheet)
+        {
+            const rules = parsedStyle.stylesheet.rules;
+            fixAllRules(rules);
+        }
+
+        finalStyle = css.stringify(parsedStyle, { compress: true });
+    
+        return finalStyle;
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+    return '';
+
+}
+
+function fixStyleSelectorName(selector: string): string
+{
+    /**
+     * Replace "*" selector to ".book_container____ > *"
+     */
+    selector = selector.replace(/^(\s+)?\*(\s+|\:(\:)?[\w\-]+)?$/, (substr) =>
+    {
+        return substr.replace('*', `${bookStyles.container} > *`);
+    });
+
+    /**
+     * Replace body and html selector to ".book_container____"
+     */
+    selector = selector.replace(/(\s+|^|>|\+|\~)\b(body|html)\b/g, (substr) => 
+    {
+        return substr.replace(/(body|html)/, `${bookStyles.container}`);
+    });
+
+    selector = selector.replace(/^\b([\w-]+)\b/, `${bookStyles.container} $1`);
+
+    return selector;
 }

@@ -19,9 +19,15 @@
     margin-top: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+    margin-bottom: var(--book-margin-bottom) !important;
     padding: 0 !important;
     height: auto !important;
     position: relative !important;
+}
+
+.container-fixed-color *
+{
+    color: var(--text-color) !important;
 }
 
 #loading-wrapper

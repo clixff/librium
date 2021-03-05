@@ -1,7 +1,7 @@
 body
 {
-    --app-background: rgb(6, 6, 6);
-    background: var(--app-background);
+    --app-background: rgb(6, 6, 6) !important;
+    background: var(--app-background) !important;
     color: white;
     font-family: var(--default-font);
 }
@@ -23,6 +23,7 @@ a:hover
     --default-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
     --book-font: var(--default-font);
     --book-font-size: 16px;
+    --book-margin-bottom: 0px;
 }
 
 body, html, #root

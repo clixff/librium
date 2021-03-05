@@ -257,6 +257,17 @@ export interface IBookPageProps
 }
 
 let isTicking = false;
+let lastBookMarginBottom = 0;
+
+function setBookMargninBottom(value: number): void
+{
+    const rootElement = document.documentElement;
+    if (rootElement)
+    {
+        rootElement.style.setProperty('--book-margin-bottom', `${value}px`);
+        lastBookMarginBottom = value;
+    }
+}
 
 export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 {
@@ -323,6 +334,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         if (!bTabLoaded)
         {
             bookPageData.bookContainerMarginBottom = 0;
+            setBookMargninBottom(0);
             /**
              * Wait for the first empty background render, then render book chunks.
              * This is useful for making book loading less noticeable and annoying.
@@ -424,11 +436,14 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     bookPageData.bookContainerMarginBottom = getContainerMarginBottom();
 
+    if (bookPageData.bookContainerMarginBottom !== lastBookMarginBottom)
+    {
+        setBookMargninBottom(bookPageData.bookContainerMarginBottom);
+    }
+
     return (
         <div id={bookStyles.wrapper} onScroll={handleScroll}>
-            <div id={bookStyles.container} className={`book_container____`} style={ {
-            marginBottom: `${bookPageData.bookContainerMarginBottom}px`
-            } }>
+            <div id={bookStyles.container} className={`book_container____`}>
                 {
                     !bTabLoaded ? <BookLoading /> :
                     book.chunks.map((chunk, index) =>
