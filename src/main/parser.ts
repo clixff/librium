@@ -3,6 +3,8 @@ import xml2js from 'xml2js';
 import { HTMLElement, TextNode, NodeType } from 'node-html-parser';
 import { IBookChunkNode } from "../shared/schema";
 import { RawBook } from "./rawbook";
+import { Html5Entities } from 'html-entities';
+import path from 'path';
 
 export const bookStyles = {
     container: `.book_container____`
@@ -164,28 +166,64 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
             /**
              * Convert media relative paths to the local server URL 
              */
-             const attributesList = bookChunkNode.attr;
-             if (attributesList)
-             {
-                 switch (bookChunkNode.name)
-                 {
-                     case 'img':
-                     case 'video':
-                     case 'track':
-                     case 'audio':
-                         rawBook.fixNodeAttributeRelativePath(attributesList, 'src');
-                         break;
-                     case 'image':
-                        rawBook.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
-                         break;
-                     case 'source':
-                        rawBook.fixNodeAttributeRelativePath(attributesList, 'srcset');
+            const attributesList = bookChunkNode.attr;
+            if (attributesList)
+            {
+                switch (bookChunkNode.name)
+                {
+                    case 'img':
+                    case 'video':
+                    case 'track':
+                    case 'audio':
                         rawBook.fixNodeAttributeRelativePath(attributesList, 'src');
-                         break;
-                     default:
-                         break;
-                 }
-             }
+                        break;
+                    case 'image':
+                    rawBook.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
+                        break;
+                    case 'source':
+                    rawBook.fixNodeAttributeRelativePath(attributesList, 'srcset');
+                    rawBook.fixNodeAttributeRelativePath(attributesList, 'src');
+                        break;
+                    default:
+                        break;
+                }
+
+                /**
+                 * Fix relative link to page
+                 */
+                if (htmlNode.rawTagName === 'a' && attributesList['href'])
+                {
+                    const linkHref = attributesList['href'];
+                    if (!linkHref.startsWith('#') && !linkHref.startsWith('http://') && !linkHref.startsWith('https://'))
+                    {
+                        const fullPath = path.join(path.parse(rawBook.currentHTMLFile).dir, linkHref);
+                        const parsedLink = fullPath.match(/([^#]+)(?:#(.+)?)?$/);
+                        const linkFilePath = parsedLink ? parsedLink[1] : '';
+                        const linkAnchor = parsedLink ? parsedLink[2] : '';
+                        const filePathFixed = linkFilePath.toLowerCase().replace(/\\/g, '/');
+
+                        for (let i = 0; i < rawBook.readingOrder.length; i++)
+                        {
+                            const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace('\\', '/');
+                            if (bookItem === filePathFixed)
+                            {
+                                attributesList['generated-link-chunk'] = `${i}`;
+
+                                if (linkAnchor)
+                                {
+                                    attributesList['generated-link-id'] = `${linkAnchor}`;
+                                }
+
+                                delete attributesList['href'];
+
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+
         }
 
         if (htmlNode.childNodes)
@@ -198,15 +236,18 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                     if (childNode.nodeType === NodeType.TEXT_NODE)
                     {
                         const textNode = childNode as TextNode;
-                        if (!textNode.isWhitespace)
-                        {
-                            if (!bookChunkNode.children)
-                            {
-                                bookChunkNode.children = [];
-                            }
 
-                            bookChunkNode.children.push(textNode.textContent);
+                        if (textNode.isWhitespace && (i === 0 || i === (htmlNode.childNodes.length - 1)))
+                        {
+                            continue;
                         }
+
+                        if (!bookChunkNode.children)
+                        {
+                            bookChunkNode.children = [];
+                        }
+
+                        bookChunkNode.children.push(Html5Entities.decode(textNode.text));
                     }
                     else if (childNode.nodeType ===  NodeType.ELEMENT_NODE)
                     {

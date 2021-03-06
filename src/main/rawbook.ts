@@ -3,7 +3,7 @@ import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, IXMLNode, MetadataItem } from "./misc/schema";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, MetadataItem } from "./misc/schema";
 import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseXML } from "./parser";
 import css from 'css';
 import { HTMLElement, NodeType, parse as parseHTML } from 'node-html-parser';
@@ -482,8 +482,7 @@ export class RawBook
                         }
                         else
                         {
-                            // const xmlParsed: IXMLObject = await parseXML(fileContent, true);
-                            // console.log('Parsed XML: ', xmlParsed);
+
                             const convertedChunk: IBookChunk | null = await this.convertHtmlToBookChunk(fileContent);
                             if (convertedChunk)
                             {

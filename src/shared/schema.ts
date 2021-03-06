@@ -8,10 +8,6 @@ export interface IBookChunkNode
      * List of HTML attributes
      */
     attr?: Record<string, string>;
-    /**
-     * Inner text of HTML element
-     */
-    text?: string;
 
     children?: Array<IBookChunkNode | string> 
 }

@@ -103,6 +103,47 @@ function setImageClickCallback(tagName: string, props: Record<string, unknown>):
     }
 }
 
+/**
+ * When clicked on 'a' with local href
+ */
+function setLocalLinkClick(props: Record<string, unknown>): void
+{
+    const chunkID = Number(props['generated-link-chunk'] as string);
+    const linkAnchor = props['generated-link-id'] as string || '';
+    const bookWrapper = document.getElementById(bookStyles.wrapper);
+    const bookContainer = document.getElementById(bookStyles.container);
+
+    
+    if (!bookWrapper || !bookContainer || !isFinite(chunkID))
+    {
+        return;
+    }
+
+    props.onClick = () => 
+    {
+        console.log(`[link] clicked on link`);
+
+        const chunkElement = bookContainer.children[chunkID] as HTMLElement;
+        if (!chunkElement)
+        {
+            return;
+        }
+
+        let linkAnchorElement: HTMLElement | null = null;
+
+        if (linkAnchor)
+        {
+            linkAnchorElement = chunkElement.querySelector(`#${linkAnchor}`);
+        }
+        /**
+         * Scroll to the anchor element or the chunk element
+         */
+        const scrollTo = linkAnchorElement ? linkAnchorElement.offsetTop : chunkElement.offsetTop;
+        console.log(`[link] scroll to ${scrollTo}`);
+        bookWrapper.scrollTo({ left: 0, top: scrollTo, behavior: 'auto' });
+    };
+}
+
 interface IBookChunkProps
 {
     id: number;
@@ -157,34 +198,33 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
             props['style'] = getParsedStyles(props['style']);
         }
 
+        if (props['generated-link-chunk'])
+        {
+            setLocalLinkClick(props);
+            delete props['generated-link-chunk'];
+            delete props['generated-link-id'];
+        }
 
-        if (BookChunkNode.children || BookChunkNode.text)
+
+        if (BookChunkNode.children)
         {
             props.children = [];
             const nodeChildren = props.children as Array<JSX.Element | string>;
-            if (BookChunkNode.children)
+            for (let i = 0; i < BookChunkNode.children.length; i++)
             {
-                for (let i = 0; i < BookChunkNode.children.length; i++)
+                const child = BookChunkNode.children[i];
+                if (typeof child === 'string' && child)
                 {
-                    const child = BookChunkNode.children[i];
-                    if (typeof child === 'string' && child)
-                    {
-                        nodeChildren.push(child);
-                    }
-                    else
-                    {
-                        const childNodeJSX = getBookChunkNode(child as IBookChunkNode, i);
-                        if (childNodeJSX)
-                        {
-                            nodeChildren.push(childNodeJSX);
-                        }
-                    }
-
+                    nodeChildren.push(child);
                 }
-            }
-            if (BookChunkNode.text)
-            {
-                nodeChildren.push(BookChunkNode.text);
+                else
+                {
+                    const childNodeJSX = getBookChunkNode(child as IBookChunkNode, i);
+                    if (childNodeJSX)
+                    {
+                        nodeChildren.push(childNodeJSX);
+                    }
+                }
             }
         }
     

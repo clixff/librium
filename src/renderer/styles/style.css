@@ -10,6 +10,7 @@ a, a:hover, a:visited, a:active
 {
     color: #1d81f3;
     text-decoration: none;
+    cursor: pointer;
 }
 
 
