@@ -1,3 +1,4 @@
+import { AppSingleton } from '../app';
 import { EMenuElementType, EViewType } from '../components/pages/newTab';
 import { IBook } from './book';
 import { getDefaultBooksViewType } from './misc';
@@ -30,7 +31,8 @@ export interface IBookPageData
     currentPage: number;
     percentReadToSave: number;
     totalNumberOfPages: number;
-    backToPageNumber: number;
+    backToPagePercentOfPages: number;
+    backToPagePercentOfBook: number;
     bookWrapper: HTMLElement | null;
 
 }
@@ -78,7 +80,8 @@ export class Tab
                         currentPage: 0,
                         totalNumberOfPages: 0,
                         bookWrapper: null,
-                        backToPageNumber: 0,
+                        backToPagePercentOfPages: 0,
+                        backToPagePercentOfBook: -1,
                         percentReadToSave: 0
                     }
                 };
@@ -120,4 +123,15 @@ export function loadTab(rawTab: IRawTab): Tab
     }
 
     return tab;
+}
+
+export function getActiveTab(): Tab | null
+{
+    if (AppSingleton)
+    {
+        const activeTab = AppSingleton.state.tabs[AppSingleton.state.activeTab];
+        return activeTab || null;
+    }
+
+    return null;
 }

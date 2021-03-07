@@ -4,7 +4,7 @@ import { IPreferences } from '../../../shared/preferences';
 import { IBookChunk, IBookChunkNode } from '../../../shared/schema';
 import { IBook } from '../../misc/book';
 import { LoadingSVG } from '../../misc/icons';
-import { IBookPageData, IBookTabState } from '../../misc/tabs';
+import { getActiveTab, IBookPageData, IBookTabState } from '../../misc/tabs';
 import bookStyles from '../../styles/modules/book.module.css';
 
 export function BookLoading(): JSX.Element
@@ -13,6 +13,8 @@ export function BookLoading(): JSX.Element
         <LoadingSVG />
     </div>);
 }
+
+let bookCallbacks: IBookPageCallbacks | null = null;
 
 /**
  * Converts a CSS string to the object with React styles.
@@ -110,18 +112,18 @@ function setLocalLinkClick(props: Record<string, unknown>): void
 {
     const chunkID = Number(props['generated-link-chunk'] as string);
     const linkAnchor = props['generated-link-id'] as string || '';
-    const bookWrapper = document.getElementById(bookStyles.wrapper);
-    const bookContainer = document.getElementById(bookStyles.container);
-
-    
-    if (!bookWrapper || !bookContainer || !isFinite(chunkID))
-    {
-        return;
-    }
 
     props.onClick = () => 
     {
         console.log(`[link] clicked on link`);
+
+        const bookWrapper = document.getElementById(bookStyles.wrapper);
+        const bookContainer = document.getElementById(bookStyles.container);
+
+        if (!bookWrapper || !bookContainer || !isFinite(chunkID))
+        {
+            return;
+        }
 
         const chunkElement = bookContainer.children[chunkID] as HTMLElement;
         if (!chunkElement)
@@ -140,6 +142,14 @@ function setLocalLinkClick(props: Record<string, unknown>): void
          */
         const scrollTo = linkAnchorElement ? linkAnchorElement.offsetTop : chunkElement.offsetTop;
         console.log(`[link] scroll to ${scrollTo}`);
+        const activeTab = getActiveTab();
+        if (bookCallbacks && activeTab && activeTab.state && activeTab.state.data)
+        {
+            bookCallbacks.updateBookTabState({
+                backToPagePercentOfBook: activeTab.state.data.percentReadToSave,
+                backToPagePercentOfPages: (activeTab.state.data.currentPage / activeTab.state.data.totalNumberOfPages) 
+            });
+        }
         bookWrapper.scrollTo({ left: 0, top: scrollTo, behavior: 'auto' });
     };
 }
@@ -412,6 +422,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
     {        
     
         window.addEventListener('resize', handleWindowResize);
+        bookCallbacks = props.callbacks;
 
         return (() =>
         {
@@ -420,6 +431,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
             const bookPageData = getBookPageData();
             bookPageData.bookWrapper = null;
+            bookCallbacks = null;
             console.log(`bookWrapper on unmount is `, bookPageData.bookWrapper);
         });
     }, []);

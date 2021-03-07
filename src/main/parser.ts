@@ -151,6 +151,8 @@ export function getAllMetadataItemStrings(metadataObject: IMetadataSchema, key: 
     return outArray;
 }
 
+let bLogged = false;
+
 export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBookChunkNode | null
 {
     try
@@ -201,12 +203,24 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                         const linkFilePath = parsedLink ? parsedLink[1] : '';
                         const linkAnchor = parsedLink ? parsedLink[2] : '';
                         const filePathFixed = linkFilePath.toLowerCase().replace(/\\/g, '/');
+                        if (!bLogged)
+                        {
+                            console.log(`[link] Link path ${filePathFixed}`);
+                        }
 
                         for (let i = 0; i < rawBook.readingOrder.length; i++)
                         {
-                            const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace('\\', '/');
+                            const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace(/\\/g, '/');
+                            if (!bLogged)
+                            {
+                                console.log(`[link] compare link with ${bookItem}`);
+                            }
                             if (bookItem === filePathFixed)
                             {
+                                if (!bLogged)
+                                {
+                                    console.log(`[link] found equal file`);
+                                }
                                 attributesList['generated-link-chunk'] = `${i}`;
 
                                 if (linkAnchor)
@@ -219,6 +233,10 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                                 break;
                             }
                         }
+                    }
+                    if (!bLogged)
+                    {
+                        bLogged = true;
                     }
                 }
             }

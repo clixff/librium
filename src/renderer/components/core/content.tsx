@@ -129,6 +129,20 @@ function Toolbar(props: ToolbarProps): JSX.Element
         bookData = props.tab.state.data;
     }
 
+    function handleBackToPageClick(): void
+    {
+        if (bookData)
+        {
+            const bookWrapper = bookData.bookWrapper;
+            const backToPagePercent = bookData.backToPagePercentOfBook;
+            const bookHeight = bookData.bookHeight;
+            if (bookWrapper)
+            {
+                bookWrapper.scrollTo({ left: 0, top: Math.floor(bookHeight * backToPagePercent), behavior: 'auto' });
+            }
+        }
+    }
+
     return (<div id={ContentStyles['toolbar-wrapper']}>
         <div id={ContentStyles['toolbar-left']}>
             {
@@ -144,9 +158,14 @@ function Toolbar(props: ToolbarProps): JSX.Element
                             <div id={ContentStyles['toolbar-book-percent']}>
                                 { `${Math.floor((bookData.currentPage / bookData.totalNumberOfPages) * 100) || 0}%` }
                             </div>
-                            <div id={ContentStyles['toolbar-book-back-to-page']}>
-                                { `Back to page ${bookData.backToPageNumber}` }
-                            </div>
+                            {
+                                bookData.backToPagePercentOfBook !== -1 ?
+                                (
+                                    <div id={ContentStyles['toolbar-book-back-to-page']} onClick={handleBackToPageClick}>
+                                        { `Back to page ${Math.floor(bookData.backToPagePercentOfPages * bookData.totalNumberOfPages) || 0}` }
+                                    </div>
+                                ) : null
+                            }
                         </React.Fragment>
                     )
                 : null
