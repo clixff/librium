@@ -86,7 +86,7 @@ class App extends React.Component<unknown, IAppState>
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
         'updateBookTabState', 'updateBookReadPercent', 'handleTabsLoaded',
-        'saveTabs']);
+        'saveTabs', 'openBookAlreadyLoaded']);
 
         AppSingleton = this;
     }
@@ -129,17 +129,24 @@ class App extends React.Component<unknown, IAppState>
         });
 
         window.addEventListener('wheel', this.handleScroll);
+
+        ipcRenderer.addListener('open-book-already-loaded', this.openBookAlreadyLoaded);
     }
     componentWillUnmount(): void
     {       
         ipcRenderer.removeListener('book-loaded', this.handleBookLoaded);
         window.removeEventListener('wheel', this.handleScroll);
+        ipcRenderer.removeListener('open-book-already-loaded', this.openBookAlreadyLoaded);
 
         if (this.saveTabsTimeout && window)
         {
             window.clearTimeout(this.saveTabsTimeout);
             this.saveTabsTimeout = null;
         }
+    }
+    openBookAlreadyLoaded(event, bookID: string): void
+    {
+        this.openBook(bookID, true);
     }
     /**
      * Exports tabs list to the main process, then saves it to disk before app quit

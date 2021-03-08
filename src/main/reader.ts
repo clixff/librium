@@ -77,11 +77,7 @@ async function openFile(filePath: string, browserWindow: BrowserWindow): Promise
             {
                 if (!err)
                 {
-                    /**
-                     * Book with this checksum already exists.
-                     * 
-                     * TODO: Open this book
-                     */
+                    browserWindow.webContents.send('open-book-already-loaded', fileCheckSum);
                 }
                 else
                 {
