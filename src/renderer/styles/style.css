@@ -204,3 +204,9 @@ body.light
 {
     background: var(--global-scrollbar-thumb-hover);
 }
+
+.cover-svg
+{
+    --icon-size: 600px !important;
+    align-self: center;
+}

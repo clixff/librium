@@ -83,7 +83,7 @@ class BookContent extends React.Component<IBookPageProps, IBookContentState>
     render(): JSX.Element
     {
         console.log(`BookContent rendered`);
-        if (!this.state.bLoaded)
+        if (!this.state.bLoaded )
         {
             return <BookLoading />;
         }
@@ -138,6 +138,13 @@ function Toolbar(props: ToolbarProps): JSX.Element
             const bookHeight = bookData.bookHeight;
             if (bookWrapper)
             {
+                if (typeof props.callbacks.bookPageCallbacks.updateBookTabState === 'function')
+                {
+                    props.callbacks.bookPageCallbacks.updateBookTabState({
+                        backToPagePercentOfBook: -1,
+                        backToPagePercentOfPages: 0
+                    });
+                }
                 bookWrapper.scrollTo({ left: 0, top: Math.floor(bookHeight * backToPagePercent), behavior: 'auto' });
             }
         }

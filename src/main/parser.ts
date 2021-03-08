@@ -181,6 +181,7 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                         break;
                     case 'image':
                     rawBook.fixNodeAttributeRelativePath(attributesList, 'xlink:href');
+                    rawBook.fixNodeAttributeRelativePath(attributesList, 'href');
                         break;
                     case 'source':
                     rawBook.fixNodeAttributeRelativePath(attributesList, 'srcset');
@@ -234,6 +235,12 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                             }
                         }
                     }
+                    else if (linkHref.startsWith('#'))
+                    {
+                        attributesList['generated-link-id'] = linkHref.slice(1);
+                        delete attributesList['href'];
+                    }
+
                     if (!bLogged)
                     {
                         bLogged = true;

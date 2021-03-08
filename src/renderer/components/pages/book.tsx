@@ -66,7 +66,7 @@ function getParsedStyles(styles: string): Record<string, string>
 
 function setImageClickCallback(tagName: string, props: Record<string, unknown>): void
 {
-    const imageSource: string | undefined = (props.src || props['xlinkHref'] || props.srcset) as string;
+    const imageSource: string | undefined = (props.src || props['href'] || props['xlinkHref'] || props.srcset) as string;
     if (imageSource)
     {
         const sourceType: string | undefined = props.type as string;
@@ -115,33 +115,48 @@ function setLocalLinkClick(props: Record<string, unknown>): void
 
     props.onClick = () => 
     {
-        console.log(`[link] clicked on link`);
+        console.log(`[link] clicked on link ${props['generated-link-chunk'] || ''}#${linkAnchor || ''}`);
 
         const bookWrapper = document.getElementById(bookStyles.wrapper);
         const bookContainer = document.getElementById(bookStyles.container);
 
-        if (!bookWrapper || !bookContainer || !isFinite(chunkID))
+        if (!bookWrapper || !bookContainer)
         {
             return;
         }
 
-        const chunkElement = bookContainer.children[chunkID] as HTMLElement;
-        if (!chunkElement)
+        let chunkElement: HTMLElement | null = null;
+        
+        if (isFinite(chunkID))
+        {
+            chunkElement = bookContainer.children[chunkID] as HTMLElement;
+        }
+
+        if (isFinite(chunkID) && !chunkElement)
         {
             return;
         }
+
 
         let linkAnchorElement: HTMLElement | null = null;
 
         if (linkAnchor)
         {
-            linkAnchorElement = chunkElement.querySelector(`#${linkAnchor}`);
+            linkAnchorElement = (isFinite(chunkID) && chunkElement ? chunkElement : bookContainer ).querySelector(`#${linkAnchor}`);
         }
+
+
         /**
          * Scroll to the anchor element or the chunk element
          */
-        const scrollTo = linkAnchorElement ? linkAnchorElement.offsetTop : chunkElement.offsetTop;
+        const scrollTo = linkAnchorElement ? linkAnchorElement.offsetTop : chunkElement ? chunkElement.offsetTop : -1;
         console.log(`[link] scroll to ${scrollTo}`);
+
+        if (scrollTo === -1)
+        {
+            return;
+        }
+
         const activeTab = getActiveTab();
         if (bookCallbacks && activeTab && activeTab.state && activeTab.state.data)
         {
@@ -208,7 +223,7 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
             props['style'] = getParsedStyles(props['style']);
         }
 
-        if (props['generated-link-chunk'])
+        if (props['generated-link-chunk'] || props['generated-link-id'])
         {
             setLocalLinkClick(props);
             delete props['generated-link-chunk'];
@@ -296,7 +311,7 @@ class BookChunk extends Component<IBookChunkProps>
             }
         }
 
-        return (<div>
+        return (<div className={`${bookStyles['chunk']}`}>
             {
                 chunkBody
             }

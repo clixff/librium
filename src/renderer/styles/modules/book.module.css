@@ -11,7 +11,6 @@
 {
     display: flex !important;
     flex-direction: column !important;
-    width: 700px !important;
     --image-max-width: 665px !important;
     color: var(--text-color) !important;
     margin-top: 0 !important;
@@ -22,6 +21,16 @@
     height: auto !important;
     position: relative !important;
 }
+
+#container, 
+#container > .chunk
+{
+    --book-page-width: 700px;
+    width: var(--book-page-width) !important;
+    min-width: var(--book-page-width) !important;
+    max-width: var(--book-page-width) !important;
+}
+
 
 #container *
 {
