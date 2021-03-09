@@ -2,14 +2,14 @@ import { getAppDataPath, getConfigPath } from "./paths";
 import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 import { EBrowseType, EColorTheme, IPreferences, IBrowseFileFilter } from "../shared/preferences";
-import { BrowserWindow, dialog, ipcMain } from "electron";
+import { BrowserWindow, dialog, ipcMain, nativeTheme } from "electron";
 
 const defaultConfig: IPreferences = {
     /**
      * Use default books directory `../Documents/epub-reader/Books`
      */
     booksDir: path.resolve(getAppDataPath(), 'Books'),
-    colorTheme: EColorTheme.Dark,
+    colorTheme: nativeTheme.shouldUseDarkColors ? EColorTheme.Dark : EColorTheme.Light,
     fontSize: 16,
     fontFamily: 'Segoe UI',
     allowCustomColors: false,
