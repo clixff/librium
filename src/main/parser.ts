@@ -151,7 +151,7 @@ export function getAllMetadataItemStrings(metadataObject: IMetadataSchema, key: 
     return outArray;
 }
 
-let bLogged = false;
+let bLogged = true;
 
 export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBookChunkNode | null
 {
@@ -247,22 +247,26 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                     }
                 }
             }
-
-
         }
 
         if (htmlNode.childNodes)
         {
+            const bIsTableChild = ['table', 'tbody', 'thead', 'th', 'tr', 'td'].includes(bookChunkNode.name);
+
             for (let i = 0; i < htmlNode.childNodes.length; i++)
             {
                 const childNode = htmlNode.childNodes[i];
+                const bIsLastChild = i === (htmlNode.childNodes.length - 1);
                 if (childNode)
                 {
                     if (childNode.nodeType === NodeType.TEXT_NODE)
                     {
                         const textNode = childNode as TextNode;
 
-                        if (textNode.isWhitespace && (i === 0 || i === (htmlNode.childNodes.length - 1)))
+                        /**
+                         * Do not add a whitespace child if it's inside a table element, first or last child
+                         */
+                        if (textNode.isWhitespace && (bIsTableChild || (i === 0 || bIsLastChild)))
                         {
                             continue;
                         }

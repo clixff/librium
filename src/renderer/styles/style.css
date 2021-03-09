@@ -114,6 +114,7 @@ body
     --setting-browse-button-border: var(--setting-browse-button-bg);
     --setting-browse-button-hover: rgb(45, 45, 45);
     --setting-browse-button-border-hover: var(--setting-browse-button-hover);
+    --setting-checkbox-border: rgb(76, 76, 76);
 
     --loading-color: white;
 
@@ -181,6 +182,7 @@ body.light
     --setting-browse-button-border: rgb(113, 113, 113);
     --setting-browse-button-hover: rgb(220, 220, 220);
     --setting-browse-button-border-hover: var(--setting-browse-button-border);
+    --setting-checkbox-border: black;
 
     --loading-color: rgb(128, 128, 128);
 }

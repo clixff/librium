@@ -224,3 +224,31 @@
     --setting-width: calc(35px - 14px);
     text-align: center;
 }
+
+.checkbox
+{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border: 1px solid var(--setting-checkbox-border);
+    background: transparent;
+    transition: border-color 0.125s linear, background-color 0.125s linear;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkbox-checked
+{
+    --checkbox-checked-color: rgb(22, 105, 230);
+    --setting-checkbox-border: var(--checkbox-checked-color) !important;
+    background: var(--checkbox-checked-color) !important;
+}
+
+.checkbox > svg
+{
+    --icon-size: 14px;
+    fill: white;
+}

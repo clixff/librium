@@ -1,10 +1,44 @@
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { EBrowseType, EColorTheme, IBrowseFileFilter, IPreferences } from '../../../shared/preferences';
-import { ArrowSVG } from '../../misc/icons';
+import { ArrowSVG, MarkSVG } from '../../misc/icons';
 import { maxBookFontSize, minBookFontSize, updateBookFontFamily, updateBookFontSize } from '../../misc/preferences';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
 import { Button } from '../common/button';
+
+interface ICheckboxSetting
+{
+    id: string;
+    name: string;
+    value: boolean;
+    onChange: (id: string, value: boolean) => void;
+}
+
+function CheckboxSetting(props: ICheckboxSetting): JSX.Element
+{
+    const [value, setValue] = useState(props.value);
+
+    function handleClick(): void
+    {
+        setValue(!value);
+        if (typeof props.onChange === 'function')
+        {
+            props.onChange(props.id, !value);
+        }
+    }
+
+    return (<div className={preferencesStyles.setting}>
+        <SettingName name={props.name} />
+        <div className={`${preferencesStyles['checkbox']} ${value ? preferencesStyles['checkbox-checked'] : '' }`} onClick={handleClick}>
+            {
+                value ? 
+                (
+                    <MarkSVG />
+                ) : null
+            }
+        </div>
+    </div>);
+}
 
 const sliderSaveTimeouts: Map<string, number> = new Map();
 const cachedSliderValues: Map<string, number> = new Map();
@@ -447,6 +481,9 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
                 <SilderSetting id="fontSize" name="Font Size" value={props.preferences.fontSize} min={minBookFontSize} max={maxBookFontSize} onChange={handleFontSizeChange} />
                 <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={handleFontFamilyChange} />
                 <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={onSettingChange} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
+                <CheckboxSetting id="allowCustomColors" name="Allow custom book colors" value={props.preferences.allowCustomColors} onChange={onSettingChange} />
+                <CheckboxSetting id="inverseImageColors" name="Inverse image colors" value={props.preferences.inverseImageColors} onChange={onSettingChange} />
+                <CheckboxSetting id="widePages" name="Wide pages" value={props.preferences.widePages} onChange={onSettingChange} />
             </div>
         </div>
     </div>);

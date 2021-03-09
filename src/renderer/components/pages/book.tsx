@@ -523,9 +523,26 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         setBookMargninBottom(bookPageData.bookContainerMarginBottom);
     }
 
+    const bookPageClassNames = ['book_container____'];
+
+    if (!props.preferences.allowCustomColors)
+    {
+        bookPageClassNames.push(bookStyles['disable-custom-colors']);
+    }
+
+    if (props.preferences.inverseImageColors)
+    {
+        bookPageClassNames.push(bookStyles['inverse-image-colors']);
+    }
+
+    if (props.preferences.widePages)
+    {
+        bookPageClassNames.push(bookStyles['wide-pages']);
+    }
+
     return (
         <div id={bookStyles.wrapper} onScroll={handleScroll}>
-            <div id={bookStyles.container} className={`book_container____ ${props.preferences.allowCustomColors ? '' : bookStyles['disable-custom-colors']}`}>
+            <div id={bookStyles.container} className={bookPageClassNames.join(' ')}>
                 {
                     !bTabLoaded ? <BookLoading /> :
                     book.chunks.map((chunk, index) =>
