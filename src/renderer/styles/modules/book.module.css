@@ -38,6 +38,40 @@
     font-size: var(--book-font-size) !important;
 }
 
+.inverse-image-colors img,
+.inverse-image-colors image,
+.inverse-image-colors picture > source
+{
+    filter: invert(1) !important;
+}
+
+#container.wide-pages,
+#container.wide-pages > .chunk
+{
+    --image-max-width: 800px;
+    --book-page-width: 850px;
+}
+
+@media screen and (max-width: 800px)
+{
+    #container,
+    #container > .chunk
+    {
+        --image-max-width: 570px !important;
+        --book-page-width: 600px !important;
+    }
+}
+
+@media screen and (max-width: 900px)
+{
+    #container.wide-pages,
+    #container.wide-pages > .chunk
+    {
+        --image-max-width: 665px;
+        --book-page-width: 700px;
+    }
+}
+
 
 #loading-wrapper
 {
@@ -82,9 +116,13 @@
     color: var(--text-color) !important;
 }
 
+.disable-custom-colors a,
+.disable-custom-colors a:hover,
+.disable-custom-colors a:active,
+.disable-custom-colors a:visited,
 .disable-custom-colors a:-webkit-any-link
 {
-    --link-color: #1d81f3;
+    --link-color: #1d81f3 !important;
     color: var(--link-color) !important;
     text-decoration-color: var(--link-color) !important;
 }
