@@ -23,7 +23,8 @@ function createWindow(): void
         minWidth: 700,
         webPreferences: {
             enableRemoteModule: false,
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false
         }
     });
     

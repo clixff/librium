@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const merge = require('webpack-merge').merge;
 const baseConfig = require('./webpack.base.config');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
