@@ -16,3 +16,14 @@ export interface IBookChunk
 {
     body: IBookChunkNode
 }
+
+/**
+ * Table of contents
+ */
+export interface ITOC
+{
+    name: string;
+    chunk: number;
+    anchor: string;
+    children?: Array<ITOC>;
+}

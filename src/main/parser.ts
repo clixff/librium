@@ -1,7 +1,7 @@
-import {IMetadataSchema, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
+import {IMetadataSchema, ITOCNavPoint, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import xml2js from 'xml2js';
 import { HTMLElement, TextNode, NodeType } from 'node-html-parser';
-import { IBookChunkNode } from "../shared/schema";
+import { IBookChunkNode, ITOC } from "../shared/schema";
 import { RawBook } from "./rawbook";
 import { Html5Entities } from 'html-entities';
 import path from 'path';
@@ -199,41 +199,55 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
                     const linkHref = attributesList['href'];
                     if (!linkHref.startsWith('#') && !linkHref.startsWith('http://') && !linkHref.startsWith('https://'))
                     {
-                        const fullPath = path.join(path.parse(rawBook.currentHTMLFile).dir, linkHref);
-                        const parsedLink = fullPath.match(/([^#]+)(?:#(.+)?)?$/);
-                        const linkFilePath = parsedLink ? parsedLink[1] : '';
-                        const linkAnchor = parsedLink ? parsedLink[2] : '';
-                        const filePathFixed = linkFilePath.toLowerCase().replace(/\\/g, '/');
-                        if (!bLogged)
+                        const fullPath = path.join(path.parse(rawBook.currentHTMLFile).dir, linkHref).toLowerCase().replace(/\\/g, '/');
+                        const [chunkID, linkAnchor] = parseChunkIDAndAnchor(fullPath, rawBook.readingOrderMap);
+
+                        if (chunkID !== -1)
                         {
-                            console.log(`[link] Link path ${filePathFixed}`);
+                            attributesList['generated-link-chunk'] = `${chunkID}`;
+
+                            if (linkAnchor)
+                            {
+                                attributesList['generated-link-id'] = `${linkAnchor}`;
+                            }
+
+                            delete attributesList['href'];
                         }
 
-                        for (let i = 0; i < rawBook.readingOrder.length; i++)
-                        {
-                            const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace(/\\/g, '/');
-                            if (!bLogged)
-                            {
-                                console.log(`[link] compare link with ${bookItem}`);
-                            }
-                            if (bookItem === filePathFixed)
-                            {
-                                if (!bLogged)
-                                {
-                                    console.log(`[link] found equal file`);
-                                }
-                                attributesList['generated-link-chunk'] = `${i}`;
+                        // const parsedLink = fullPath.match(/([^#]+)(?:#(.+)?)?$/);
+                        // const linkFilePath = parsedLink ? parsedLink[1] : '';
+                        // const linkAnchor = parsedLink ? parsedLink[2] : '';
+                        // const filePathFixed = linkFilePath.toLowerCase().replace(/\\/g, '/');
+                        // if (!bLogged)
+                        // {
+                        //     console.log(`[link] Link path ${filePathFixed}`);
+                        // }
 
-                                if (linkAnchor)
-                                {
-                                    attributesList['generated-link-id'] = `${linkAnchor}`;
-                                }
+                        // for (let i = 0; i < rawBook.readingOrder.length; i++)
+                        // {
+                        //     const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace(/\\/g, '/');
+                        //     if (!bLogged)
+                        //     {
+                        //         console.log(`[link] compare link with ${bookItem}`);
+                        //     }
+                        //     if (bookItem === filePathFixed)
+                        //     {
+                        //         if (!bLogged)
+                        //         {
+                        //             console.log(`[link] found equal file`);
+                        //         }
+                        //         attributesList['generated-link-chunk'] = `${i}`;
 
-                                delete attributesList['href'];
+                        //         if (linkAnchor)
+                        //         {
+                        //             attributesList['generated-link-id'] = `${linkAnchor}`;
+                        //         }
 
-                                break;
-                            }
-                        }
+                        //         delete attributesList['href'];
+
+                        //         break;
+                        //     }
+                        // }
                     }
                     else if (linkHref.startsWith('#'))
                     {
@@ -304,4 +318,122 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
     }
 
     return null;
+}
+
+
+function parseChunkIDAndAnchor(filePath: string, readingOrderMap: Map<string, number>): [number, string]
+{
+    let chunkID = -1;
+    let anchor = '';
+
+    const parsedPath = filePath.match(/([^#]+)(?:#(.+)?)?$/);
+    const filePathElement = parsedPath ? parsedPath[1] || '' : '';
+    const fullFilePath = filePathElement.toLowerCase().replace(/\\/g, '/');
+
+    anchor = parsedPath ? parsedPath[2] || '' : '';
+
+    const chuknIDInMap = readingOrderMap.get(fullFilePath);
+    
+    if (chuknIDInMap !== undefined && isFinite(chuknIDInMap))
+    {
+        chunkID = chuknIDInMap;
+    }
+    
+
+    return [chunkID, anchor];
+}
+
+
+function parseTOCNavPoint(navPoint: ITOCNavPoint, tocPath: string, readingOrder: Map<string, number>): ITOC | null
+{
+    if (navPoint && navPoint["#name"] === 'navPoint' && navPoint["@_children"])
+    {
+        const tocItem: ITOC = {
+            name: '',
+            chunk: -1,
+            anchor: ''
+        };
+        for (let i = 0; i < navPoint["@_children"].length; i++)
+        {
+            const navPointChild = navPoint["@_children"][i];
+            if (navPointChild)
+            {
+                switch (navPointChild["#name"]) 
+                {
+                    case 'content':
+                        if (!navPointChild["@_attr"] || !navPointChild["@_attr"].src)
+                        {
+                            return null;
+                        }
+
+                        const tocItemPath = path.join(tocPath, navPointChild["@_attr"].src);
+
+                        const [chuknID, anchor] = parseChunkIDAndAnchor(tocItemPath, readingOrder);
+
+                        tocItem.chunk = chuknID;
+                        tocItem.anchor = anchor;
+
+
+                        break;
+                    case 'navLabel':
+                        const navLabel = navPointChild;
+                        
+                        if (!navLabel["@_children"] || !navLabel["@_children"].length)
+                        {
+                            return null;
+                        }
+
+                        const navLabelTextElement = navLabel["@_children"][0];
+                        if (navLabelTextElement && navLabelTextElement["#name"] === 'text' && navLabelTextElement["@_text"] !== undefined)
+                        {
+                            tocItem.name = navLabelTextElement["@_text"];   
+                        }
+
+                        break;
+                    case 'navPoint':
+                        const childPoint: ITOC | null = parseTOCNavPoint(navPointChild, tocPath, readingOrder);
+                        if (childPoint)
+                        {
+                            if (!tocItem.children)
+                            {
+                                tocItem.children = [];
+                            }
+
+                            tocItem.children.push(childPoint);
+                        }
+                        break;
+                }
+            }
+        }
+        
+        if (tocItem && tocItem.chunk !== -1)
+        {
+            return tocItem;
+        }
+    }
+
+    return null;
+}
+
+export function parseTOCNavPoints(navPoints: Array<ITOCNavPoint>, tocPath: string, readingOrder: Map<string, number>): Array<ITOC>
+{
+    const tableOfContents: Array<ITOC> = [];
+
+    tocPath = path.parse(tocPath).dir;
+
+    if (navPoints && navPoints.length)
+    {
+        for (let i = 0; i < navPoints.length; i++)
+        {
+            const navPoint = navPoints[i];
+
+            const tocItem: ITOC | null = parseTOCNavPoint(navPoint, tocPath, readingOrder);
+            if (tocItem)
+            {
+                tableOfContents.push(tocItem);
+            }
+        }
+    }
+
+    return tableOfContents;
 }

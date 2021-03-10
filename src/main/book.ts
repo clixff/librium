@@ -1,6 +1,6 @@
 import path from 'path';
 import fs, { promises as fsPromises } from 'fs';
-import { IBookChunk } from '../shared/schema';
+import { IBookChunk, ITOC } from '../shared/schema';
 import { ipcMain, app } from "electron";
 import { getConfig } from './config';
 import { ICategory, loadCategories } from './misc/category';
@@ -18,6 +18,7 @@ interface IBookBaseData
     percentRead: number;
     percentPages: number;
     styles: Array<string>;
+    tableOfContents: Array<ITOC>;
 }
 
 /**
@@ -84,6 +85,7 @@ export class Book
      * List of paths to CSS files
      */
     styles: Array<string> = [];
+    tableOfContents: Array<ITOC> = [];
     constructor(saveDirectory: string, bookId: string)
     {
         this.saveDirectory = saveDirectory;
@@ -109,7 +111,8 @@ export class Book
                 percentRead: this.percentRead,
                 percentPages: this.percentPages,
                 version: '0.1',
-                styles: this.styles
+                styles: this.styles,
+                tableOfContents: this.tableOfContents
             };
             const filePath = path.join(this.saveDirectory, 'book.json');
             await fsPromises.writeFile(filePath, JSON.stringify(bookMetadata, null, '\t'), { encoding: 'utf-8' });
@@ -136,7 +139,8 @@ export class Book
             id: this.id,
             percentRead: this.percentRead,
             percentPages: this.percentPages,
-            styles: this.styles
+            styles: this.styles,
+            tableOfContents: this.tableOfContents
         };
 
         return bookExportData;
@@ -152,6 +156,7 @@ export class Book
         this.percentRead = metadata.percentRead || 0;
         this.percentPages = metadata.percentPages || 0;
         this.styles = metadata.styles || [];
+        this.tableOfContents = metadata.tableOfContents || [];
     }
     updateLastTimeOpened(): void
     {

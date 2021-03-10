@@ -3,8 +3,8 @@ import fs, { promises as fsPromises } from "fs";
 import path from 'path';
 import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
-import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, MetadataItem } from "./misc/schema";
-import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseXML } from "./parser";
+import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, ITOCFileSchema, MetadataItem } from "./misc/schema";
+import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseTOCNavPoints, parseXML } from "./parser";
 import css from 'css';
 import { HTMLElement, NodeType, parse as parseHTML } from 'node-html-parser';
 
@@ -62,6 +62,7 @@ export class RawBook
      * Custom CSS 
      */
     customStyles = ``;
+    readingOrderMap: Map<string, number> = new Map();
     constructor(epubContent: Buffer, pathToSave: string, bookID: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -411,6 +412,20 @@ export class RawBook
                         if (manifestItem)
                         {
                             this.readingOrder.push(manifestItem.href);
+                            const fixedFilePath = path.join(this.epubContentPath, manifestItem.href).toLowerCase().replace(/\\/g, '/');
+                            this.readingOrderMap.set(fixedFilePath, this.readingOrder.length - 1);
+                        }
+                    }
+                }
+
+                if (spineElement["@_attr"] && spineElement["@_attr"].toc)
+                {
+                    if (this.bookRef && !this.bookRef.tableOfContents.length)
+                    {
+                        const tocItem = this.items.get(spineElement["@_attr"].toc);
+                        if (tocItem)
+                        {
+                            await this.parseTOC(tocItem.href);
                         }
                     }
                 }
@@ -700,6 +715,42 @@ export class RawBook
                 if (this.bookRef)
                 {
                     this.bookRef.styles.push(generatedCSSFileName);
+                }
+            }
+        }
+        catch (error)
+        {
+            console.error(error);
+        }
+    }
+    async parseTOC(tocPath: string): Promise<void>
+    {
+        try
+        {
+            if (!this.bookRef)
+            {
+                return;
+            }
+
+            tocPath = path.join(this.epubContentPath, tocPath);
+            const tocContent = await this.readFile(tocPath);
+            if (tocContent)
+            {
+                const tocParsed = (await parseXML(tocContent, true)) as ITOCFileSchema;
+                if (tocParsed.ncx && tocParsed.ncx["@_children"])
+                {
+                    const ncxChildren = tocParsed.ncx["@_children"];
+                    for (let i = 0; i < ncxChildren.length; i++)
+                    {
+                        const ncxChild = ncxChildren[i];
+                        if (ncxChild["#name"] !== 'navMap' || !ncxChild["@_children"])
+                        {
+                            continue;
+                        }
+
+                        this.bookRef.tableOfContents = parseTOCNavPoints(ncxChild["@_children"], tocPath, this.readingOrderMap);
+
+                    }
                 }
             }
         }

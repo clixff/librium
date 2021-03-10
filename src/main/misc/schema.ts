@@ -152,3 +152,41 @@ export interface IManifestItem
     "href": string;
     "properties"?: string;
 }
+
+interface ITOCNavLabel
+{
+    "#name": "navLabel";
+    "@_children"?: [
+        {
+            "#name": 'text';
+            "@_text": string;
+        }
+    ];
+}
+
+interface ITOCContent
+{
+    "#name": 'content';
+    "@_attr"?: {
+        "src"?: string; 
+    };
+}
+
+export interface ITOCNavPoint
+{
+    "#name": 'navPoint';
+    "@_children"?: Array<ITOCNavPoint | ITOCNavLabel | ITOCContent>;
+}
+
+/**
+ * toc.ncx file schema (table of contents)
+ */
+export interface ITOCFileSchema
+{
+    ncx?: {
+        "@_children"?: Array<{
+            "#name": 'navMap',
+            "@_children"?: Array<ITOCNavPoint>
+        }>
+    }
+}
