@@ -202,6 +202,11 @@ class App extends React.Component<unknown, IAppState>
                             tabStateBookData.bookHeight = 0;
                             tabStateBookData.bookPageHeight = 0;
                             tabStateBookData.bookContainerMarginBottom = 0;
+                            tabStateBookData.backToPagePercentOfBook = -1;
+                            tabStateBookData.backToPagePercentOfPages = 0;
+                            tabStateBookData.currentNavigationItem = '';
+                            tabStateBookData.tableOfContents = [];
+                            tabStateBookData.tableOfContentsItems = [];
                         }
                     }
         

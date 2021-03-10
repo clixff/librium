@@ -1,6 +1,14 @@
 import { ipcRenderer } from "electron";
-import { IBookChunk } from "../../shared/schema";
+import { IBookChunk, ITOC } from "../../shared/schema";
 import { deleteBookFromCategory, ICategory } from "./category";
+
+export interface ITOCRenderer 
+{
+    name: string;
+    bookPercent: number;
+    pagesPercent: number;
+    children?: Array<ITOCRenderer>;
+}
 
 export interface IBookBase
 {
@@ -15,6 +23,8 @@ export interface IBookBase
     percentRead: number;
     percentPages: number;
     styles: Array<string>;
+    tableOfContents: Array<ITOC>;
+
 }
 
 export interface IBook extends IBookBase

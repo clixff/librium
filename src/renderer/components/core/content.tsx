@@ -156,9 +156,16 @@ function Toolbar(props: ToolbarProps): JSX.Element
                 bookData ?
                     (
                         <React.Fragment>
-                            <div id={ContentStyles['toolbar-book-chapter']}>
-                                Chapter 1
-                            </div>
+                            {
+                                bookData.currentNavigationItem ?
+                                (
+                                    <div id={ContentStyles['toolbar-book-chapter']}>
+                                        {
+                                            bookData.currentNavigationItem
+                                        }
+                                    </div>
+                                ) : null
+                            }
                             <div id={ContentStyles['toolbar-book-page']}>
                                 Page <b> { bookData.currentPage } </b> of { bookData.totalNumberOfPages }
                             </div>

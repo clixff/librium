@@ -1,6 +1,6 @@
 import { AppSingleton } from '../app';
 import { EMenuElementType, EViewType } from '../components/pages/newTab';
-import { IBook } from './book';
+import { IBook, ITOCRenderer } from './book';
 import { getDefaultBooksViewType } from './misc';
 
 export enum ETabType
@@ -33,6 +33,12 @@ export interface IBookPageData
     totalNumberOfPages: number;
     backToPagePercentOfPages: number;
     backToPagePercentOfBook: number;
+    tableOfContents: Array<ITOCRenderer>;
+    tableOfContentsItems: Array<[number, string]>;
+    /**
+     * Table of contents item
+     */
+    currentNavigationItem: string;
     bookWrapper: HTMLElement | null;
 
 }
@@ -82,7 +88,10 @@ export class Tab
                         bookWrapper: null,
                         backToPagePercentOfPages: 0,
                         backToPagePercentOfBook: -1,
-                        percentReadToSave: 0
+                        percentReadToSave: 0,
+                        currentNavigationItem: '',
+                        tableOfContents: [],
+                        tableOfContentsItems: []
                     }
                 };
                 break;

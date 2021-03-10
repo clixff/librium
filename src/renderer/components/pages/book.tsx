@@ -1,8 +1,8 @@
 import { ipcRenderer } from 'electron';
 import React, { Component, useEffect, useState } from 'react';
 import { IPreferences } from '../../../shared/preferences';
-import { IBookChunk, IBookChunkNode } from '../../../shared/schema';
-import { IBook } from '../../misc/book';
+import { IBookChunk, IBookChunkNode, ITOC } from '../../../shared/schema';
+import { IBook, ITOCRenderer } from '../../misc/book';
 import { LoadingSVG } from '../../misc/icons';
 import { getActiveTab, IBookPageData, IBookTabState } from '../../misc/tabs';
 import bookStyles from '../../styles/modules/book.module.css';
@@ -353,6 +353,8 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 {
     const [bTabLoaded, setTabLoaded] = useState(false);
 
+    const book: IBook | null = props.book;
+
     function getBookPageData(): IBookPageData
     {
         return props.tabState.data;
@@ -408,6 +410,131 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         recalculatePages();
     }
 
+    function getCurrentNavigationItem(): string
+    {
+        let navigationItem = '';
+
+        const bookPageData = getBookPageData();
+
+        if (bookPageData && bookPageData.tableOfContentsItems && bookPageData.tableOfContentsItems.length)
+        {
+            const navigationItems = bookPageData.tableOfContentsItems;
+
+
+            /**
+             * TODO: Binary search
+             */
+            for (let i = 0; i < navigationItems.length; i++)
+            {
+                const tempNavItem = navigationItems[i];
+                if (tempNavItem[0] <= bookPageData.percentReadToSave)
+                {
+                    navigationItem = tempNavItem[1];
+                }
+                else
+                {
+                    return navigationItem;
+                }
+            }
+        }
+
+        return navigationItem;
+    }
+
+    function calculateTableOfContents(): void
+    {
+        const bookPageData = getBookPageData();
+
+        
+        bookPageData.tableOfContents = [];
+        bookPageData.tableOfContentsItems = [];
+        bookPageData.currentNavigationItem = '';
+
+        if (!bookPageData.bookWrapper)
+        {
+            return;
+        }
+
+        const bookContainer = document.getElementById(bookStyles.container);
+
+
+        function parseTocItem(tocItem: ITOC, parentArray: Array<ITOCRenderer>): void
+        {
+            if (tocItem)
+            {
+                const tocRenderer: ITOCRenderer = {
+                    name: tocItem.name,
+                    bookPercent: -1,
+                    pagesPercent: -1,
+                };
+
+                const bookWrapper = bookPageData.bookWrapper;
+                
+                if (bookWrapper && bookContainer)
+                {
+                    const bookChunkElement = bookContainer.children[tocItem.chunk] as HTMLElement;
+                    if (bookChunkElement)
+                    {
+                        let anchorElement: HTMLElement | null = null;
+
+                        if (tocItem.anchor)
+                        {
+                            anchorElement = bookChunkElement.querySelector(`#${tocItem.anchor}`);
+                        }
+
+                        const tocElement = tocItem.anchor ? anchorElement : bookChunkElement;
+
+                        if (tocElement)
+                        {
+                            tocRenderer.bookPercent = tocElement.offsetTop / bookPageData.bookHeight;
+                            const tocElementPage = Math.ceil(tocElement.offsetTop / bookPageData.bookPageHeight) + 1;
+                            tocRenderer.pagesPercent = (tocElementPage / bookPageData.totalNumberOfPages);
+                        }
+                    }
+
+                    parentArray.push(tocRenderer);
+                    bookPageData.tableOfContentsItems.push([tocRenderer.bookPercent, tocRenderer.name]);
+
+                    if (tocItem.children)
+                    {
+                        tocRenderer.children = [];
+
+                        for (let i = 0; i < tocItem.children.length; i++)
+                        {
+                            parseTocItem(tocItem.children[i], tocRenderer.children);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (book && book.tableOfContents && book.tableOfContents.length)
+        {
+            const bookTOC = book.tableOfContents;
+            for (let i = 0; i < bookTOC.length; i++)
+            {
+                const tocItem = bookTOC[i];
+                parseTocItem(tocItem, bookPageData.tableOfContents);
+            }
+
+            bookPageData.tableOfContentsItems.sort((a, b) =>
+            {
+                if (a[0] < b[0])
+                {
+                    return -1;
+                }
+                else if (a[0] > b[0])
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+            });
+        }
+    }
+
     useEffect(() => 
     {
         console.log(`book effect. bTabLoaded: ${bTabLoaded}`);
@@ -424,6 +551,14 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         else
         {
             recalculatePages();
+
+            const bookPageData = getBookPageData();
+
+            if (!bookPageData.tableOfContents.length)
+            {
+                calculateTableOfContents();
+            }
+
 
             if (bookPageData.bookWrapper && bookPageData.percentReadToSave)
             {                
@@ -452,7 +587,6 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
     }, []);
 
     console.log(`Render book`);
-    const book: IBook | null = props.book;
 
     if (!book)
     {
@@ -488,13 +622,18 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
                     console.log(`Page ${bookPageData.currentPage} of ${bookPageData.totalNumberOfPages} (${bookWrapper.scrollTop} / ${bookPageData.bookHeight})`);
 
+                    const oldNavigationItem = bookPageData.currentNavigationItem;
+
+                    bookPageData.currentNavigationItem = getCurrentNavigationItem();
+
                     /**
                      * Update book page number in the toolbar
                      */
-                    if (oldPage !== bookPageData.currentPage)
+                    if (oldPage !== bookPageData.currentPage || oldNavigationItem !== bookPageData.currentNavigationItem)
                     {
                         props.callbacks.updateBookTabState({
-                            currentPage: bookPageData.currentPage
+                            currentPage: bookPageData.currentPage,
+                            currentNavigationItem: bookPageData.currentNavigationItem
                         });
                     }
                     
