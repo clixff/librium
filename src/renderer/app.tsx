@@ -207,6 +207,7 @@ class App extends React.Component<unknown, IAppState>
                             tabStateBookData.currentNavigationItem = '';
                             tabStateBookData.tableOfContents = [];
                             tabStateBookData.tableOfContentsItems = [];
+                            tabStateBookData.scrollToPercent = null;
                         }
                     }
         
@@ -915,7 +916,9 @@ class App extends React.Component<unknown, IAppState>
             bookPageCallbacks: {
                 loadBookChunks: this.loadBookChunks,
                 updateBookTabState: this.updateBookTabState,
-                updateBookReadPercent: this.updateBookReadPercent
+                updateBookReadPercent: this.updateBookReadPercent,
+                openModal: this.openModal,
+                closeModal: this.closeModal
             }
         };
 

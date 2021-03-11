@@ -6,7 +6,7 @@ import { IBook } from '../../misc/book';
 import { NewTabContent } from '../pages/newTab';
 import { ICategory } from '../../misc/category';
 import { IBookCallbacks } from './book';
-import { IModalData, ModalWrapper } from '../misc/modal';
+import { IModalData, ModalWrapper, TableOfContentsMenu } from '../misc/modal';
 import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookLoading, BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
@@ -150,6 +150,16 @@ function Toolbar(props: ToolbarProps): JSX.Element
         }
     }
 
+    function handleTableOfContentsClick(): void
+    {
+        if (bookData)
+        {
+            const tocMenu = <TableOfContentsMenu totalNumberOfPages={bookData.totalNumberOfPages} tocItems={bookData.tableOfContents} scrollToPercent={bookData.scrollToPercent} closeModal={props.callbacks.bookPageCallbacks.closeModal} currentScrollPercent={bookData.percentReadToSave} />;
+
+            props.callbacks.bookPageCallbacks.openModal(tocMenu);
+        }
+    }
+
     return (<div id={ContentStyles['toolbar-wrapper']}>
         <div id={ContentStyles['toolbar-left']}>
             {
@@ -159,7 +169,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
                             {
                                 bookData.currentNavigationItem ?
                                 (
-                                    <div id={ContentStyles['toolbar-book-chapter']}>
+                                    <div id={ContentStyles['toolbar-book-chapter']} onClick={handleTableOfContentsClick}>
                                         {
                                             bookData.currentNavigationItem
                                         }
@@ -191,7 +201,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
                     <React.Fragment>
                         <ToolbarButton icon={TextSVG} title={`Book settings`} />
                         <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} />
-                        <ToolbarButton icon={ListSVG} title={`Table of Contents`} />
+                        <ToolbarButton icon={ListSVG} title={`Table of Contents`} onClick={handleTableOfContentsClick} />
                         <ToolbarButton icon={SearchSVG} title={`Search`} />
                         <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} />
                     </React.Fragment>

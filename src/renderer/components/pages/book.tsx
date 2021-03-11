@@ -326,6 +326,8 @@ export interface IBookPageCallbacks
     loadBookChunks: (book: IBook) => void;
     updateBookTabState: (data: Partial<IBookPageData>) => void;
     updateBookReadPercent: (book: IBook, percent: number, percentPages: number) => void;
+    openModal: (modal: JSX.Element | null) => void;
+    closeModal: () => void;
 }
 
 export interface IBookPageProps
@@ -377,6 +379,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     function recalculatePages(): void
     {
+        const bookPageData = getBookPageData();
         getBookWrapperElement();
         if (bookPageData.bookWrapper)
         {
@@ -395,11 +398,19 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
             bookPageData.totalNumberOfPages = Math.ceil(newBookHeight / newBookPageHeight);
             console.log(`Total number of pages is ${bookPageData.totalNumberOfPages}`);
 
+            bookPageData.tableOfContents = [];
+            bookPageData.tableOfContentsItems = [];
+
+            calculateTableOfContents();
+
+            const navigationItem = getCurrentNavigationItem();
+
             props.callbacks.updateBookTabState({
                 bookHeight: newBookHeight,
                 bookPageHeight: newBookPageHeight,
                 totalNumberOfPages: bookPageData.totalNumberOfPages,
-                currentPage: Math.floor(bookPageData.bookWrapper.scrollTop / newBookPageHeight) + 1
+                currentPage: Math.floor(bookPageData.bookWrapper.scrollTop / newBookPageHeight) + 1,
+                currentNavigationItem: navigationItem
             });
         }
     }
@@ -420,10 +431,6 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         {
             const navigationItems = bookPageData.tableOfContentsItems;
 
-
-            /**
-             * TODO: Binary search
-             */
             for (let i = 0; i < navigationItems.length; i++)
             {
                 const tempNavItem = navigationItems[i];
@@ -535,6 +542,22 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         }
     }
 
+    function scrollToPercent(percent: number): void
+    {
+        const bookPageData = getBookPageData();
+        if (bookPageData.bookWrapper)
+        {
+            props.callbacks.updateBookTabState({
+                backToPagePercentOfBook: bookPageData.percentReadToSave,
+                backToPagePercentOfPages: (bookPageData.currentPage / bookPageData.totalNumberOfPages) 
+            });
+
+            const scrollTo = Math.floor(bookPageData.bookHeight * percent);
+
+            bookPageData.bookWrapper.scrollTo({ left: 0, top: scrollTo, behavior: 'auto' });
+        }
+    }
+
     useEffect(() => 
     {
         console.log(`book effect. bTabLoaded: ${bTabLoaded}`);
@@ -559,11 +582,23 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
                 calculateTableOfContents();
             }
 
-
             if (bookPageData.bookWrapper && bookPageData.percentReadToSave)
             {                
                 const scrollTo = Math.floor(bookPageData.bookHeight * bookPageData.percentReadToSave);
                 bookPageData.bookWrapper.scrollTo({ left: 0, top: scrollTo, behavior: 'auto' });
+            }
+            else
+            {
+                const oldNavigationItem = bookPageData.currentNavigationItem;
+
+                bookPageData.currentNavigationItem = getCurrentNavigationItem();
+    
+                if (oldNavigationItem !== bookPageData.currentNavigationItem)
+                {
+                    props.callbacks.updateBookTabState({
+                        currentNavigationItem: bookPageData.currentNavigationItem
+                    });
+                }
             }
         }
     }, [bTabLoaded]);
@@ -574,6 +609,10 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
         window.addEventListener('resize', handleWindowResize);
         bookCallbacks = props.callbacks;
 
+        const bookPageData = getBookPageData();
+
+        bookPageData.scrollToPercent = scrollToPercent;
+
         return (() =>
         {
             console.log(`remove resize event`);
@@ -581,6 +620,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
             const bookPageData = getBookPageData();
             bookPageData.bookWrapper = null;
+            bookPageData.scrollToPercent = null;
             bookCallbacks = null;
             console.log(`bookWrapper on unmount is `, bookPageData.bookWrapper);
         });

@@ -40,6 +40,7 @@ export interface IBookPageData
      */
     currentNavigationItem: string;
     bookWrapper: HTMLElement | null;
+    scrollToPercent: ((percent: number) => void) | null;
 
 }
 
@@ -91,7 +92,8 @@ export class Tab
                         percentReadToSave: 0,
                         currentNavigationItem: '',
                         tableOfContents: [],
-                        tableOfContentsItems: []
+                        tableOfContentsItems: [],
+                        scrollToPercent: null
                     }
                 };
                 break;

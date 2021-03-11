@@ -21,6 +21,7 @@ function createWindow(): void
         show: false,
         frame: false,
         minWidth: 700,
+        minHeight: 500,
         webPreferences: {
             enableRemoteModule: false,
             nodeIntegration: true,

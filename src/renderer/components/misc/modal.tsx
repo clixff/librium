@@ -1,8 +1,128 @@
 import React, { useEffect, useState } from 'react';
+import { ITOCRenderer } from '../../misc/book';
 import { ICategory } from '../../misc/category';
 import { TrashcanSVG, MarkSVG } from '../../misc/icons';
 import modalStyles from '../../styles/modules/common/modal.module.css';
 import { Button } from '../common/button';
+
+interface ITocItemProps
+{
+    name: string;
+    pageNumber: number;
+    percent: number;
+    row: number;
+    isActive: boolean;
+    scrollToPercent: ((percent: number) => void);
+}
+
+function TableOfContentsItem(props: ITocItemProps): JSX.Element
+{
+    function handleClick(): void
+    {
+        props.scrollToPercent(props.percent);
+    }
+
+    const classNames = [modalStyles['toc-item']];
+
+    classNames.push(modalStyles[`toc-item-row-${props.row < 5 ? props.row : 5}`]);
+
+    if (props.isActive)
+    {
+        classNames.push(modalStyles['toc-item-active']);
+    }
+
+    return (<div className={classNames.join(' ')} onClick={handleClick}>
+        <div className={modalStyles['toc-item-name']}>
+            {
+                props.name
+            }
+        </div>
+        <div className={modalStyles['toc-item-page']}>
+            {
+                props.pageNumber !== -1 ? props.pageNumber : ''
+            }
+        </div>
+    </div>);
+}
+
+interface ITocMenuProps
+{
+    tocItems: Array<ITOCRenderer>;
+    scrollToPercent: ((percent: number) => void) | null;
+    currentScrollPercent: number;
+    totalNumberOfPages: number;
+    closeModal: () => void;
+}
+
+export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
+{
+
+    function scrollToPercent(percent: number): void
+    {
+        if (percent !== -1)
+        {
+            if (typeof props.closeModal === 'function')
+            {
+                props.closeModal();
+            }
+
+            if (typeof props.scrollToPercent === 'function')
+            {
+                props.scrollToPercent(percent);
+            }
+        }
+    }
+
+    const tableOfContentsItems: Array<JSX.Element> = [];
+
+    function tocItemsToJSX(tocItems: Array<ITOCRenderer>, row: number): void
+    {
+        for (let i = 0; i < tocItems.length; i++)
+        {
+            const tocItem = tocItems[i];
+
+            const nextTocItem = tocItem.children && tocItem.children.length ?  tocItem.children[0] : tocItems[i + 1];
+
+            const bIsActiveItem = false;
+
+            if (tocItem.bookPercent <= props.currentScrollPercent)
+            {
+                if (!nextTocItem || (nextTocItem && nextTocItem.bookPercent > props.currentScrollPercent))
+                {
+                    // bIsActiveItem = true;
+                }
+            }
+
+            const tocJSX = <TableOfContentsItem name={tocItem.name} row={row} pageNumber={ tocItem.pagesPercent !== -1 ? Math.floor(tocItem.pagesPercent * props.totalNumberOfPages) : -1 } percent={tocItem.bookPercent} scrollToPercent={scrollToPercent} isActive={bIsActiveItem} key={tableOfContentsItems.length} />;
+            tableOfContentsItems.push(tocJSX);
+            if (tocItem.children && tocItem.children.length)
+            {
+                tocItemsToJSX(tocItem.children, row + 1);
+            }
+
+        }
+    }
+
+    tocItemsToJSX(props.tocItems, 1);
+
+    return (<div id={modalStyles['toc']}>
+        <div id={modalStyles['toc-content']}>
+            <div id={modalStyles['toc-title']}>
+                {
+                    `Table of contents`
+                }
+            </div>
+            <div id={modalStyles['toc-container']}>
+                {
+                    tableOfContentsItems
+                }
+            </div>
+            <div id={modalStyles['toc-bottom']}>
+                <Button moduleClass="grey" text="Close" onClick={props.closeModal} />
+            </div>
+        </div>
+    </div>);
+}
 
 export interface IManageCategoriesItem
 {
