@@ -10,7 +10,7 @@ interface ITocItemProps
     name: string;
     pageNumber: number;
     percent: number;
-    row: number;
+    depth: number;
     isActive: boolean;
     scrollToPercent: ((percent: number) => void);
 }
@@ -24,7 +24,7 @@ function TableOfContentsItem(props: ITocItemProps): JSX.Element
 
     const classNames = [modalStyles['toc-item']];
 
-    classNames.push(modalStyles[`toc-item-row-${props.row < 5 ? props.row : 5}`]);
+    classNames.push(modalStyles[`toc-item-depth-${props.depth < 5 ? props.depth : 5}`]);
 
     if (props.isActive)
     {
@@ -73,37 +73,61 @@ export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
         }
     }
 
-    const tableOfContentsItems: Array<JSX.Element> = [];
+    const tocItemsList: Array<[ITOCRenderer, number]> = [];
+    const tocJsxList: Array<JSX.Element> = [];
 
-    function tocItemsToJSX(tocItems: Array<ITOCRenderer>, row: number): void
+    function flatTocArray(tocItems: Array<ITOCRenderer>, depth: number): void
     {
         for (let i = 0; i < tocItems.length; i++)
         {
             const tocItem = tocItems[i];
 
-            const nextTocItem = tocItem.children && tocItem.children.length ?  tocItem.children[0] : tocItems[i + 1];
+            tocItemsList.push([tocItem, depth]);
 
-            const bIsActiveItem = false;
-
-            if (tocItem.bookPercent <= props.currentScrollPercent)
-            {
-                if (!nextTocItem || (nextTocItem && nextTocItem.bookPercent > props.currentScrollPercent))
-                {
-                    // bIsActiveItem = true;
-                }
-            }
-
-            const tocJSX = <TableOfContentsItem name={tocItem.name} row={row} pageNumber={ tocItem.pagesPercent !== -1 ? Math.floor(tocItem.pagesPercent * props.totalNumberOfPages) : -1 } percent={tocItem.bookPercent} scrollToPercent={scrollToPercent} isActive={bIsActiveItem} key={tableOfContentsItems.length} />;
-            tableOfContentsItems.push(tocJSX);
             if (tocItem.children && tocItem.children.length)
             {
-                tocItemsToJSX(tocItem.children, row + 1);
+                flatTocArray(tocItem.children, depth + 1);
             }
 
         }
     }
 
-    tocItemsToJSX(props.tocItems, 1);
+    flatTocArray(props.tocItems, 1);
+
+    for (let i = 0; i < tocItemsList.length; i++)
+    {
+        const tocItem = tocItemsList[i][0];
+
+        let bIsActiveItem = false;
+
+        const nextTocItem = tocItemsList[i + 1] ? tocItemsList[i + 1][0] : null;
+
+        if (tocItem.bookPercent <= props.currentScrollPercent)
+        {
+            if (!nextTocItem || (nextTocItem && nextTocItem.bookPercent > props.currentScrollPercent))
+            {
+                bIsActiveItem = true;
+            }
+        }
+
+        const tocJSX = <TableOfContentsItem name={tocItem.name} depth={tocItemsList[i][1]} pageNumber={ tocItem.pagesPercent !== -1 ? Math.floor(tocItem.pagesPercent * props.totalNumberOfPages) : -1 } percent={tocItem.bookPercent} scrollToPercent={scrollToPercent} isActive={bIsActiveItem} key={i} />;
+        tocJsxList.push(tocJSX);
+    }
+
+    useEffect(() => 
+    {
+        const containerElement = document.getElementById(modalStyles['toc-container']);
+        if (containerElement)
+        {
+            const activeElement = containerElement.querySelector(`.${modalStyles['toc-item-active']}`) as HTMLElement;
+            if (activeElement)
+            {
+                const scrollTo = activeElement.offsetTop - 146;
+
+                containerElement.scrollTo({ left: 0, top: scrollTo, behavior: 'auto'  });
+            }
+        }
+    });
 
     return (<div id={modalStyles['toc']}>
         <div id={modalStyles['toc-content']}>
@@ -114,7 +138,7 @@ export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
             </div>
             <div id={modalStyles['toc-container']}>
                 {
-                    tableOfContentsItems
+                    tocJsxList
                 }
             </div>
             <div id={modalStyles['toc-bottom']}>

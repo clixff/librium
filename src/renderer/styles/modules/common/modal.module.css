@@ -342,33 +342,33 @@
     max-width: var(--toc-item-name-width) !important;
 }
 
-.toc-item-row-1
+.toc-item-depth-1
 {
     font-weight: 600;
     --toc-item-name-width: calc(445px - 60px);
 }
 
-.toc-item-row-2
+.toc-item-depth-2
 {
     --toc-item-name-width: calc(445px - 100px);
 }
 
-.toc-item-row-3
+.toc-item-depth-3
 {
     --toc-item-name-width: calc(445px - 150px);
 }
 
-.toc-item-row-4
+.toc-item-depth-4
 {
     --toc-item-name-width: calc(445px - 200px);
 }
 
-.toc-item-row-5
+.toc-item-depth-5
 {
     --toc-item-name-width: calc(445px - 250px);
 }
 
-.toc-item:not(.toc-item-row-1)
+.toc-item:not(.toc-item-depth-1)
 {
     color: var(--subtext-color);
 }
