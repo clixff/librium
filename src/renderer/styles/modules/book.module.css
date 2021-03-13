@@ -20,6 +20,9 @@
     padding: 0 !important;
     height: auto !important;
     position: relative !important;
+    background: transparent !important;
+    min-height: inherit !important;
+    max-height: inherit !important;
 }
 
 #container, 

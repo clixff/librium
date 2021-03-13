@@ -110,7 +110,14 @@ export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
             }
         }
 
-        const tocJSX = <TableOfContentsItem name={tocItem.name} depth={tocItemsList[i][1]} pageNumber={ tocItem.pagesPercent !== -1 ? Math.floor(tocItem.pagesPercent * props.totalNumberOfPages) : -1 } percent={tocItem.bookPercent} scrollToPercent={scrollToPercent} isActive={bIsActiveItem} key={i} />;
+        let pageNumber = tocItem.pagesPercent !== -1 ? Math.floor(tocItem.pagesPercent * props.totalNumberOfPages) : -1;
+
+        if (pageNumber > props.totalNumberOfPages)
+        {
+            pageNumber = props.totalNumberOfPages;
+        }
+
+        const tocJSX = <TableOfContentsItem name={tocItem.name} depth={tocItemsList[i][1]} pageNumber={ pageNumber } percent={tocItem.bookPercent} scrollToPercent={scrollToPercent} isActive={bIsActiveItem} key={i} />;
         tocJsxList.push(tocJSX);
     }
 
@@ -122,7 +129,7 @@ export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
             const activeElement = containerElement.querySelector(`.${modalStyles['toc-item-active']}`) as HTMLElement;
             if (activeElement)
             {
-                const scrollTo = activeElement.offsetTop - 146;
+                const scrollTo = Math.max(0, activeElement.offsetTop - 155 - (39 * 2));
 
                 containerElement.scrollTo({ left: 0, top: scrollTo, behavior: 'auto'  });
             }

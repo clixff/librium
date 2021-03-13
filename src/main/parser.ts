@@ -1,6 +1,6 @@
 import {IMetadataSchema, ITOCNavPoint, IXMLNode, IXMLObject, MetadataItem } from "./misc/schema";
 import xml2js from 'xml2js';
-import { HTMLElement, TextNode, NodeType } from 'node-html-parser';
+import { HTMLElement, TextNode, NodeType, parse as parseHTML } from 'node-html-parser';
 import { IBookChunkNode, ITOC } from "../shared/schema";
 import { RawBook } from "./rawbook";
 import { Html5Entities } from 'html-entities';
@@ -213,41 +213,6 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
 
                             delete attributesList['href'];
                         }
-
-                        // const parsedLink = fullPath.match(/([^#]+)(?:#(.+)?)?$/);
-                        // const linkFilePath = parsedLink ? parsedLink[1] : '';
-                        // const linkAnchor = parsedLink ? parsedLink[2] : '';
-                        // const filePathFixed = linkFilePath.toLowerCase().replace(/\\/g, '/');
-                        // if (!bLogged)
-                        // {
-                        //     console.log(`[link] Link path ${filePathFixed}`);
-                        // }
-
-                        // for (let i = 0; i < rawBook.readingOrder.length; i++)
-                        // {
-                        //     const bookItem = path.join(rawBook.epubContentPath, rawBook.readingOrder[i]).toLowerCase().replace(/\\/g, '/');
-                        //     if (!bLogged)
-                        //     {
-                        //         console.log(`[link] compare link with ${bookItem}`);
-                        //     }
-                        //     if (bookItem === filePathFixed)
-                        //     {
-                        //         if (!bLogged)
-                        //         {
-                        //             console.log(`[link] found equal file`);
-                        //         }
-                        //         attributesList['generated-link-chunk'] = `${i}`;
-
-                        //         if (linkAnchor)
-                        //         {
-                        //             attributesList['generated-link-id'] = `${linkAnchor}`;
-                        //         }
-
-                        //         delete attributesList['href'];
-
-                        //         break;
-                        //     }
-                        // }
                     }
                     else if (linkHref.startsWith('#'))
                     {
@@ -292,9 +257,15 @@ export function htmlNodeToBookNode(htmlNode: HTMLElement, rawBook: RawBook): IBo
 
                         bookChunkNode.children.push(Html5Entities.decode(textNode.text));
                     }
-                    else if (childNode.nodeType ===  NodeType.ELEMENT_NODE)
+                    else if (childNode.nodeType === NodeType.ELEMENT_NODE)
                     {
                         const nodeElement = childNode as HTMLElement;
+
+                        if (nodeElement.rawTagName === 'script')
+                        {
+                            continue;
+                        }
+
                         const childBookNode = htmlNodeToBookNode(nodeElement, rawBook);
                         if (childBookNode)
                         {
@@ -432,6 +403,115 @@ export function parseTOCNavPoints(navPoints: Array<ITOCNavPoint>, tocPath: strin
             {
                 tableOfContents.push(tocItem);
             }
+        }
+    }
+
+    return tableOfContents;
+}
+
+function parseHtmlTocLiElement(liElement: HTMLElement, tocDirectory: string, arrayToAdd: Array<ITOC>, readingOrderMap: Map<string, number>): void
+{
+    if (!liElement)
+    {
+        return;
+    }
+
+    /**
+     * Is added to the array
+     */
+    let bIsNavPoint = false;
+    
+    const tocItem: ITOC = {
+        name: '',
+        chunk: -1,
+        anchor: '',
+    };
+
+    let olElement: HTMLElement | null = null;
+
+    for (let i = 0; i < liElement.childNodes.length; i++)
+    {
+        const childNode = liElement.childNodes[i];
+        if (childNode.nodeType === NodeType.ELEMENT_NODE)
+        {
+            const childNodeElement = childNode as HTMLElement;
+
+            if (childNodeElement.rawTagName === 'a')
+            {
+                tocItem.name = (childNodeElement.text || '').trim();
+                if (childNodeElement.attributes.href)
+                {
+                    const [chunkID, anchor] = parseChunkIDAndAnchor(path.join(tocDirectory, childNodeElement.attributes.href), readingOrderMap);
+
+                    tocItem.chunk = chunkID;
+                    tocItem.anchor = anchor;
+
+                    if (chunkID !== -1)
+                    {
+                        bIsNavPoint = true;
+                        arrayToAdd.push(tocItem);
+                    }
+                }
+            }
+            else if (childNodeElement.rawTagName === 'ol')
+            {
+                olElement = childNodeElement;
+            }
+        }
+    }
+
+    
+    if (olElement)
+    {
+        if (bIsNavPoint)
+        {
+            tocItem.children = [];
+            parseHtmlTocNavPoints(olElement, tocDirectory, tocItem.children, readingOrderMap);
+        }
+        else
+        {
+            parseHtmlTocNavPoints(olElement, tocDirectory, arrayToAdd, readingOrderMap);
+        }
+    }
+}
+
+function parseHtmlTocNavPoints(olElement: HTMLElement, tocDirectory: string, arrayToAdd: Array<ITOC>, readingOrderMap: Map<string, number>): void
+{
+    if (!olElement)
+    {
+        return;
+    }
+
+    for (let i = 0; i < olElement.childNodes.length; i++)
+    {
+        const childElement = olElement.childNodes[i];
+        if (childElement.nodeType === NodeType.ELEMENT_NODE)
+        {
+            const liElement = childElement as HTMLElement;
+            
+            parseHtmlTocLiElement(liElement, tocDirectory, arrayToAdd, readingOrderMap);
+        }
+    }
+}
+
+/**
+ * Parses EPUB 3.0 navigation HTML file (instead of old toc.ncx)
+ */
+export function parseHtmlTocFile(fileContent: string, tocPath: string, readingOrderMap: Map<string, number>): Array<ITOC>
+{
+    const tableOfContents: Array<ITOC> = [];
+
+    const rootNode = parseHTML(fileContent, { blockTextElements: {} });
+
+    const tocDirectory = path.parse(tocPath).dir;
+
+    if (rootNode)
+    {
+        const navWrapper = rootNode.querySelector('nav[type="toc"] > ol');
+
+        if (navWrapper)
+        {
+            parseHtmlTocNavPoints(navWrapper, tocDirectory, tableOfContents, readingOrderMap);
         }
     }
 

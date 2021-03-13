@@ -4,7 +4,7 @@ import path from 'path';
 import { IBookChunk, IBookChunkNode } from "../shared/schema";
 import { Book } from "./book";
 import { IContainerXMLSchema, IManifestItem, IMetadataSchema, IOPFSchema, IReferenceSchema, ISpineSchema, ITOCFileSchema, MetadataItem } from "./misc/schema";
-import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseTOCNavPoints, parseXML } from "./parser";
+import { bookStyles, getAllMetadataItemStrings, getFirstMetadataItemString, htmlNodeToBookNode, parseHtmlTocFile, parseTOCNavPoints, parseXML } from "./parser";
 import css from 'css';
 import { HTMLElement, NodeType, parse as parseHTML } from 'node-html-parser';
 
@@ -63,6 +63,9 @@ export class RawBook
      */
     customStyles = ``;
     readingOrderMap: Map<string, number> = new Map();
+
+    navigationItemID = '';
+
     constructor(epubContent: Buffer, pathToSave: string, bookID: string)
     {
         this.zipArchive = new AdmZip(epubContent);
@@ -195,11 +198,6 @@ export class RawBook
             // console.log(`Reading order: \n`, this.readingOrder);
 
             await this.parsePages();
-
-
-            /**
-             * TODO: Parse toc.ncx
-             */
             
         }
         catch (error)
@@ -361,11 +359,20 @@ export class RawBook
                     });
                 }
 
-                if (manifestItem.properties === 'cover-image')
+                if (manifestItem.properties)
                 {
-                    if (this.bookRef)
+                    const propsList = manifestItem.properties.split(' ');
+
+                    if (propsList.includes('cover-image'))
                     {
-                        this.updateCover(manifestItem.href);
+                        if (this.bookRef)
+                        {
+                            this.updateCover(manifestItem.href);
+                        }
+                    }
+                    else if (propsList.includes('nav'))
+                    {
+                        this.navigationItemID = itemAttributes.id;
                     }
                 }
 
@@ -414,6 +421,23 @@ export class RawBook
                             this.readingOrder.push(manifestItem.href);
                             const fixedFilePath = path.join(this.epubContentPath, manifestItem.href).toLowerCase().replace(/\\/g, '/');
                             this.readingOrderMap.set(fixedFilePath, this.readingOrder.length - 1);
+                        }
+                    }
+                }
+
+                if (this.navigationItemID)
+                {
+                    if (this.bookRef && !this.bookRef.tableOfContents.length)
+                    {
+                        const navigationItem = this.items.get(this.navigationItemID);
+                        if (navigationItem)
+                        {
+                            const itemPathInArchive = path.join(this.epubContentPath, navigationItem.href).replace(/\\/g, '/');
+                            const navFile = await this.readFile(itemPathInArchive);
+                            if (navFile)
+                            {
+                                this.bookRef.tableOfContents = parseHtmlTocFile(navFile, itemPathInArchive, this.readingOrderMap);
+                            }
                         }
                     }
                 }

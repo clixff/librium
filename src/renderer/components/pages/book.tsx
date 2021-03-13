@@ -230,6 +230,12 @@ function getBookChunkNode(BookChunkNode: IBookChunkNode, childIndex: number): JS
             delete props['generated-link-id'];
         }
 
+        if (tagName === 'video' || tagName === 'audio')
+        {
+            delete props['autoplay'];
+            props.controls = true;
+        }
+
 
         if (BookChunkNode.children)
         {
@@ -467,52 +473,60 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
         function parseTocItem(tocItem: ITOC, parentArray: Array<ITOCRenderer>): void
         {
-            if (tocItem)
+            try
             {
-                const tocRenderer: ITOCRenderer = {
-                    name: tocItem.name,
-                    bookPercent: -1,
-                    pagesPercent: -1,
-                };
-
-                const bookWrapper = bookPageData.bookWrapper;
-                
-                if (bookWrapper && bookContainer)
+                if (tocItem)
                 {
-                    const bookChunkElement = bookContainer.children[tocItem.chunk] as HTMLElement;
-                    if (bookChunkElement)
+                    const tocRenderer: ITOCRenderer = {
+                        name: tocItem.name,
+                        bookPercent: -1,
+                        pagesPercent: -1,
+                    };
+    
+                    const bookWrapper = bookPageData.bookWrapper;
+                    
+                    if (bookWrapper && bookContainer)
                     {
-                        let anchorElement: HTMLElement | null = null;
-
-                        if (tocItem.anchor)
+                        const bookChunkElement = bookContainer.children[tocItem.chunk] as HTMLElement;
+                        if (bookChunkElement)
                         {
-                            anchorElement = bookChunkElement.querySelector(`#${tocItem.anchor}`);
+                            let anchorElement: HTMLElement | null = null;
+    
+                            if (tocItem.anchor)
+                            {
+                                anchorElement = bookChunkElement.querySelector(`#${tocItem.anchor}`);
+                            }
+    
+                            const tocElement = tocItem.anchor ? anchorElement : bookChunkElement;
+    
+                            if (tocElement)
+                            {
+                                tocRenderer.bookPercent = tocElement.offsetTop / bookPageData.bookHeight;
+                                const tocElementPage = Math.ceil(tocElement.offsetTop / bookPageData.bookPageHeight) + 1;
+                                tocRenderer.pagesPercent = (tocElementPage / bookPageData.totalNumberOfPages);
+                            }
                         }
-
-                        const tocElement = tocItem.anchor ? anchorElement : bookChunkElement;
-
-                        if (tocElement)
+    
+                        parentArray.push(tocRenderer);
+                        bookPageData.tableOfContentsItems.push([tocRenderer.bookPercent, tocRenderer.name]);
+    
+                        if (tocItem.children)
                         {
-                            tocRenderer.bookPercent = tocElement.offsetTop / bookPageData.bookHeight;
-                            const tocElementPage = Math.ceil(tocElement.offsetTop / bookPageData.bookPageHeight) + 1;
-                            tocRenderer.pagesPercent = (tocElementPage / bookPageData.totalNumberOfPages);
-                        }
-                    }
-
-                    parentArray.push(tocRenderer);
-                    bookPageData.tableOfContentsItems.push([tocRenderer.bookPercent, tocRenderer.name]);
-
-                    if (tocItem.children)
-                    {
-                        tocRenderer.children = [];
-
-                        for (let i = 0; i < tocItem.children.length; i++)
-                        {
-                            parseTocItem(tocItem.children[i], tocRenderer.children);
+                            tocRenderer.children = [];
+    
+                            for (let i = 0; i < tocItem.children.length; i++)
+                            {
+                                parseTocItem(tocItem.children[i], tocRenderer.children);
+                            }
                         }
                     }
                 }
             }
+            catch (error)
+            {
+                console.error(error);
+            }
+
         }
 
         if (book && book.tableOfContents && book.tableOfContents.length)
