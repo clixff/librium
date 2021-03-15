@@ -63,3 +63,48 @@ export function SaveTabs(): void
     }
 }
 
+export function querySelectorWrapper(element: HTMLElement, selector: string): HTMLElement | null
+{
+    try
+    {
+        return element.querySelector(selector);
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+
+    return null;
+}
+
+export function findElementByID(parentElement: HTMLElement, elementID: string): HTMLElement | null
+{
+    try
+    {
+        if (parentElement && parentElement.children)
+        {
+            for (let i = 0; i < parentElement.children.length; i++)
+            {
+                const childElement = parentElement.children[i] as HTMLElement;
+
+                if (childElement.id === elementID)
+                {
+                    return childElement;
+                }
+
+                const foundInChild = findElementByID(childElement, elementID);
+
+                if (foundInChild)
+                {
+                    return foundInChild;
+                }
+            }
+        }
+    }
+    catch (error)
+    {
+        console.error(error);
+    }
+
+    return null;
+}

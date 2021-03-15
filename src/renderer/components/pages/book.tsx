@@ -4,6 +4,7 @@ import { IPreferences } from '../../../shared/preferences';
 import { IBookChunk, IBookChunkNode, ITOC } from '../../../shared/schema';
 import { IBook, ITOCRenderer } from '../../misc/book';
 import { LoadingSVG } from '../../misc/icons';
+import { findElementByID, querySelectorWrapper } from '../../misc/misc';
 import { getActiveTab, IBookPageData, IBookTabState } from '../../misc/tabs';
 import bookStyles from '../../styles/modules/book.module.css';
 
@@ -142,7 +143,12 @@ function setLocalLinkClick(props: Record<string, unknown>): void
 
         if (linkAnchor)
         {
-            linkAnchorElement = (isFinite(chunkID) && chunkElement ? chunkElement : bookContainer ).querySelector(`#${linkAnchor}`);
+            const parentElementForSearch = (isFinite(chunkID) && chunkElement) ? chunkElement : bookContainer;
+            linkAnchorElement = querySelectorWrapper((isFinite(chunkID) && chunkElement ? chunkElement : bookContainer), linkAnchor );
+            if (!linkAnchorElement)
+            {
+                linkAnchorElement = findElementByID(parentElementForSearch, linkAnchor);
+            }
         }
 
 
@@ -494,7 +500,12 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
     
                             if (tocItem.anchor)
                             {
-                                anchorElement = bookChunkElement.querySelector(`#${tocItem.anchor}`);
+                                anchorElement = querySelectorWrapper(bookChunkElement, `#${tocItem.anchor}`);
+
+                                if (!anchorElement)
+                                {
+                                    anchorElement = findElementByID(bookChunkElement, tocItem.anchor);
+                                }
                             }
     
                             const tocElement = tocItem.anchor ? anchorElement : bookChunkElement;
