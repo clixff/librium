@@ -1,3 +1,4 @@
+import { ipcMain } from 'electron/main';
 import React from 'react';
 import { getBookCoverColor, IBook } from '../../misc/book';
 import newTabStyles from '../../styles/modules/newTab.module.css';

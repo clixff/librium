@@ -104,7 +104,10 @@ class App extends React.Component<unknown, IAppState>
                 categories: categories
             }, () =>
             {
-                ipcRenderer.invoke('load-tabs').then(this.handleTabsLoaded);
+                ipcRenderer.invoke('load-tabs').then(this.handleTabsLoaded).then(() =>
+                {
+                    ipcRenderer.send('load-book-from-argv');
+                });
             });
         });
 
@@ -129,8 +132,13 @@ class App extends React.Component<unknown, IAppState>
         });
 
         window.addEventListener('wheel', this.handleScroll);
-
+        
         ipcRenderer.addListener('open-book-already-loaded', this.openBookAlreadyLoaded);
+
+        ipcRenderer.invoke('get-argv').then((argv) => 
+        {
+            console.log(`argv is `, argv);
+        });
     }
     componentWillUnmount(): void
     {       
@@ -217,17 +225,23 @@ class App extends React.Component<unknown, IAppState>
             }, bForce ? 0 : 5000);
         }
     }
-    handleTabsLoaded(tabsData: { tabs: Array<IRawTab>, active: number }): void
+    handleTabsLoaded(tabsData: { tabs: Array<IRawTab>, active: number }): Promise<void>
     {
-        if (tabsData.tabs.length)
+        return new Promise((resolve) =>
         {
-            const newTabsList: Array<Tab> = [];
-            let newActiveTabIndex = tabsData.active;
-            for (let i = 0; i < tabsData.tabs.length; i++)
+            if (tabsData.tabs.length)
             {
-                const rawTab = tabsData.tabs[i];
-                if (rawTab)
+                const newTabsList: Array<Tab> = [];
+                let newActiveTabIndex = tabsData.active;
+                for (let i = 0; i < tabsData.tabs.length; i++)
                 {
+                    const rawTab = tabsData.tabs[i];
+
+                    if (!rawTab)
+                    {
+                        continue;
+                    }
+
                     const tab = loadTab(rawTab);
                     let bAddTab = true;
 
@@ -236,20 +250,19 @@ class App extends React.Component<unknown, IAppState>
                         if (tab.state && tab.state.bookId)
                         {
                             const bookInTab = this.booksMap.get(tab.state.bookId);
-                            if (bookInTab)
+
+                            /**
+                             * Do not add this tab if book not found
+                             */
+                            if (!bookInTab)
                             {
-                                tab.state.book = bookInTab;
-                                if (tab.state.data)
-                                {
-                                    tab.state.data.percentReadToSave = bookInTab.percentRead;
-                                }
+                                continue;
                             }
-                            else
+                            tab.state.book = bookInTab;
+
+                            if (tab.state.data)
                             {
-                                /**
-                                 * Do not add this tab if book not found
-                                 */
-                                bAddTab = false;
+                                tab.state.data.percentReadToSave = bookInTab.percentRead;
                             }
                         }
                         else
@@ -263,18 +276,22 @@ class App extends React.Component<unknown, IAppState>
                         newTabsList.push(tab);
                     }
                 }
+    
+                if (newActiveTabIndex < 0 || newActiveTabIndex >= newTabsList.length)
+                {
+                    newActiveTabIndex = 0;
+                }
+    
+                this.setState({
+                    tabs: newTabsList,
+                    activeTab: newActiveTabIndex
+                }, resolve);
             }
-
-            if (newActiveTabIndex < 0 || newActiveTabIndex >= newTabsList.length)
+            else
             {
-                newActiveTabIndex = 0;
+                resolve();
             }
-
-            this.setState({
-                tabs: newTabsList,
-                activeTab: newActiveTabIndex
-            });
-        }
+        });
     }
     handleScroll(): void
     {

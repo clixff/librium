@@ -34,9 +34,9 @@ export async function initConfig(): Promise<void>
             {
                 const configLoaded: Record<string, unknown> = JSON.parse(configString);
                 config = (configLoaded as unknown) as IPreferences;
-                console.log(`Loaded config from disk: `, config);
+                // console.log(`Loaded config from disk: `, config);
                 fixConfig();
-                console.log(`Fixed config: `, config);
+                // console.log(`Fixed config: `, config);
             }
             catch (error)
             {

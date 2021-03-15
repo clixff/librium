@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import path from 'path';
 import { getConfig } from "./config";
 import { RawBook } from "./rawbook";
+import { findWindowID, windowArgv } from './index';
 
 ipcMain.on('open-file-click', async (event) => 
 {
@@ -43,7 +44,7 @@ ipcMain.on('open-file-click', async (event) =>
 /**
  * Opens .epub file, checks file signature, then converts it to the right format and open in renderer process
  */
-async function openFile(filePath: string, browserWindow: BrowserWindow): Promise<void>
+export async function openFile(filePath: string, browserWindow: BrowserWindow): Promise<void>
 {
     try
     {
@@ -116,8 +117,45 @@ async function openFile(filePath: string, browserWindow: BrowserWindow): Promise
 }
 
 
+ipcMain.on('load-book-from-argv', (event): void => 
+{
+    const browserWindow: BrowserWindow | null = BrowserWindow.fromWebContents(event.sender);
+    if (browserWindow && process.argv && process.argv.length > 1)
+    {
+        const windowID = findWindowID(browserWindow);
+
+        if (windowID === -1) 
+        {
+            return;
+        }
+
+        const argvList = windowArgv[windowID];
+
+        const bookPath = findEpubFileInArgvList(argvList);
+
+        if (bookPath)
+        {
+            openFile(bookPath, browserWindow);
+        }
+    }
+});
 
 
+export function findEpubFileInArgvList(argvList: Array<string>): string
+{
+    if (argvList && argvList.length > 1)
+    {
+        for (let i = 1; i < argvList.length; i++)
+        {
+            const argumentValue = argvList[i];
+            if (argumentValue.endsWith('.epub'))
+            {
+                return argumentValue;
+            }
+        }
+    }
+    return '';
+}
 
 
 
