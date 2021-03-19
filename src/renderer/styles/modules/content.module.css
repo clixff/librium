@@ -133,3 +133,8 @@
     cursor: pointer;
     font-weight: 600;
 }
+
+.fullscreen-wrapper
+{
+    height: 100% !important;
+}

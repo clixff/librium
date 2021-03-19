@@ -10,6 +10,7 @@ import { IModalData, ModalWrapper, TableOfContentsMenu } from '../misc/modal';
 import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookLoading, BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
+import { changeFullScreenMode } from '../../misc/misc';
 
 interface IBookContentState
 {
@@ -160,6 +161,11 @@ function Toolbar(props: ToolbarProps): JSX.Element
         }
     }
 
+    function handleFullScreenClick(): void
+    {
+        changeFullScreenMode();
+    }
+
     return (<div id={ContentStyles['toolbar-wrapper']}>
         <div id={ContentStyles['toolbar-left']}>
             {
@@ -203,7 +209,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
                         <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} />
                         <ToolbarButton icon={ListSVG} title={`Table of Contents`} onClick={handleTableOfContentsClick} />
                         <ToolbarButton icon={SearchSVG} title={`Search`} />
-                        <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} />
+                        <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} onClick={handleFullScreenClick}  />
                     </React.Fragment>
                 ) : null
             }
@@ -235,6 +241,7 @@ interface ITabContentProps
      * Active book if current tab type is Book
      */
     book: IBook | null;
+    isFullScreen: boolean;
     closeModal: () => void;
 }
 
@@ -248,7 +255,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
         return (<div></div>);
     }
 
-    return (<div id={ContentStyles.wrapper}>
+    return (<div id={ContentStyles.wrapper} className={`${props.isFullScreen ? ContentStyles['fullscreen-wrapper'] : '' }`}>
         <Toolbar bIsBookContent={activeTab.type === ETabType.book} callbacks={props.callbacks} tab={activeTab} />
         {
             activeTab.type === ETabType.newTab ?

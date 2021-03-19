@@ -108,3 +108,11 @@ export function findElementByID(parentElement: HTMLElement, elementID: string): 
 
     return null;
 }
+
+export function changeFullScreenMode(): void
+{
+    if (AppSingleton)
+    {
+        AppSingleton.changeFullScreenMode();
+    }
+}

@@ -16,6 +16,7 @@ import { EColorTheme, IPreferences } from '../shared/preferences';
 import { fixPreferences, updateBookFontFamily, updateBookFontSize } from './misc/preferences';
 import { changeColorTheme, changeSetting } from './components/core/preferences';
 import { IBookChunk } from '../shared/schema';
+import contentStyles from './styles/modules/content.module.css';
 
 
 interface IAppState
@@ -41,6 +42,7 @@ interface IAppState
     },
     modal: IModalData;
     preferences: IPreferences;
+    isFullScreen: boolean;
 }
 
 export let AppSingleton: App | null = null;
@@ -76,7 +78,8 @@ class App extends React.Component<unknown, IAppState>
                 allowCustomColors: false,
                 inverseImageColors: false,
                 widePages: false
-            }
+            },
+            isFullScreen: false
         };
 
         bindFunctionsContext(this, ['handleBookLoaded', 'handleOpenNewTabButtonClicked', 'handleTabClick',
@@ -86,7 +89,7 @@ class App extends React.Component<unknown, IAppState>
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
         'updateBookTabState', 'updateBookReadPercent', 'handleTabsLoaded',
-        'saveTabs', 'openBookAlreadyLoaded']);
+        'saveTabs', 'openBookAlreadyLoaded', 'changeFullScreenMode', 'handleKeyUp']);
 
         AppSingleton = this;
     }
@@ -132,6 +135,7 @@ class App extends React.Component<unknown, IAppState>
         });
 
         window.addEventListener('wheel', this.handleScroll);
+        window.addEventListener('keyup', this.handleKeyUp);
         
         ipcRenderer.addListener('open-book-already-loaded', this.openBookAlreadyLoaded);
 
@@ -144,6 +148,7 @@ class App extends React.Component<unknown, IAppState>
     {       
         ipcRenderer.removeListener('book-loaded', this.handleBookLoaded);
         window.removeEventListener('wheel', this.handleScroll);
+        window.removeEventListener('keyup', this.handleKeyUp);
         ipcRenderer.removeListener('open-book-already-loaded', this.openBookAlreadyLoaded);
 
         if (this.saveTabsTimeout && window)
@@ -151,6 +156,37 @@ class App extends React.Component<unknown, IAppState>
             window.clearTimeout(this.saveTabsTimeout);
             this.saveTabsTimeout = null;
         }
+    }
+    handleKeyUp(event: KeyboardEvent): void
+    {
+        if (event.code === 'F11')
+        {
+            this.changeFullScreenMode();
+        }
+        else if (event.code === 'Escape')
+        {
+            if (!this.state.modal.element && this.state.isFullScreen)
+            {
+                ipcRenderer.send('change-full-screen-mode', false);
+                
+                this.setState({
+                    isFullScreen: false
+                });
+            }
+        }
+    }
+    changeFullScreenMode(): void
+    {
+        this.setState((prevState) =>
+        {
+            const newFullScreenState = !prevState.isFullScreen;
+
+            ipcRenderer.send('change-full-screen-mode', newFullScreenState);
+
+            return ({
+                isFullScreen: newFullScreenState
+            });
+        });
     }
     openBookAlreadyLoaded(event, bookID: string): void
     {
@@ -949,8 +985,13 @@ class App extends React.Component<unknown, IAppState>
 
         return (
         <React.Fragment>
-            <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
-            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} preferences={this.state.preferences} closeModal={this.closeModal} book={activeBook} />
+            {
+                this.state.isFullScreen ? null :
+                (
+                <TitleBar tabsList={this.state.tabs} activeTab={this.state.activeTab} tabsCallbacks={ tabsCallbacks } />
+                )
+            }
+            <TabContent tabsList={this.state.tabs} activeTab={this.state.activeTab} callbacks={tabContentCallback} savedBooks={this.state.savedBooks} categories={this.state.categories} modal={this.state.modal} preferences={this.state.preferences} closeModal={this.closeModal} book={activeBook} isFullScreen={this.state.isFullScreen} />
             {
                 this.state.contextMenu && this.state.contextMenu.element ?
                 <ContextMenuWrapper x={this.state.contextMenu.x} y={this.state.contextMenu.y} removeContextMenu={this.removeContextMenu} >

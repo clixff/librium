@@ -206,3 +206,13 @@ ipcMain.handle('get-argv', async (event) =>
     }
     return null;
 });
+
+
+ipcMain.on('change-full-screen-mode', (event, newFullScreenState) =>
+{
+    const browserWindow = BrowserWindow.fromWebContents(event.sender);
+    if (browserWindow)
+    {
+        browserWindow.setFullScreen(newFullScreenState);
+    }
+});
