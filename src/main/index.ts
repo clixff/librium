@@ -49,7 +49,7 @@ function createWindow(argv: Array<string>): void
     window.on('ready-to-show', () =>  
     {
         window.show();
-        if (NODE_ENV === 'development' || true)
+        if (NODE_ENV === 'development')
         {
             window.webContents.openDevTools();
         }
@@ -117,6 +117,16 @@ async function handleAppReady(): Promise<void>
                 console.error(`Error installing developer extensions: `, error);
             }
         }
+
+        app.setUserTasks([{
+            program: process.execPath,
+            arguments: '--new-window',
+            iconPath: process.execPath,
+            iconIndex: 0,
+            title: 'New Window',
+            description: 'Opens a new window'
+        }]);
+
     
         createWindow(process.argv);
     }
@@ -129,10 +139,16 @@ async function handleAppReady(): Promise<void>
 /**
  * Second app instance opened
  */
-async function handleSecondInstance(event, argv): Promise<void>
+async function handleSecondInstance(event, argv: Array<string>): Promise<void>
 {
     try
     {
+        if (argv.includes('--new-window'))
+        {
+            createWindow(argv);
+            return;
+        }
+
         const bookPath = findEpubFileInArgvList(argv);
 
         if (bookPath && activeWindow)
