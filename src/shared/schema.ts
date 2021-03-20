@@ -27,3 +27,11 @@ export interface ITOC
     anchor: string;
     children?: Array<ITOC>;
 }
+
+export interface IBookmark
+{
+    pagePercent: number;
+    bookPercent: number;
+    text: string;
+    id: string;
+}

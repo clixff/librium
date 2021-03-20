@@ -126,6 +126,8 @@ body
     --toolbar-settings-font-size-button-bg: rgb(40, 40, 40);
     --toolbar-settings-font-size-button-hover: rgb(65, 65, 65);
 
+    --toolbar-bookmarks-icon-bg: rgb(40, 40, 40);
+
 }
 
 body.light
@@ -201,6 +203,9 @@ body.light
 
     --toolbar-settings-font-size-button-bg: rgb(225, 225, 225);
     --toolbar-settings-font-size-button-hover: rgb(200, 200, 200);
+
+    --toolbar-bookmarks-icon-bg: rgb(225, 225, 225);
+
 }
 
 

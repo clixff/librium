@@ -568,7 +568,12 @@ function FontSizeSetting(props: IFontSizeSettingProps): JSX.Element
             AppSingleton.changeSetting('fontSize', newValue, false);
         }
 
-        fontSizeSettingSaveTimeout = window.setTimeout(handleSettingChanged, 3000);
+        if (fontSizeSettingSaveTimeout)
+        {
+            window.clearTimeout(fontSizeSettingSaveTimeout);
+        }
+
+        fontSizeSettingSaveTimeout = window.setTimeout(saveFontSizeToDisk, 3000);
     }
 
     function handeClickSubtract(): void

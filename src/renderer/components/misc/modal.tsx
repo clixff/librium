@@ -5,6 +5,51 @@ import { TrashcanSVG, MarkSVG } from '../../misc/icons';
 import modalStyles from '../../styles/modules/common/modal.module.css';
 import { Button } from '../common/button';
 
+interface IAddNewBookmarkModalProps
+{
+    closeModal: () => void;
+    addBookmark: (name: string) => void;
+}
+
+export function AddNewBookmarkModal(props: IAddNewBookmarkModalProps): JSX.Element
+{
+    const [bookmarkName, setBookmarkName] = useState('');
+
+    function handleInput(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        setBookmarkName(event.target.value);
+    }
+
+    function handleAddClick(): void
+    {
+        if (typeof props.closeModal === 'function')
+        {
+            props.closeModal();
+        }
+
+        if (typeof props.addBookmark === 'function')
+        {
+            props.addBookmark(bookmarkName);
+        }
+    }
+
+    return (<div id={modalStyles['add-bookmark']}>
+    <div id={modalStyles['add-bookmark-content']}>
+        <div id={modalStyles['add-bookmark-title']}>
+            {
+                `Add new bookmark`
+            }
+        </div>
+        <div id={modalStyles['add-bookmark-name']}>
+            <input value={bookmarkName} placeholder={'Bookmark name'} autoFocus={true} onChange={handleInput} />
+        </div>
+        <div id={modalStyles['add-bookmark-bottom']}>
+            <Button moduleClass="grey" text="Add bookmark" onClick={handleAddClick} />
+        </div>
+    </div>
+</div>);
+}
+
 interface ITocItemProps
 {
     name: string;

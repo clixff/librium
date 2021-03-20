@@ -11,7 +11,7 @@ import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookLoading, BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
 import { changeFullScreenMode } from '../../misc/misc';
-import { ToolbarDropdownSettings, ToolbarDropdownWrapper } from '../misc/toolbarDropdown'; 
+import { ToolbarDropdownBookmarks, ToolbarDropdownSettings, ToolbarDropdownWrapper } from '../misc/toolbarDropdown'; 
 
 interface IBookContentState
 {
@@ -98,6 +98,7 @@ interface IToolbarButtonProps
 {
     icon: typeof React.Component;
     title?: string;
+    bWithDropdown?: boolean;
     onClick?: () => void;
 }
 
@@ -110,7 +111,7 @@ function ToolbarButton(props: IToolbarButtonProps): JSX.Element
             props.onClick();
         }
     }
-    return (<div className={ContentStyles['toolbar-button']} onClick={handleClick} title={props.title || ''}>
+    return (<div className={`${ContentStyles['toolbar-button']} ${props.bWithDropdown ? 'toolbar-button-with-dropdown' : ''}`} onClick={handleClick} title={props.title || ''}>
         <props.icon />
     </div>);
 }
@@ -196,6 +197,13 @@ function Toolbar(props: ToolbarProps): JSX.Element
         openDropdown(<ToolbarDropdownSettings preferences={props.preferences} />, 187);
     }
 
+    function handleBookmarksClick(): void
+    {
+
+
+        openDropdown(<ToolbarDropdownBookmarks closeDropdown={closeDropdown} />, 150);
+    }
+
     useEffect(() =>
     {
         if (toolbarDropdown.element)
@@ -252,10 +260,10 @@ function Toolbar(props: ToolbarProps): JSX.Element
             {
                 props.bIsBookContent ? (
                     <React.Fragment>
-                        <ToolbarButton icon={TextSVG} title={`Book settings`} onClick={handleBookSettingsClick} />
-                        <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} />
+                        <ToolbarButton icon={TextSVG} title={`Book settings`} onClick={handleBookSettingsClick} bWithDropdown={true} />
+                        <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} onClick={handleBookmarksClick} bWithDropdown={true} />
                         <ToolbarButton icon={ListSVG} title={`Table of Contents`} onClick={handleTableOfContentsClick} />
-                        <ToolbarButton icon={SearchSVG} title={`Search`} />
+                        <ToolbarButton icon={SearchSVG} title={`Search`} bWithDropdown={true} />
                         <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} onClick={handleFullScreenClick}  />
                     </React.Fragment>
                 ) : null

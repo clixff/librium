@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron";
-import { IBookChunk, ITOC } from "../../shared/schema";
+import { IBookChunk, IBookmark, ITOC } from "../../shared/schema";
 import { deleteBookFromCategory, ICategory } from "./category";
 
 export interface ITOCRenderer 
@@ -24,6 +24,7 @@ export interface IBookBase
     percentPages: number;
     styles: Array<string>;
     tableOfContents: Array<ITOC>;
+    bookmarks: Array<IBookmark>;
 
 }
 
@@ -147,4 +148,53 @@ export function getBookCustomCoverIconURL(bookId: string): string
 {
     const color = getBookCoverColor(bookId);
     return `http://127.0.0.1:45506/file/book-cover-icon.svg?color=${color}`;
+}
+
+export function generateBookmarkID(): string
+{
+    const hexDate = Date.now().toString(16);
+    const randomNumber = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
+
+    return `${hexDate}-${randomNumber}`;
+}
+
+export function removeBookmark(book: IBook, bookmarkID: string): void
+{
+    if (book && book.bookmarks && book.bookmarks.length)
+    {
+        let bookmarkIndex = -1;
+        for (let i = 0; i < book.bookmarks.length; i++)
+        {
+            const bookmark = book.bookmarks[i];
+            if (bookmark && bookmark.id === bookmarkID)
+            {
+                bookmarkIndex = i;
+                break;
+            }
+        }
+
+        if (bookmarkIndex !== -1)
+        {
+            book.bookmarks.splice(bookmarkIndex, 1);
+        }
+
+        ipcRenderer.send('remove-bookmark', book.id, bookmarkID);
+    }
+}
+
+export function addNewBookmark(book: IBook, pagePercent: number, bookPercent: number, bookmarkText: string): void
+{
+    if (book && book.bookmarks)
+    {
+        const bookmark: IBookmark = {
+            pagePercent: pagePercent,
+            bookPercent: bookPercent,
+            text: bookmarkText.trim(),
+            id: generateBookmarkID()
+        };
+
+        book.bookmarks.unshift(bookmark);
+
+        ipcRenderer.send('add-new-bookmark', book.id, bookmark);
+    }
 }

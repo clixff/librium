@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
-import { deleteBook, getBookCustomCoverIconURL, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
+import { addNewBookmark, deleteBook, getBookCustomCoverIconURL, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, IBookPageData, IRawTab, loadTab, Tab } from './misc/tabs';
@@ -11,13 +11,11 @@ import { IRawCategory, ICategory, parseCategories, createCategory, deleteCategor
 import { EMenuElementType } from './components/pages/newTab';
 import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
-import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType } from './components/misc/modal';
+import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType, AddNewBookmarkModal } from './components/misc/modal';
 import { EColorTheme, IPreferences } from '../shared/preferences';
 import { fixPreferences, updateBookFontFamily, updateBookFontSize } from './misc/preferences';
 import { changeColorTheme, changeSetting } from './components/core/preferences';
 import { IBookChunk } from '../shared/schema';
-import contentStyles from './styles/modules/content.module.css';
-
 
 interface IAppState
 {
@@ -89,7 +87,8 @@ class App extends React.Component<unknown, IAppState>
         'createCategory', 'openManageCategoriesMenu', 'handleManageCategoriesEvent',
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
         'updateBookTabState', 'updateBookReadPercent', 'handleTabsLoaded',
-        'saveTabs', 'openBookAlreadyLoaded', 'changeFullScreenMode', 'handleKeyUp']);
+        'saveTabs', 'openBookAlreadyLoaded', 'changeFullScreenMode', 'handleKeyUp',
+        'openNewBookmarkModal']);
 
         AppSingleton = this;
     }
@@ -156,6 +155,35 @@ class App extends React.Component<unknown, IAppState>
             window.clearTimeout(this.saveTabsTimeout);
             this.saveTabsTimeout = null;
         }
+    }
+    openNewBookmarkModal(): void
+    {
+        const handleAddClick = (bookmarkName: string) =>
+        {
+            const activeTab = this.state.tabs[this.state.activeTab];
+            if (activeTab && activeTab.type === ETabType.book)
+            {
+                if (!activeTab.state || !activeTab.state.book || !activeTab.state.data)
+                {
+                    return;
+                }
+
+                const bookData = activeTab.state.data;
+
+                const bookmarkPagePercent = bookData.currentPage / bookData.totalNumberOfPages;
+                const bookmarkBookPercent = bookData.percentReadToSave;
+
+                addNewBookmark(activeTab.state.book, bookmarkPagePercent, bookmarkBookPercent, bookmarkName);
+                this.setState((prevState) => 
+                {
+                    return ({
+                        savedBooks: prevState.savedBooks
+                    });
+                });
+            }
+        };
+
+        this.openModal(<AddNewBookmarkModal closeModal={this.closeModal} addBookmark={handleAddClick} />);
     }
     handleKeyUp(event: KeyboardEvent): void
     {

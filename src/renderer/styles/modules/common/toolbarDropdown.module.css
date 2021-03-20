@@ -13,7 +13,7 @@
 #wrapper
 {
     position: fixed;
-    top: 100px;
+    top: 90px;
     right: 0px;
     background: var(--toolbar-dropdown-background);
     border: 1px solid var(--toolbar-dropdown-stroke);
@@ -22,6 +22,7 @@
     animation: toolbarDropdownFadeIn 0.1s linear forwards;
     z-index: 1001;
     box-shadow: 0px 0px 7px 3px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
 }
 
 #wrapper::before,
@@ -71,4 +72,66 @@
 .settings > div:last-child
 {
     margin-bottom: 0px !important;
+}
+
+.bookmarks
+{
+    display: flex;
+    flex-direction: column;
+}
+
+.bookmark-button
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 30px;
+    cursor: pointer;
+}
+
+.bookmark-button:not(:last-child)
+{
+    margin-bottom: 15px;
+}
+
+.bookmark-button-icon
+{
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--toolbar-bookmarks-icon-bg);
+}
+
+.bookmark-button:first-child svg
+{
+    transform: rotate(45deg);
+}
+
+.bookmark-button-icon > svg
+{
+    --icon-size: 8px;
+    fill: var(--subtext-color);
+    transition: fill 0.1s linear;
+}
+
+.bookmark-button-text
+{
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--subtext-color);
+    transition: color 0.1s linear;
+}
+
+.bookmark-button:hover .bookmark-button-text
+{
+    color: var(--text-color);
+}
+
+.bookmark-button:hover > .bookmark-button-icon > svg
+{
+    fill: var(--text-color);
 }

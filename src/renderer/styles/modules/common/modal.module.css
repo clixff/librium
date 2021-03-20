@@ -115,7 +115,8 @@
 
 
 #manage-categories,
-#toc
+#toc,
+#add-bookmark
 {
     background: var(--modal-background);
     display: flex;
@@ -136,7 +137,8 @@
 }
 
 #manage-categories-content,
-#toc-content
+#toc-content,
+#add-bookmark-content
 {
     display: flex;
     flex-direction: column;
@@ -145,7 +147,8 @@
 }
 
 #manage-categories-title,
-#toc-title
+#toc-title,
+#add-bookmark-title
 {
     font-weight: 600;
     font-size: 16px;
@@ -302,7 +305,8 @@
 }
 
 #manage-categories-bottom,
-#toc-bottom
+#toc-bottom,
+#add-bookmark-bottom
 {
     display: flex;
     flex-direction: row;
@@ -382,4 +386,33 @@
     max-width: var(--toc-item-page-width) !important;
     text-align: right;
     margin-right: 10px;
+}
+
+#add-bookmark
+{
+    --modal-width: 325px;
+    height: auto;
+}
+
+#add-bookmark-bottom
+{
+    margin-top: 15px;
+}
+
+#add-bookmark-name
+{
+    margin: 10px 0px;
+}
+
+#add-bookmark-name > input
+{
+    width: calc(100% - 7px);
+    height: 30px;
+    outline: none;
+    appearance: none;
+    background: var(--setting-background);
+    border: 1px solid var(--setting-border);
+    color: var(--text-color);
+    padding-left: 7px;
+    border-radius: 4px;
 }

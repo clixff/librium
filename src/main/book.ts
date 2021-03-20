@@ -1,6 +1,6 @@
 import path from 'path';
 import fs, { promises as fsPromises } from 'fs';
-import { IBookChunk, ITOC } from '../shared/schema';
+import { IBookChunk, IBookmark, ITOC } from '../shared/schema';
 import { ipcMain, app } from "electron";
 import { getConfig } from './config';
 import { ICategory, loadCategories } from './misc/category';
@@ -19,6 +19,7 @@ interface IBookBaseData
     percentPages: number;
     styles: Array<string>;
     tableOfContents: Array<ITOC>;
+    bookmarks: Array<IBookmark>;
 }
 
 /**
@@ -85,7 +86,10 @@ export class Book
      * List of paths to CSS files
      */
     styles: Array<string> = [];
+
     tableOfContents: Array<ITOC> = [];
+
+    bookmarks: Array<IBookmark> = [];
     constructor(saveDirectory: string, bookId: string)
     {
         this.saveDirectory = saveDirectory;
@@ -112,7 +116,8 @@ export class Book
                 percentPages: this.percentPages,
                 version: '0.1',
                 styles: this.styles,
-                tableOfContents: this.tableOfContents
+                tableOfContents: this.tableOfContents,
+                bookmarks: this.bookmarks
             };
             const filePath = path.join(this.saveDirectory, 'book.json');
             await fsPromises.writeFile(filePath, JSON.stringify(bookMetadata, null, '\t'), { encoding: 'utf-8' });
@@ -140,7 +145,8 @@ export class Book
             percentRead: this.percentRead,
             percentPages: this.percentPages,
             styles: this.styles,
-            tableOfContents: this.tableOfContents
+            tableOfContents: this.tableOfContents,
+            bookmarks: this.bookmarks
         };
 
         return bookExportData;
@@ -157,6 +163,7 @@ export class Book
         this.percentPages = metadata.percentPages || 0;
         this.styles = metadata.styles || [];
         this.tableOfContents = metadata.tableOfContents || [];
+        this.bookmarks = metadata.bookmarks || [];
     }
     updateLastTimeOpened(): void
     {
@@ -431,4 +438,47 @@ async function saveAllBooksMeta(): Promise<void>
 app.on('before-quit', async () => 
 {
     await saveAllBooksMeta();
+});
+
+ipcMain.on('add-new-bookmark', (event, bookID: string, bookmark: IBookmark) =>
+{
+    const book = savedBooks.get(bookID);
+    if (book)
+    {
+        if (!book.bookmarks)
+        {
+            book.bookmarks = [];
+        }
+
+        book.bookmarks.unshift(bookmark);
+
+        book.saveMeta();
+    }
+});
+
+ipcMain.on('remove-bookmark', (event, bookID: string, bookmarkID: string) =>
+{
+    const book = savedBooks.get(bookID);
+
+    if (book && book.bookmarks && book.bookmarks.length)
+    {
+        let bookmarkIndex = -1;
+
+        for (let i = 0; i < book.bookmarks.length; i++)
+        {
+            const bookmark = book.bookmarks[i];
+            
+            if (bookmark && bookmark.id === bookmarkID)
+            {
+                bookmarkIndex = i;
+                break;
+            }
+
+            if (bookmarkIndex !== -1)
+            {
+                book.bookmarks.splice(bookmarkIndex, 1);
+                book.saveMeta();
+            }
+        }
+    }
 });
