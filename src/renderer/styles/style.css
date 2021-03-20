@@ -120,6 +120,12 @@ body
 
     --loading-color: white;
 
+    --toolbar-dropdown-background: rgb(23, 23, 23);
+    --toolbar-dropdown-stroke: rgb(38, 38, 38);
+
+    --toolbar-settings-font-size-button-bg: rgb(40, 40, 40);
+    --toolbar-settings-font-size-button-hover: rgb(65, 65, 65);
+
 }
 
 body.light
@@ -189,6 +195,12 @@ body.light
     --toc-item-hover: rgb(0, 0, 0, 0.08);
 
     --loading-color: rgb(128, 128, 128);
+
+    --toolbar-dropdown-background: white;
+    --toolbar-dropdown-stroke: rgb(170, 170, 170);
+
+    --toolbar-settings-font-size-button-bg: rgb(225, 225, 225);
+    --toolbar-settings-font-size-button-hover: rgb(200, 200, 200);
 }
 
 

@@ -1,0 +1,74 @@
+@keyframes toolbarDropdownFadeIn
+{
+    0%
+    {
+        opacity: 0;
+    }
+    100%
+    {
+        opacity: 1;
+    }
+}
+
+#wrapper
+{
+    position: fixed;
+    top: 100px;
+    right: 0px;
+    background: var(--toolbar-dropdown-background);
+    border: 1px solid var(--toolbar-dropdown-stroke);
+    outline: none;
+    appearance: none;
+    animation: toolbarDropdownFadeIn 0.1s linear forwards;
+    z-index: 1001;
+    box-shadow: 0px 0px 7px 3px rgba(0, 0, 0, 0.15);
+}
+
+#wrapper::before,
+#wrapper::after
+{
+    content: "";
+    display: block;
+    border-style: solid;
+    width: 0px;
+    height: 0px;
+    top: -22px;
+    right: 0;
+    position: absolute;
+}
+
+#wrapper::before
+{
+    right: 10px;
+    border-color: transparent transparent var(--toolbar-dropdown-stroke) transparent;
+    border-width: 10px;
+}
+
+#wrapper::after
+{
+    right: 9px;
+    border-color: transparent transparent var(--toolbar-dropdown-background) transparent;
+    border-width: 11px;
+}
+
+
+.fullscreen
+{
+    top: calc(100px - 36px) !important;
+}
+
+#wrapper > div
+{
+    margin: 12px;
+}
+
+.settings
+{
+    display: flex;
+    flex-direction: column;
+}
+
+.settings > div:last-child
+{
+    margin-bottom: 0px !important;
+}

@@ -146,7 +146,6 @@
 {
     outline: none;
     padding: 0px 7px;
-    font-family: 12px;
     color: var(--text-color);
     --setting-width: calc(195px - 14px);
 }
@@ -251,4 +250,60 @@
 {
     --icon-size: 14px;
     fill: white;
+}
+
+.font-size-wrapper
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 125px;
+    align-self: center;
+}
+
+.font-size-button
+{
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 50%;
+    background: var(--toolbar-settings-font-size-button-bg);
+    transition: background-color 0.125s linear;
+    box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.15);
+}
+
+.font-size-button:hover
+{
+    background: var(--toolbar-settings-font-size-button-hover);
+}
+
+.font-size-button:hover > svg
+{
+    fill: var(--text-color);
+}
+
+.font-size-button > svg
+{
+    fill: var(--subtext-color);
+    transition: fill 0.125s linear;
+    --icon-size: 8px;
+}
+
+.font-size-button:last-child > svg
+{
+    transform: rotate(45deg);
+}
+
+.font-size-number
+{
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 16px;
 }

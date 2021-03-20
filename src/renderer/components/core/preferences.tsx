@@ -1,7 +1,8 @@
 import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { EBrowseType, EColorTheme, IBrowseFileFilter, IPreferences } from '../../../shared/preferences';
-import { ArrowSVG, MarkSVG } from '../../misc/icons';
+import { AppSingleton } from '../../app';
+import { ArrowSVG, CloseTitlebarSVG, MarkSVG, MinimizeSVG } from '../../misc/icons';
 import { maxBookFontSize, minBookFontSize, updateBookFontFamily, updateBookFontSize } from '../../misc/preferences';
 import preferencesStyles from '../../styles/modules/preferences.module.css';
 import { Button } from '../common/button';
@@ -280,7 +281,11 @@ function InputSetting(props: IInputSettingProps): JSX.Element
     {
         if (event.code === 'Enter')
         {
-            saveValue();
+            if (event.target)
+            {
+                const inputElement = event.target as HTMLElement;
+                inputElement.blur();
+            }
         }
     }
 
@@ -435,41 +440,6 @@ export interface IPreferencesPageProps
 
 export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
 {
-    function handleColorThemeChange(id: string, option: number): void
-    {
-        let colorTheme: EColorTheme = option;
-        if (colorTheme !== EColorTheme.Dark)
-        {
-            colorTheme = EColorTheme.Light;
-        }
-
-        changeColorTheme(colorTheme);
-
-        onSettingChange(id, option);
-    }
-
-    function handleFontFamilyChange(id: string, fontFamily: string): void
-    {
-        updateBookFontFamily(fontFamily);
-
-        onSettingChange(id, fontFamily);
-    }
-
-    function handleFontSizeChange(id: string, fontSize: number): void
-    {
-        updateBookFontSize(fontSize);
-
-        onSettingChange(id, fontSize);
-    }
-
-    function onSettingChange(id: string, value: unknown): void
-    {
-        console.log(`change setting ${id} to ${value}`);
-        if (typeof props.callbacks.changeSetting === 'function')
-        {
-            props.callbacks.changeSetting(id, value);
-        }
-    }
 
     return (<div id={preferencesStyles.wrapper}>
         <div id={preferencesStyles['page-content']}>
@@ -480,10 +450,10 @@ export function PreferencesPage(props: IPreferencesPageProps): JSX.Element
                 <DropdownSetting id="colorTheme" name="Color Theme" options={['Dark', 'Light']} activeOption={props.preferences.colorTheme} onChange={handleColorThemeChange} />
                 <SilderSetting id="fontSize" name="Font Size" value={props.preferences.fontSize} min={minBookFontSize} max={maxBookFontSize} onChange={handleFontSizeChange} />
                 <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={handleFontFamilyChange} />
-                <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={onSettingChange} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
-                <CheckboxSetting id="allowCustomColors" name="Allow custom book colors" value={props.preferences.allowCustomColors} onChange={onSettingChange} />
-                <CheckboxSetting id="inverseImageColors" name="Inverse image colors" value={props.preferences.inverseImageColors} onChange={onSettingChange} />
-                <CheckboxSetting id="widePages" name="Wide pages" value={props.preferences.widePages} onChange={onSettingChange} />
+                <PathSetting id="booksDir" name="Saved Books directory" value={props.preferences.booksDir} onChange={handleSettingChanged} type={EBrowseType.Directory} bMultiselect={false} filters={[{ name: 'Directory', extensions: ['*'] }]} />
+                <CheckboxSetting id="allowCustomColors" name="Allow custom book colors" value={props.preferences.allowCustomColors} onChange={handleSettingChanged} />
+                <CheckboxSetting id="inverseImageColors" name="Inverse image colors" value={props.preferences.inverseImageColors} onChange={handleSettingChanged} />
+                <CheckboxSetting id="widePages" name="Wide pages" value={props.preferences.widePages} onChange={handleSettingChanged} />
             </div>
         </div>
     </div>);
@@ -511,4 +481,146 @@ export function changeSetting(preferences: IPreferences, id: string, value: unkn
     const preferencesRecord: Record<string, unknown> = preferences as unknown as Record<string, unknown>;
     preferencesRecord[id] = value;
     ipcRenderer.send('setting-changed', id, value);
+}
+
+interface IToolbarDropdownSettingsContainerProps
+{
+    preferences: IPreferences;
+}
+
+export function ToolbarDropdownSettingsContainer(props: IToolbarDropdownSettingsContainerProps): JSX.Element
+{
+    function handleDarkModeSetting(id: string, value: boolean): void
+    {
+        handleColorThemeChange('colorTheme', value ? EColorTheme.Dark : EColorTheme.Light);
+    }
+
+    return (<React.Fragment>
+            <FontSizeSetting name="Font Size" value={props.preferences.fontSize} />
+            <InputSetting id="fontFamily" name="Font Family" value={props.preferences.fontFamily} onChange={handleFontFamilyChange} />
+            <CheckboxSetting id="darkMode" name="Dark Mode" value={props.preferences.colorTheme === EColorTheme.Dark} onChange={handleDarkModeSetting}  />
+    </React.Fragment>);
+}
+
+function handleSettingChanged(settingID: string, value: unknown): void
+{
+    if (AppSingleton)
+    {
+        AppSingleton.changeSetting(settingID, value);
+    }
+}
+
+function handleFontFamilyChange(id: string, fontFamily: string): void
+{
+    updateBookFontFamily(fontFamily);
+
+    handleSettingChanged(id, fontFamily);
+}
+
+function handleFontSizeChange(id: string, fontSize: number): void
+{
+    updateBookFontSize(fontSize);
+
+    handleSettingChanged(id, fontSize);
+}
+
+function handleColorThemeChange(id: string, option: number): void
+{
+    let colorTheme: EColorTheme = option;
+    if (colorTheme !== EColorTheme.Dark)
+    {
+        colorTheme = EColorTheme.Light;
+    }
+
+    changeColorTheme(colorTheme);
+
+    handleSettingChanged(id, option);
+}
+
+let fontSizeSettingSaveTimeout: number | null = null;
+let fontsizeSettingValue = 16;
+
+interface IFontSizeSettingProps
+{
+    name: string;
+    value: number;
+}
+
+function FontSizeSetting(props: IFontSizeSettingProps): JSX.Element
+{
+    const [value, _setValue] = useState(props.value);
+
+    function setValue(newValue: number): void
+    {
+        if (newValue < minBookFontSize || newValue > maxBookFontSize)
+        {
+            return;
+        }
+
+        _setValue(newValue);
+
+        fontsizeSettingValue = newValue;
+
+        updateBookFontSize(newValue);
+
+        if (AppSingleton)
+        {
+            AppSingleton.changeSetting('fontSize', newValue, false);
+        }
+
+        fontSizeSettingSaveTimeout = window.setTimeout(handleSettingChanged, 3000);
+    }
+
+    function handeClickSubtract(): void
+    {
+        setValue(value - 1);
+    }
+
+    function handeClickAdd(): void
+    {
+        setValue(value + 1);
+    }
+
+    useEffect(() =>
+    {
+        return (() => 
+        {
+            if (fontSizeSettingSaveTimeout)
+            {
+                saveFontSizeToDisk();
+            }
+        });
+    }, []);
+
+    function saveFontSizeToDisk(): void
+    {
+        if (fontSizeSettingSaveTimeout)
+        {
+            window.clearTimeout(fontSizeSettingSaveTimeout);
+            
+            fontSizeSettingSaveTimeout = null;
+        }
+
+        if (AppSingleton)
+        {
+            changeSetting(AppSingleton.state.preferences, 'fontSize', fontsizeSettingValue);
+        }
+    }
+
+    return (<div className={preferencesStyles.setting}>
+        <SettingName name={props.name} />
+        <div className={preferencesStyles['font-size-wrapper']}>
+            <div className={preferencesStyles['font-size-button']} onClick={handeClickSubtract}>
+                <MinimizeSVG />
+            </div>
+            <div className={preferencesStyles['font-size-number']}>
+                {
+                    value
+                }
+            </div>
+            <div className={preferencesStyles['font-size-button']} onClick={handeClickAdd}>
+                <CloseTitlebarSVG />
+            </div>
+        </div>
+    </div>);
 }

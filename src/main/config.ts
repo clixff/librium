@@ -14,7 +14,7 @@ const defaultConfig: IPreferences = {
     fontFamily: 'Segoe UI',
     allowCustomColors: false,
     inverseImageColors: false,
-    widePages: false
+    widePages: true
 };
 
 let config: IPreferences | null = null;

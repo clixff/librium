@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ETabType, IBookPageData, IBookTabState, Tab } from '../../misc/tabs';
 import ContentStyles from '../../styles/modules/content.module.css';
 import { PreferencesSVG, BookmarkSVG, FullscreenSVG, ListSVG, SearchSVG, TextSVG } from '../../misc/icons';
@@ -11,6 +11,7 @@ import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookLoading, BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
 import { changeFullScreenMode } from '../../misc/misc';
+import { ToolbarDropdownSettings, ToolbarDropdownWrapper } from '../misc/toolbarDropdown'; 
 
 interface IBookContentState
 {
@@ -119,10 +120,34 @@ interface ToolbarProps
     bIsBookContent: boolean;
     callbacks: ITabContentCallbacks;
     tab: Tab;
+    isFullScreen: boolean;
+    preferences: IPreferences;
 }
 
 function Toolbar(props: ToolbarProps): JSX.Element
 {
+    const [toolbarDropdown, setDropdown] = useState<{ element: JSX.Element | null, rightOffset: number }>({
+        element: (<> </>),
+        rightOffset: 0
+    });
+
+
+    function closeDropdown(): void
+    {
+        setDropdown({
+            element: null,
+            rightOffset: 0
+        });
+    }
+
+    function openDropdown(dropdownElement: JSX.Element, rightOffset: number): void
+    {
+        setDropdown({
+            element: dropdownElement,
+            rightOffset: rightOffset
+        });
+    }
+
     let bookData: IBookPageData | null = null;
 
     if (props.bIsBookContent && props.tab.state && props.tab.state.data)
@@ -166,6 +191,19 @@ function Toolbar(props: ToolbarProps): JSX.Element
         changeFullScreenMode();
     }
 
+    function handleBookSettingsClick(): void
+    {
+        openDropdown(<ToolbarDropdownSettings preferences={props.preferences} />, 187);
+    }
+
+    useEffect(() =>
+    {
+        if (toolbarDropdown.element)
+        {
+            closeDropdown();
+        }
+    }, [props.tab]);
+
     return (<div id={ContentStyles['toolbar-wrapper']}>
         <div id={ContentStyles['toolbar-left']}>
             {
@@ -203,9 +241,18 @@ function Toolbar(props: ToolbarProps): JSX.Element
         </div>
         <div id={ContentStyles['toolbar-right']}>
             {
+                toolbarDropdown.element ?
+                <ToolbarDropdownWrapper isFullScreen={props.isFullScreen} rightOffset={toolbarDropdown.rightOffset} closeDropdown={closeDropdown}>
+                    {
+                        toolbarDropdown.element
+                    }
+                </ToolbarDropdownWrapper>
+                : null
+            }
+            {
                 props.bIsBookContent ? (
                     <React.Fragment>
-                        <ToolbarButton icon={TextSVG} title={`Book settings`} />
+                        <ToolbarButton icon={TextSVG} title={`Book settings`} onClick={handleBookSettingsClick} />
                         <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} />
                         <ToolbarButton icon={ListSVG} title={`Table of Contents`} onClick={handleTableOfContentsClick} />
                         <ToolbarButton icon={SearchSVG} title={`Search`} />
@@ -256,7 +303,7 @@ export function TabContent(props: ITabContentProps): JSX.Element
     }
 
     return (<div id={ContentStyles.wrapper} className={`${props.isFullScreen ? ContentStyles['fullscreen-wrapper'] : '' }`}>
-        <Toolbar bIsBookContent={activeTab.type === ETabType.book} callbacks={props.callbacks} tab={activeTab} />
+        <Toolbar bIsBookContent={activeTab.type === ETabType.book} callbacks={props.callbacks} tab={activeTab} isFullScreen={props.isFullScreen} preferences={props.preferences} />
         {
             activeTab.type === ETabType.newTab ?
             <NewTabContent key={activeTab.key} savedBooks={props.savedBooks} categories={props.categories} callbacks={props.callbacks} state={activeTab.state} /> 

@@ -792,10 +792,13 @@ class App extends React.Component<unknown, IAppState>
      * 
      * @param id Setting ID 
      */
-    changeSetting(id: string, value: unknown): void
+    changeSetting(id: string, value: unknown, saveToDisk = true): void
     {
         const preferences = this.state.preferences;
-        changeSetting(preferences, id, value);
+        if (saveToDisk)
+        {
+            changeSetting(preferences, id, value);
+        }
         this.setState({
             preferences: preferences
         });
