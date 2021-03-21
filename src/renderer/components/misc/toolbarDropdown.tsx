@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import { ipcRenderer } from 'electron';
+import React, { useEffect, useState } from 'react';
 import { IPreferences } from '../../../shared/preferences';
 import { AppSingleton } from '../../app';
 import { CloseTitlebarSVG, ListSVG } from '../../misc/icons';
 import toolbarDropdownStyles from '../../styles/modules/common/toolbarDropdown.module.css';
 import { ToolbarDropdownSettingsContainer } from '../core/preferences';
+
 interface IToolbarDropdownProps
 {
     rightOffset: number;
@@ -12,19 +14,10 @@ interface IToolbarDropdownProps
     closeDropdown: () => void;
 }
 
-
 export function ToolbarDropdownWrapper(props: IToolbarDropdownProps): JSX.Element
 {
-
-
     useEffect(() => 
     {
-        const wrapperElement = document.getElementById(toolbarDropdownStyles.wrapper);
-        if (wrapperElement)
-        {
-            wrapperElement.focus();
-        }
-
         document.body.addEventListener('click', handleDocumentClick);
 
         return (() =>
@@ -82,7 +75,7 @@ export function ToolbarDropdownWrapper(props: IToolbarDropdownProps): JSX.Elemen
     }
 
 
-    return (<div tabIndex={0} id={toolbarDropdownStyles.wrapper} className={`${props.isFullScreen ? toolbarDropdownStyles.fullscreen : ''}`} style={
+    return (<div id={toolbarDropdownStyles.wrapper} className={`${props.isFullScreen ? toolbarDropdownStyles.fullscreen : ''}`} style={
         {
             right: `${props.rightOffset}px`
         }
@@ -172,5 +165,43 @@ export function ToolbarDropdownBookmarks(props: IToolbarDropdownBookmarksProps):
     return (<div className={`${toolbarDropdownStyles.bookmarks}`}>
         <BookmarkMenuButton icon={CloseTitlebarSVG} text="Add new bookmark" onClick={handleAddNewClick} />
         <BookmarkMenuButton icon={ListSVG} text="View all bookmarks" onClick={handleViewAllClick} />
+    </div>);
+}
+
+export function ToolbarDropdownSearch(): JSX.Element
+{
+    const [searchValue, setSearchValue] = useState('');
+
+    function handleInput(event: React.ChangeEvent<HTMLInputElement>): void
+    {
+        setSearchValue(event.target.value);
+    }
+
+    function handleBlur(): void
+    {
+        // sendSearchRequest();
+    }
+
+    function sendSearchRequest(): void
+    {
+        if (searchValue.length)
+        {
+            ipcRenderer.send('search-text', searchValue);
+        }
+    }
+
+    function handleKeyUp(event: React.KeyboardEvent<HTMLInputElement>): void
+    {
+        if (event.code === 'Enter')
+        {
+            sendSearchRequest();
+        }
+    }
+
+    return (<div className={toolbarDropdownStyles.search}>
+        <div className={toolbarDropdownStyles['search-title']}>
+            Search
+        </div>
+        <input value={searchValue} onChange={handleInput} placeholder={"Search in book"} onBlur={handleBlur} autoFocus={true} onKeyUp={handleKeyUp} />
     </div>);
 }

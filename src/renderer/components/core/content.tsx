@@ -11,7 +11,7 @@ import { IPreferencesCallbacks, PreferencesPage } from './preferences';
 import { IPreferences } from '../../../shared/preferences';
 import { BookLoading, BookPage, IBookPageCallbacks, IBookPageProps } from '../pages/book';
 import { changeFullScreenMode } from '../../misc/misc';
-import { ToolbarDropdownBookmarks, ToolbarDropdownSettings, ToolbarDropdownWrapper } from '../misc/toolbarDropdown'; 
+import { ToolbarDropdownBookmarks, ToolbarDropdownSearch, ToolbarDropdownSettings, ToolbarDropdownWrapper } from '../misc/toolbarDropdown'; 
 
 interface IBookContentState
 {
@@ -125,6 +125,7 @@ interface ToolbarProps
     preferences: IPreferences;
 }
 
+
 function Toolbar(props: ToolbarProps): JSX.Element
 {
     const [toolbarDropdown, setDropdown] = useState<{ element: JSX.Element | null, rightOffset: number }>({
@@ -199,9 +200,12 @@ function Toolbar(props: ToolbarProps): JSX.Element
 
     function handleBookmarksClick(): void
     {
-
-
         openDropdown(<ToolbarDropdownBookmarks closeDropdown={closeDropdown} />, 150);
+    }
+
+    function handleSearchClick(): void
+    {
+        openDropdown(<ToolbarDropdownSearch />, 100);
     }
 
     useEffect(() =>
@@ -263,7 +267,7 @@ function Toolbar(props: ToolbarProps): JSX.Element
                         <ToolbarButton icon={TextSVG} title={`Book settings`} onClick={handleBookSettingsClick} bWithDropdown={true} />
                         <ToolbarButton icon={BookmarkSVG} title={`Bookmarks`} onClick={handleBookmarksClick} bWithDropdown={true} />
                         <ToolbarButton icon={ListSVG} title={`Table of Contents`} onClick={handleTableOfContentsClick} />
-                        <ToolbarButton icon={SearchSVG} title={`Search`} bWithDropdown={true} />
+                        {/* <ToolbarButton icon={SearchSVG} title={`Search`} onClick={handleSearchClick} bWithDropdown={true} /> */}
                         <ToolbarButton icon={FullscreenSVG} title={`Fullscreen`} onClick={handleFullScreenClick}  />
                     </React.Fragment>
                 ) : null

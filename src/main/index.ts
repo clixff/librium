@@ -95,6 +95,7 @@ function createWindow(argv: Array<string>): void
      * This disables Ctrl+W shortcut
      */
     window.setMenu(null);
+
 }
 
 async function handleAppReady(): Promise<void>
@@ -232,3 +233,4 @@ ipcMain.on('change-full-screen-mode', (event, newFullScreenState) =>
         browserWindow.setFullScreen(newFullScreenState);
     }
 });
+

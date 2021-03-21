@@ -638,6 +638,8 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
         bookPageData.scrollToPercent = scrollToPercent;
 
+        const bookContainer = document.getElementById(bookStyles.container);
+
         return (() =>
         {
             // console.log(`remove resize event`);
