@@ -116,7 +116,7 @@ function setLocalLinkClick(props: Record<string, unknown>): void
 
     props.onClick = () => 
     {
-        console.log(`[link] clicked on link ${props['generated-link-chunk'] || ''}#${linkAnchor || ''}`);
+        // console.log(`[link] clicked on link ${props['generated-link-chunk'] || ''}#${linkAnchor || ''}`);
 
         const bookWrapper = document.getElementById(bookStyles.wrapper);
         const bookContainer = document.getElementById(bookStyles.container);
@@ -156,7 +156,7 @@ function setLocalLinkClick(props: Record<string, unknown>): void
          * Scroll to the anchor element or the chunk element
          */
         const scrollTo = linkAnchorElement ? linkAnchorElement.offsetTop : chunkElement ? chunkElement.offsetTop : -1;
-        console.log(`[link] scroll to ${scrollTo}`);
+        // console.log(`[link] scroll to ${scrollTo}`);
 
         if (scrollTo === -1)
         {
@@ -284,7 +284,7 @@ class BookChunk extends Component<IBookChunkProps>
     constructor(props: IBookChunkProps)
     {
         super(props);
-        console.log(`Book chunk ${props.id} created`);
+        // console.log(`Book chunk ${props.id} created`);
         
     }
     /**
@@ -296,7 +296,7 @@ class BookChunk extends Component<IBookChunkProps>
     }
     componentDidMount(): void
     {
-        console.log(`Book chunk ${this.props.id} did mount`);
+        // console.log(`Book chunk ${this.props.id} did mount`);
     }
     render(): JSX.Element
     {
@@ -406,9 +406,9 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
             bookPageData.bookHeight = newBookHeight;
             bookPageData.bookPageHeight = newBookPageHeight;
 
-            console.log(`Book height is ${newBookHeight}, book page height is ${newBookPageHeight}`);
+            // console.log(`Book height is ${newBookHeight}, book page height is ${newBookPageHeight}`);
             bookPageData.totalNumberOfPages = Math.ceil(newBookHeight / newBookPageHeight);
-            console.log(`Total number of pages is ${bookPageData.totalNumberOfPages}`);
+            // console.log(`Total number of pages is ${bookPageData.totalNumberOfPages}`);
 
             bookPageData.tableOfContents = [];
             bookPageData.tableOfContentsItems = [];
@@ -429,7 +429,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     function handleWindowResize(): void
     {
-        console.log(`Window resized`);
+        // console.log(`Window resized`);
         recalculatePages();
     }
 
@@ -585,7 +585,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     useEffect(() => 
     {
-        console.log(`book effect. bTabLoaded: ${bTabLoaded}`);
+        // console.log(`book effect. bTabLoaded: ${bTabLoaded}`);
         if (!bTabLoaded)
         {
             bookPageData.bookContainerMarginBottom = 0;
@@ -640,18 +640,18 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
         return (() =>
         {
-            console.log(`remove resize event`);
+            // console.log(`remove resize event`);
             window.removeEventListener('resize', handleWindowResize);
 
             const bookPageData = getBookPageData();
             bookPageData.bookWrapper = null;
             bookPageData.scrollToPercent = null;
             bookCallbacks = null;
-            console.log(`bookWrapper on unmount is `, bookPageData.bookWrapper);
+            // console.log(`bookWrapper on unmount is `, bookPageData.bookWrapper);
         });
     }, []);
 
-    console.log(`Render book`);
+    // console.log(`Render book`);
 
     if (!book)
     {
@@ -660,8 +660,6 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
 
     function handleScroll(event: React.UIEvent<HTMLDivElement>): void
     {
-        console.log(event);
-        console.log(`event.isTrusted: ${event.isTrusted}`);
         if (!event.isTrusted)
         {
             return;
@@ -685,7 +683,7 @@ export const BookPage = React.memo((props: IBookPageProps): JSX.Element =>
                         bookPageData.currentPage = 1;
                     }
 
-                    console.log(`Page ${bookPageData.currentPage} of ${bookPageData.totalNumberOfPages} (${bookWrapper.scrollTop} / ${bookPageData.bookHeight})`);
+                    // console.log(`Page ${bookPageData.currentPage} of ${bookPageData.totalNumberOfPages} (${bookWrapper.scrollTop} / ${bookPageData.bookHeight})`);
 
                     const oldNavigationItem = bookPageData.currentNavigationItem;
 

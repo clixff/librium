@@ -186,10 +186,18 @@ export function addNewBookmark(book: IBook, pagePercent: number, bookPercent: nu
 {
     if (book && book.bookmarks)
     {
+        bookmarkText = bookmarkText.trim();
+
+        if (!bookmarkText)
+        {
+            const date = new Date();
+            bookmarkText = `Bookmark ${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+        }
+
         const bookmark: IBookmark = {
             pagePercent: pagePercent,
             bookPercent: bookPercent,
-            text: bookmarkText.trim(),
+            text: bookmarkText,
             id: generateBookmarkID()
         };
 

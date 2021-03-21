@@ -473,12 +473,12 @@ ipcMain.on('remove-bookmark', (event, bookID: string, bookmarkID: string) =>
                 bookmarkIndex = i;
                 break;
             }
+        }
 
-            if (bookmarkIndex !== -1)
-            {
-                book.bookmarks.splice(bookmarkIndex, 1);
-                book.saveMeta();
-            }
+        if (bookmarkIndex !== -1)
+        {
+            book.bookmarks.splice(bookmarkIndex, 1);
+            book.saveMeta();
         }
     }
 });

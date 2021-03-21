@@ -116,7 +116,8 @@
 
 #manage-categories,
 #toc,
-#add-bookmark
+#add-bookmark,
+#bookmark-list
 {
     background: var(--modal-background);
     display: flex;
@@ -136,9 +137,15 @@
     --modal-width: 500px;
 }
 
+#bookmark-list
+{
+    --modal-width: 400px;
+}
+
 #manage-categories-content,
 #toc-content,
-#add-bookmark-content
+#add-bookmark-content,
+#bookmark-list-content
 {
     display: flex;
     flex-direction: column;
@@ -148,7 +155,8 @@
 
 #manage-categories-title,
 #toc-title,
-#add-bookmark-title
+#add-bookmark-title,
+#bookmark-list-title
 {
     font-weight: 600;
     font-size: 16px;
@@ -158,7 +166,8 @@
 
 
 #manage-categories-container,
-#toc-container
+#toc-container,
+#bookmark-list-container
 {
     display: flex;
     flex-direction: column;
@@ -176,11 +185,11 @@
 
 @media screen and (min-height: 500px)
 {
-    #toc
+    .list-modal
     {
         max-height: 440px;
     }
-    #toc-container
+    .list-modal-container
     {
         max-height: calc(440px - 119px);
     }
@@ -188,11 +197,11 @@
 
 @media screen and (min-height: 700px)
 {
-    #toc
+    .list-modal
     {
         max-height: 540px;
     }
-    #toc-container
+    .list-modal-container
     {
         max-height: calc(540px - 119px);
     }
@@ -200,11 +209,11 @@
 
 @media screen and (min-height: 800px)
 {
-    #toc
+    .list-modal
     {
         max-height: 640px;
     }
-    #toc-container
+    .list-modal-container
     {
         max-height: calc(640px - 119px);
     }
@@ -212,11 +221,11 @@
 
 @media screen and (min-height: 900px)
 {
-    #toc
+    .list-modal
     {
         max-height: 740px;
     }
-    #toc-container
+    .list-modal-container
     {
         max-height: calc(740px - 119px);
     }
@@ -224,11 +233,11 @@
 
 @media screen and (min-height: 1000px)
 {
-    #toc
+    .list-modal
     {
         max-height: 940px;
     }
-    #toc-container
+    .list-modal-container
     {
         max-height: calc(840px - 119px);
     }
@@ -306,7 +315,8 @@
 
 #manage-categories-bottom,
 #toc-bottom,
-#add-bookmark-bottom
+#add-bookmark-bottom,
+#bookmark-list-bottom
 {
     display: flex;
     flex-direction: row;
@@ -415,4 +425,74 @@
     color: var(--text-color);
     padding-left: 7px;
     border-radius: 4px;
+}
+
+.bookmark-item
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    color: var(--subtext-color);
+    transition: background-color 0.125s linear;
+    background: transparent;
+    justify-content: space-between;
+    width: 100%;
+    padding: 15px 0px;
+    border-radius: 5px;
+}
+
+.bookmark-item:hover
+{
+    /* color: var(--text-color); */
+    background: var(--toc-item-hover);
+}
+
+.bookmark-item-right
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 15px;
+}
+
+.bookmark-item-page
+{
+    text-align: right;
+    min-width: 70px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.bookmark-item-name
+{
+    word-break: break-word;
+    margin-left: 5px;
+}
+
+.bookmark-item-delete
+{
+    margin-right: 2px;
+    padding: 0 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.125s linear;
+}
+
+.bookmark-item-delete > svg
+{
+    --icon-size: 11px;
+    fill: var(--bookmark-item-delete);
+    transition: fill 0.125s linear;
+}
+
+.bookmark-item-delete:hover > svg
+{
+    fill: var(--bookmark-item-delete-hover);
+}
+
+.bookmark-item:hover .bookmark-item-delete
+{
+    opacity: 1;
+    pointer-events: all;
 }

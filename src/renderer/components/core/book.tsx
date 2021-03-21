@@ -171,7 +171,7 @@ interface IBooksViewProps
 
 function bAreBooksViewPropsEqual(prevProps: IBooksViewProps, nextProps: IBooksViewProps): boolean
 {
-    console.log(`prevLength: ${prevProps.books.length}. nextProps: ${nextProps.books.length}. equal: ${prevProps.books === nextProps.books}`);
+    // console.log(`prevLength: ${prevProps.books.length}. nextProps: ${nextProps.books.length}. equal: ${prevProps.books === nextProps.books}`);
     return prevProps.keys === nextProps.keys && prevProps.books === nextProps.books && prevProps.books.length === nextProps.books.length;
 }
 

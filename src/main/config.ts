@@ -109,7 +109,7 @@ async function initDefaultConfig(): Promise<void>
 {
     config = copyConfig();
 
-    console.log(`Loaded default config `, config);
+    // console.log(`Loaded default config `, config);
 
     await saveConfig();
 }

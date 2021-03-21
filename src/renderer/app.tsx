@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/style.css';
 import { ipcRenderer } from 'electron';
-import { addNewBookmark, deleteBook, getBookCustomCoverIconURL, IBook, IBookBase, rawBooksToBooks, rawBookToBook } from './misc/book';
+import { addNewBookmark, deleteBook, getBookCustomCoverIconURL, IBook, IBookBase, rawBooksToBooks, rawBookToBook, removeBookmark } from './misc/book';
 import { TitleBar } from './components/core/titlebar';
 import { TabContent, ITabContentCallbacks } from './components/core/content';
 import { ETabType, IBookPageData, IRawTab, loadTab, Tab } from './misc/tabs';
@@ -11,7 +11,7 @@ import { IRawCategory, ICategory, parseCategories, createCategory, deleteCategor
 import { EMenuElementType } from './components/pages/newTab';
 import { ContextMenuWrapper } from './components/misc/context';
 import { bindFunctionsContext } from './misc/misc';
-import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType, AddNewBookmarkModal } from './components/misc/modal';
+import { DeletionWarningModal, IModalData, IManageCategoriesItem, ManageCategoriesMenu, EManageCategoriesEventType, AddNewBookmarkModal, BookmarkListModal } from './components/misc/modal';
 import { EColorTheme, IPreferences } from '../shared/preferences';
 import { fixPreferences, updateBookFontFamily, updateBookFontSize } from './misc/preferences';
 import { changeColorTheme, changeSetting } from './components/core/preferences';
@@ -88,7 +88,7 @@ class App extends React.Component<unknown, IAppState>
         'changeSetting', 'openBook', 'loadBookChunks', 'updateBookLastTImeOpenedTime',
         'updateBookTabState', 'updateBookReadPercent', 'handleTabsLoaded',
         'saveTabs', 'openBookAlreadyLoaded', 'changeFullScreenMode', 'handleKeyUp',
-        'openNewBookmarkModal']);
+        'openNewBookmarkModal', 'openBookmarkListModal']);
 
         AppSingleton = this;
     }
@@ -155,6 +155,38 @@ class App extends React.Component<unknown, IAppState>
             window.clearTimeout(this.saveTabsTimeout);
             this.saveTabsTimeout = null;
         }
+    }
+    openBookmarkListModal(): void
+    {
+        const activeTab = this.state.tabs[this.state.activeTab];
+
+        if (!activeTab || activeTab.type !== ETabType.book || !activeTab.state || !activeTab.state.data || !activeTab.state.book)
+        {
+            return;
+        }
+
+        const activeBook = activeTab.state.book;
+        const bookData = activeTab.state.data;
+
+        if (!bookData.scrollToPercent)
+        {
+            return;
+        }
+
+        const deleteBookmark = (bookmarkID: string) => 
+        {
+            if (activeBook)
+            {
+                removeBookmark(activeBook, bookmarkID);
+
+                this.setState({
+                    savedBooks: this.state.savedBooks
+                });
+            }
+        };
+        
+
+        this.openModal(<BookmarkListModal list={activeBook.bookmarks} totalNumberOfPages={bookData.totalNumberOfPages} deleteBookmark={deleteBookmark} scrollToPercent={bookData.scrollToPercent}   closeModal={this.closeModal}/>);
     }
     openNewBookmarkModal(): void
     {
@@ -936,7 +968,7 @@ class App extends React.Component<unknown, IAppState>
         {
             if (activeTab.state && activeTab.state.data)
             {
-                console.log(`Update book data`, data);
+                // console.log(`Update book data`, data);
                 activeTab.state.data = {
                     ...activeTab.state.data,
                     ...data

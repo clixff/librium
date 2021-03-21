@@ -83,7 +83,7 @@ export function ContextMenuWrapper(props: IContextMenuWrapperProps): JSX.Element
 {
     function handleBlur(): void
     {
-        console.log('handleBlur context');
+        // console.log('handleBlur context');
         if (typeof props.removeContextMenu === 'function')
         {
             props.removeContextMenu();

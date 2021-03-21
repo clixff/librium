@@ -1,9 +1,117 @@
 import React, { useEffect, useState } from 'react';
+import { IBookmark } from '../../../shared/schema';
 import { ITOCRenderer } from '../../misc/book';
 import { ICategory } from '../../misc/category';
-import { TrashcanSVG, MarkSVG } from '../../misc/icons';
+import { TrashcanSVG, MarkSVG, CrossSVG } from '../../misc/icons';
 import modalStyles from '../../styles/modules/common/modal.module.css';
 import { Button } from '../common/button';
+
+interface IBookmarkItemProps
+{
+    bookmark: IBookmark;
+    totalNumberOfPages: number;
+    scrollToPercent: (percent: number) => void;
+    deleteBookmark: (id: string) => void;
+    closeModal: () => void;
+}
+
+function BookmarkItem(props: IBookmarkItemProps): JSX.Element | null
+{
+    const [bDeleted, setDeleted] = useState(false);
+
+    function handleJumpClick(): void
+    {
+        if (typeof props.closeModal === 'function')
+        {
+            props.closeModal();
+        }
+
+        if (typeof props.scrollToPercent === 'function')
+        {
+            props.scrollToPercent(props.bookmark.bookPercent);
+        }
+    }
+
+    function handleDeleteClick(event: React.MouseEvent<HTMLDivElement>): void
+    {
+        if (event)
+        {
+            if (typeof props.deleteBookmark === 'function')
+            {
+                setDeleted(true);
+
+                props.deleteBookmark(props.bookmark.id);
+            }
+
+            event.stopPropagation();
+        }
+    }
+
+    if (bDeleted)
+    {
+        return null;
+    }
+
+    return (<div className={`${modalStyles['bookmark-item']}`}  onClick={handleJumpClick}>
+        <div className={`${modalStyles['bookmark-item-name']}`}>
+            {
+                props.bookmark.text || 'Bookmark'
+            }
+        </div>
+        <div className={modalStyles['bookmark-item-right']}>
+            <div className={modalStyles['bookmark-item-page']}>
+                {
+                    `Page ${Math.floor(props.bookmark.pagePercent * props.totalNumberOfPages)}`
+                }
+            </div>
+            <div className={modalStyles['bookmark-item-delete']} onClick={handleDeleteClick} title={`Delete bookmark`}>
+                <CrossSVG />
+            </div>
+        </div>
+    </div>);
+}
+
+interface IBookmarkListModal
+{
+    list: Array<IBookmark>;
+    totalNumberOfPages: number;
+    closeModal: () => void;
+    scrollToPercent: (percent: number) => void;
+    deleteBookmark: (id: string) => void;
+}
+
+export function BookmarkListModal(props: IBookmarkListModal): JSX.Element
+{
+
+    function deleteBookmark(id: string): void
+    {
+        props.deleteBookmark(id);
+    }
+
+    console.log(`Bookmarks list rendered`);
+    
+
+    return (<div id={modalStyles['bookmark-list']} className={`${modalStyles['list-modal']}`}> 
+        <div id={modalStyles['bookmark-list-content']}>
+            <div id={modalStyles['bookmark-list-title']}>
+                {
+                    `Bookmarks`
+                }
+            </div>
+            <div id={modalStyles['bookmark-list-container']} className={`${modalStyles['list-modal-container']}`}>
+                {
+                    props.list.map((bookmark) =>
+                    {
+                        return (<BookmarkItem bookmark={bookmark} key={bookmark.id} totalNumberOfPages={props.totalNumberOfPages} scrollToPercent={props.scrollToPercent} deleteBookmark={deleteBookmark} closeModal={props.closeModal} />);
+                    })
+                }
+            </div>
+            <div id={modalStyles['bookmark-list-bottom']}>
+                <Button moduleClass="grey" text="Close" onClick={props.closeModal} />
+            </div>
+        </div>
+    </div>); 
+}
 
 interface IAddNewBookmarkModalProps
 {
@@ -181,14 +289,14 @@ export function TableOfContentsMenu(props: ITocMenuProps): JSX.Element
         }
     });
 
-    return (<div id={modalStyles['toc']}>
+    return (<div id={modalStyles['toc']} className={`${modalStyles['list-modal']}`}>
         <div id={modalStyles['toc-content']}>
             <div id={modalStyles['toc-title']}>
                 {
                     `Table of contents`
                 }
             </div>
-            <div id={modalStyles['toc-container']}>
+            <div id={modalStyles['toc-container']} className={`${modalStyles['list-modal-container']}`}>
                 {
                     tocJsxList
                 }

@@ -128,6 +128,9 @@ body
 
     --toolbar-bookmarks-icon-bg: rgb(40, 40, 40);
 
+    --bookmark-item-delete: rgb(140, 140, 140);
+    --bookmark-item-delete-hover: rgb(225, 225, 225);
+
 }
 
 body.light
@@ -206,6 +209,8 @@ body.light
 
     --toolbar-bookmarks-icon-bg: rgb(225, 225, 225);
 
+    --bookmark-item-delete: rgb(120, 120, 120);
+    --bookmark-item-delete-hover: rgb(25, 25, 25);
 }
 
 

@@ -274,15 +274,15 @@ export class NewTabContent extends React.Component<INewTabContentProps>
     constructor(props: INewTabContentProps)
     {
         super(props);
-        console.log(`NewTab Content constructor`);
+        // console.log(`NewTab Content constructor`);
     }
     componentDidMount(): void
     {
-        console.log(`NewTab Content did mount`);
+        // console.log(`NewTab Content did mount`);
     }
     render(): JSX.Element
     {
-        console.log(`NewTab Content rendered`);
+        // console.log(`NewTab Content rendered`);
         return (<NewTabPage {...this.props}/>);
     }
 }

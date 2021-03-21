@@ -162,6 +162,11 @@ export function ToolbarDropdownBookmarks(props: IToolbarDropdownBookmarksProps):
         {
             props.closeDropdown();
         }
+
+        if (AppSingleton)
+        {
+            AppSingleton.openBookmarkListModal();
+        }
     }
 
     return (<div className={`${toolbarDropdownStyles.bookmarks}`}>

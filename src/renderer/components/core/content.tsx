@@ -29,11 +29,11 @@ class BookContent extends React.Component<IBookPageProps, IBookContentState>
             bLoaded: !!(this.props.book && this.props.book.chunks.length)
         };
         
-        console.log(`BookContent constructor`);
+        // console.log(`BookContent constructor`);
     }
     componentDidMount(): void
     {
-        console.log(`BookContent did mount`);
+        // console.log(`BookContent did mount`);
         if (!this.state.bLoaded && this.props.book)
         {
             this.props.callbacks.loadBookChunks(this.props.book);
@@ -84,7 +84,7 @@ class BookContent extends React.Component<IBookPageProps, IBookContentState>
     }
     render(): JSX.Element
     {
-        console.log(`BookContent rendered`);
+        // console.log(`BookContent rendered`);
         if (!this.state.bLoaded )
         {
             return <BookLoading />;
