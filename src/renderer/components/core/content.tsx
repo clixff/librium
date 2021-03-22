@@ -195,12 +195,12 @@ function Toolbar(props: ToolbarProps): JSX.Element
 
     function handleBookSettingsClick(): void
     {
-        openDropdown(<ToolbarDropdownSettings preferences={props.preferences} />, 187);
+        openDropdown(<ToolbarDropdownSettings preferences={props.preferences} />, 151);
     }
 
     function handleBookmarksClick(): void
     {
-        openDropdown(<ToolbarDropdownBookmarks closeDropdown={closeDropdown} />, 150);
+        openDropdown(<ToolbarDropdownBookmarks closeDropdown={closeDropdown} />, 114);
     }
 
     function handleSearchClick(): void
