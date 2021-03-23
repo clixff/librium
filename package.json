@@ -1,6 +1,6 @@
 {
-  "name": "epub-reader",
-  "version": "0.0.1",
+  "name": "librium",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,9 @@
     "run:renderer:dev": "webpack serve --mode production --config ./webpack/webpack.renderer.dev.js",
     "dev": "npm run build:main:dev && concurrently \"npm run run:renderer:dev\" \"npm run run:main:dev\"",
     "build": "npm run build:main:prod && npm run build:renderer:prod",
-    "dist": "electron-builder",
-    "dist32": "electron-builder --ia32"
+    "dist": "electron-builder --win --x64",
+    "dist32": "electron-builder --win --ia32",
+    "release": "node src/misc/release.js"
   },
   "author": "",
   "license": "ISC",
@@ -60,6 +61,12 @@
     "webpack-dev-server": "^3.11.1"
   },
   "build": {
+    "appId": "com.app.librium",
+    "productName": "Librium",
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false
+    },
     "asar": true,
     "extends": null,
     "extraMetadata": {

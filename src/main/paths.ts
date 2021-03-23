@@ -4,7 +4,7 @@ import fs, { promises as fsPromises } from 'fs';
 
 export function getAppDataPath(): string
 {
-    return path.resolve(app.getPath('documents'), 'epub-reader');
+    return path.resolve(app.getPath('documents'), 'Librium');
 }
 
 export function getConfigPath(): string
