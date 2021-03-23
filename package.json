@@ -17,7 +17,7 @@
     "release": "node src/misc/release.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "mit",
   "dependencies": {
     "@babel/preset-react": "^7.12.10",
     "@types/css": "^0.0.31",
